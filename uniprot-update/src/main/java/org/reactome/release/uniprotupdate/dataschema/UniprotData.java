@@ -15,6 +15,7 @@ public class UniprotData
 	private List<Gene> genes;
 	private List<Isoform> isoforms;
 	private List<Keyword> keywords;
+	private List<String> ensembleGeneIDs;
 	private String sequenceLength;
 	private String sequenceChecksum;
 	private String scientificName;
@@ -117,5 +118,14 @@ public class UniprotData
 	public void setRecommendedName(String recommendedName)
 	{
 		this.recommendedName = recommendedName;
+	}
+
+	@XmlElement(name="ensemblGeneID")
+	public List<String> getEnsembleGeneIDs() {
+		return ensembleGeneIDs;
+	}
+
+	public void setEnsembleGeneIDs(List<String> ensembleGeneIDs) {
+		this.ensembleGeneIDs = ensembleGeneIDs;
 	}	
 }

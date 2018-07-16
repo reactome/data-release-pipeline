@@ -12,7 +12,7 @@ public class UniprotData
 	
 	private List<String> accessions;
 	private List<Chain> chains;
-	private List<GeneName> geneNames;
+	private List<Gene> genes;
 	private List<Isoform> isoforms;
 	private List<Keyword> keywords;
 	private String sequenceLength;
@@ -43,14 +43,14 @@ public class UniprotData
 	}
 
 	@XmlElement(name="gene")
-	public List<GeneName> getGeneNames()
+	public List<Gene> getGenes()
 	{
-		return geneNames;
+		return genes;
 	}
 
-	public void setGeneNames(List<GeneName> geneNames)
+	public void setGenes(List<Gene> genes)
 	{
-		this.geneNames = geneNames;
+		this.genes = genes;
 	}
 
 	@XmlElement(name="isoform")

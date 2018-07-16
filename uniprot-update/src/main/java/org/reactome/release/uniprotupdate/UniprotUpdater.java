@@ -1,6 +1,7 @@
 package org.reactome.release.uniprotupdate;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -8,9 +9,11 @@ import java.util.Set;
 
 import org.gk.model.GKInstance;
 import org.gk.model.InstanceEdit;
+import org.gk.model.InstanceUtilities;
 import org.gk.model.ReactomeJavaConstants;
 import org.gk.persistence.MySQLAdaptor;
-import org.reactome.release.uniprotupdate.dataschema.GeneName;
+import org.gk.schema.GKSchemaAttribute;
+import org.reactome.release.uniprotupdate.dataschema.Gene;
 import org.reactome.release.uniprotupdate.dataschema.Name;
 import org.reactome.release.uniprotupdate.dataschema.UniprotData;
 
@@ -31,13 +34,14 @@ public class UniprotUpdater
 																			"Human immunodeficiency virus type 1", "Human immunodeficiency virus type 2", "Influenza A virus") );
 	
 	private static GKInstance ensemblHSapiensRefDB;
+	private static GKInstance humanSpecies;
 	
-	private static String geneNamesListToString(List<GeneName> geneNames)
+	private static String geneNamesListToString(List<Gene> geneNames)
 	{
 		StringBuilder sb = new StringBuilder();
-		for (GeneName geneName : geneNames)
+		for (Gene gene : geneNames)
 		{
-			for (Name name : geneName.getNames())
+			for (Name name : gene.getNames())
 			{
 				sb.append("\"").append(name.getValue()).append("\", ");
 			}
@@ -59,13 +63,20 @@ public class UniprotUpdater
 			// initialize if it's null.
 			if (UniprotUpdater.ensemblHSapiensRefDB == null)
 			{
+				@SuppressWarnings("unchecked")
 				List<GKInstance> refDBs = (List<GKInstance>)adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceDatabase, ReactomeJavaConstants.name, "=", ENSEMBL_HOMO_SAPIENS_GENE);
 				UniprotUpdater.ensemblHSapiensRefDB = refDBs.get(0);
 			}
 		}
-		
-		@SuppressWarnings("unchecked")
-		GKInstance humanSpecies = ((List<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.species, ReactomeJavaConstants.name, "=", HOMO_SAPIENS)).get(0);
+		synchronized (UniprotUpdater.humanSpecies)
+		{
+			if (UniprotUpdater.humanSpecies == null)
+			{
+				@SuppressWarnings("unchecked")
+				List<GKInstance> species = (List<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.species, ReactomeJavaConstants.name, "=", HOMO_SAPIENS);
+				UniprotUpdater.humanSpecies = species.get(0);
+			}
+		}
 		
 		for (UniprotData data : uniprotData)
 		{
@@ -76,11 +87,11 @@ public class UniprotUpdater
 				if (data.getScientificName().equals(HOMO_SAPIENS))
 				{
 					// Report when there are multiple gene names.
-					if (data.getGeneNames().size() > 0)
+					if (data.getGenes().size() > 0)
 					{
-						System.out.println("Accession " + data.getAccessions().toString() + "multiple gene names: " + geneNamesListToString(data.getGeneNames()));
+						System.out.println("Accession " + data.getAccessions().toString() + "multiple gene names: " + geneNamesListToString(data.getGenes()));
 					}
-					for (GeneName geneName : data.getGeneNames())
+					for (Gene geneName : data.getGenes())
 					{
 						for (Name name : geneName.getNames())
 						{
@@ -132,6 +143,12 @@ public class UniprotUpdater
 							else
 							{
 								GKInstance newRefDNASequence = new GKInstance(adaptor.getSchema().getClassByName(ReactomeJavaConstants.ReferenceDNASequence));
+								newRefDNASequence.setAttributeValue(ReactomeJavaConstants.geneName, geneNameFromFile);
+								newRefDNASequence.setAttributeValue(ReactomeJavaConstants.species, humanSpecies);
+								newRefDNASequence.setAttributeValue(ReactomeJavaConstants.referenceDatabase, UniprotUpdater.ensemblHSapiensRefDB);
+								newRefDNASequence.setAttributeValue(ReactomeJavaConstants.identifier, "???");
+								newRefDNASequence.setAttributeValue(ReactomeJavaConstants.created, instanceEdit);
+								
 							}
 						}
 					}
@@ -140,5 +157,4 @@ public class UniprotUpdater
 			}
 		}
 	}
-	
 }

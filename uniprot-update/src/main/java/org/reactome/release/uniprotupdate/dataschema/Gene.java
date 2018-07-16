@@ -6,7 +6,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlType(name="gene")
-public class GeneName
+public class Gene
 {
 	private List<Name> names;
 

@@ -90,6 +90,7 @@ public class UniprotUpdater
 		
 		for (UniprotData data : uniprotData)
 		{
+			// Should each pass through this loop be a single transactione? This might work well if this loop is run in parallel...
 			// first, let's make sure this piece of data is for a species that we can update via Uniprot Update.
 			if (speciesToUpdate.contains(data.getScientificName()))
 			{
@@ -230,6 +231,7 @@ public class UniprotUpdater
 								else
 								{
 									// log an error about mismatched isoform ID and accession.
+									System.out.println("Isoform ID "+ isoformID + " does not match Accession "+accession);
 								}
 							}
 						}
@@ -254,6 +256,7 @@ public class UniprotUpdater
 	 */
 	private void updateInstanceWithData(MySQLAdaptor adaptor, GKInstance instance, UniprotData data, String ... attributes )
 	{
+		// Set the default list if the user does not specify anything.
 		if (attributes == null || attributes.length == 0)
 		{
 			attributes = new String[] { ReactomeJavaConstants.secondaryIdentifier, ReactomeJavaConstants.description, ReactomeJavaConstants.sequenceLength,
@@ -263,6 +266,7 @@ public class UniprotUpdater
 		//if (attributes!=null && attributes.length > 0) {
 		for (String attribute : attributes )
 		{
+			// The old Perl code actually prints messages every time the old data differs from the new data. Is that really necessary?
 			try
 			{
 				switch (attribute)
@@ -272,6 +276,7 @@ public class UniprotUpdater
 						if (data.getAccessions()!=null && data.getAccessions().size()>0)
 						{
 							instance.setAttributeValue(ReactomeJavaConstants.secondaryIdentifier, data.getAccessions());
+							adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.secondaryIdentifier);
 						}
 						break;
 					}
@@ -280,6 +285,7 @@ public class UniprotUpdater
 						if (data.getRecommendedName()!=null)
 						{
 							instance.setAttributeValue(ReactomeJavaConstants.description, data.getRecommendedName());
+							adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.description);
 						}
 						break;
 					}
@@ -288,6 +294,7 @@ public class UniprotUpdater
 						if (data.getSequenceLength()!=null)
 						{
 							instance.setAttributeValue(ReactomeJavaConstants.sequenceLength, data.getSequenceLength());
+							adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.sequenceLength);
 						}
 						break;
 					}
@@ -297,7 +304,7 @@ public class UniprotUpdater
 						try
 						{
 							// Using a list here because that's what fetchInstanceByAttribute returns but I honestly don't expect more than one result.
-							// It would be very weird if two different Species objects existed with the same name.
+							// It would be *very* weird if two different Species objects existed with the same name.
 							@SuppressWarnings("unchecked")
 							List<GKInstance> dataSpeciesInst = (List<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.Species, ReactomeJavaConstants.name, "=", speciesName);
 							Set<Long> speciesDBIDs = new HashSet<Long>();
@@ -311,6 +318,7 @@ public class UniprotUpdater
 							if (!speciesDBIDs.contains(speciesInst.getDBID()))
 							{
 								instance.setAttributeValue(ReactomeJavaConstants.species, dataSpeciesInst.get(0));
+								adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.species);
 							}
 						}
 						catch (Exception e)
@@ -326,15 +334,18 @@ public class UniprotUpdater
 							String oldChecksum = (String) instance.getAttributeValue("checksum");
 							if (oldChecksum != null && oldChecksum.length() > 0 && data.getSequenceChecksum().equals(oldChecksum))
 							{
+								// The old Perl code prints a warning when the checksum changes.
 								System.out.println("Checksum has changed! DB ID: "+instance.getDBID() + "\tOld checksum: "+oldChecksum+"\tNew checksum:"+data.getSequenceChecksum());
 								instance.setAttributeValue("isSequenceChanged", true);
+								instance.setAttributeValue("checksum", data.getSequenceChecksum());
+								adaptor.updateInstanceAttribute(instance, "isSequenceChanged");
+								adaptor.updateInstanceAttribute(instance, "checksum");
 							}
 							else
 							{
 								instance.setAttributeValue("isSequenceChanged", false);
+								adaptor.updateInstanceAttribute(instance,"isSequenceChanged");
 							}
-							
-							
 						}
 						catch (Exception e)
 						{
@@ -351,6 +362,7 @@ public class UniprotUpdater
 						{
 							// The first item in the flattened gene names list is the primary gene name.
 							instance.setAttributeValue(ReactomeJavaConstants.name,  data.getFlattenedGeneNames().get(0));
+							adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.name);
 						}
 						break;
 					}
@@ -359,6 +371,7 @@ public class UniprotUpdater
 						if (data.getFlattenedGeneNames()!=null && data.getFlattenedGeneNames().size() > 0)
 						{
 							instance.setAttributeValue(ReactomeJavaConstants.geneName, data.getFlattenedGeneNames());
+							adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.geneName);
 						}
 						break;
 					}
@@ -367,6 +380,7 @@ public class UniprotUpdater
 						if (!data.getFlattenedCommentsText().isEmpty())
 						{
 							instance.setAttributeValue(ReactomeJavaConstants.comment, data.getFlattenedCommentsText());
+							adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.comment);
 						}
 						break;
 					}
@@ -375,6 +389,7 @@ public class UniprotUpdater
 						if (!data.getFlattenedKeywords().isEmpty())
 						{
 							instance.setAttributeValue(ReactomeJavaConstants.keyword, data.getFlattenedKeywords());
+							adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.keyword);
 						}
 						break;
 					}
@@ -388,13 +403,17 @@ public class UniprotUpdater
 								chainStrings.add(chain.toString());
 							}
 							instance.setAttributeValue("chain", chainStrings);
+							adaptor.updateInstanceAttribute(instance, "chain");
 						}
 						break;
 					}
 				}
-				
 			}
 			catch (InvalidAttributeException | InvalidAttributeValueException e)
+			{
+				e.printStackTrace();
+			}
+			catch (Exception e)
 			{
 				e.printStackTrace();
 			}
@@ -476,6 +495,7 @@ public class UniprotUpdater
 			else
 			{
 				// log a message about mismatches...
+				System.out.println("Isoform ID "+isoformID + " does not match with Accession "+accession);
 			}
 		}
 	}

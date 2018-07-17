@@ -53,6 +53,8 @@ public class UniprotUpdateStep extends ReleaseStep
 			String identifier = (String) instance.getAttributeValue(ReactomeJavaConstants.identifier);
 			if (identifier !=null && identifier.length() > 0)
 			{
+				// fast-load the attributes now so accessing them later will be faster.
+				adaptor.fastLoadInstanceAttributeValues(instance);
 				instanceMap.put(identifier, instance);
 			}
 		}

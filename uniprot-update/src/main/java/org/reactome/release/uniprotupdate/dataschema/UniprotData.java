@@ -1,5 +1,8 @@
 package org.reactome.release.uniprotupdate.dataschema;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -9,13 +12,15 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class UniprotData
 {
 
-	
+	private List<String> flattenedGeneNames;
+	private String primaryGeneName;
 	private List<String> accessions;
 	private List<Chain> chains;
 	private List<Gene> genes;
 	private List<Isoform> isoforms;
 	private List<Keyword> keywords;
 	private List<String> ensembleGeneIDs;
+	private List<CommentText> commentTexts;
 	private String sequenceLength;
 	private String sequenceChecksum;
 	private String scientificName;
@@ -44,14 +49,50 @@ public class UniprotData
 	}
 
 	@XmlElement(name="gene")
-	public List<Gene> getGenes()
+	public Collection<Gene> getGenes()
 	{
-		return genes;
+		// Don't allow the collection to be modified, since that would have
+		// an impact on the flattened gene list.
+		return Collections.unmodifiableCollection(genes);
 	}
 
 	public void setGenes(List<Gene> genes)
 	{
 		this.genes = genes;
+		// Only execute the gene name-flattening code when the genes list is actually set.
+		// This is the only place where the data structures that underly flattenedGeneNames
+		// can be modified.
+		int i = 0;
+		if (this.genes!=null)
+		{
+			for (Gene gene : this.getGenes())
+			{
+				for (Name name : gene.getNames())
+				{
+					this.flattenedGeneNames.add(name.getValue());
+					if (name.getType().equals("primary"))
+					{
+						this.primaryGeneName = name.getValue();
+					}
+					else
+					{
+						// only have to count positions until after primary gene name has been found.
+						if (this.primaryGeneName == null)
+						{
+							i ++;
+						}
+					}
+				}
+			}
+		}
+		// Move the primary gene name to the head of the array, if it's not already there.
+		if (i>0 && this.primaryGeneName != null)
+		{
+			// remove primary gene name from its current position.
+			this.flattenedGeneNames.remove(i);
+			// add it at the begining.
+			this.flattenedGeneNames.add(0, primaryGeneName);
+		}
 	}
 
 	@XmlElement(name="isoform")
@@ -121,11 +162,53 @@ public class UniprotData
 	}
 
 	@XmlElement(name="ensemblGeneID")
-	public List<String> getEnsembleGeneIDs() {
+	public List<String> getEnsembleGeneIDs()
+	{
 		return ensembleGeneIDs;
 	}
 
-	public void setEnsembleGeneIDs(List<String> ensembleGeneIDs) {
+	public void setEnsembleGeneIDs(List<String> ensembleGeneIDs)
+	{
 		this.ensembleGeneIDs = ensembleGeneIDs;
+	}
+
+	@XmlElement
+	public List<CommentText> getCommentTexts()
+	{
+		return commentTexts;
+	}
+
+	public void setCommentTexts(List<CommentText> commentText)
+	{
+		this.commentTexts = commentText;
 	}	
+	
+	public List<String> getFlattenedGeneNames()
+	{
+		return this.flattenedGeneNames;
+	}
+	
+	public String getFlattenedCommentsText()
+	{
+		StringBuilder flattenedCommentsText = new StringBuilder();
+		
+		for (CommentText comment : this.commentTexts)
+		{
+			flattenedCommentsText.append(comment.getType().toUpperCase()).append(" ").append(comment.getText()).append(" ");
+		}
+		// TODO: move the bulk of this code to the setter method for commentTexts?
+		return flattenedCommentsText.toString().trim();
+	}
+	
+	public List<String> getFlattenedKeywords()
+	{
+		List<String> flattenedKeywords = new ArrayList<String>();
+		
+		for (Keyword keyword : this.keywords)
+		{
+			flattenedKeywords.add(keyword.getValue());
+		}
+		// TODO: move the bulk of this code to the setter method for keywords?
+		return flattenedKeywords;
+	}
 }

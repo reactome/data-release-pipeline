@@ -191,20 +191,14 @@ public class UniprotUpdater
 						else
 						{
 
-							GKInstance newRefDNASequence = new GKInstance(adaptor.getSchema().getClassByName(ReactomeJavaConstants.ReferenceDNASequence));
-							newRefDNASequence.setAttributeValue(ReactomeJavaConstants.identifier, ensemblGeneID);
-							newRefDNASequence.setAttributeValue(ReactomeJavaConstants.species, humanSpecies);
-							newRefDNASequence.setAttributeValue(ReactomeJavaConstants.referenceDatabase, UniprotUpdater.ensemblHSapiensRefDB);
-							newRefDNASequence.setAttributeValue(ReactomeJavaConstants.geneName, flattenedGeneNames);
-							newRefDNASequence.setAttributeValue(ReactomeJavaConstants.created, instanceEdit);
-							newRefDNASequence.setAttributeValue(ReactomeJavaConstants.modified, null);
-							newRefDNASequence.setAttributeValue(ReactomeJavaConstants.name, primaryGeneName);
+							GKInstance newRefDNASequence = createNewReferenceDNASequence(adaptor, instanceEdit, flattenedGeneNames, primaryGeneName, ensemblGeneID);
 							Long newDBID = adaptor.storeInstance(newRefDNASequence);
 							System.out.println("New ReferenceDNASequence \""+newRefDNASequence.toString()+"\" with Gene ID "+ensemblGeneID+" has DB ID"+newDBID);
 						}
 						// For all species...
 						// Process the rest of the data - chains, isoforms...
 
+						// We need to query for ReferenceGeneProducts that have a specific identifier and are also in the "ENSEMBL - Human" reference database.
 						AttributeQueryRequest aqrIdentifier = adaptor.new AttributeQueryRequest(ReactomeJavaConstants.ReferenceGeneProduct, ReactomeJavaConstants.identifier, "=", accession);
 						AttributeQueryRequest aqrRefDB = adaptor.new AttributeQueryRequest(ReactomeJavaConstants.ReferenceGeneProduct, ReactomeJavaConstants.referenceDatabase, "=", UniprotUpdater.ensemblHSapiensRefDB);
 						List<AttributeQueryRequest> aqrList = Arrays.asList(aqrIdentifier, aqrRefDB);
@@ -225,12 +219,9 @@ public class UniprotUpdater
 						else
 						{
 							//create new RefGeneProd...
-							GKInstance referenceGeneProduct = new GKInstance(adaptor.getSchema().getClassByName(ReactomeJavaConstants.ReferenceGeneProduct));
-							referenceGeneProduct.setAttributeValue(ReactomeJavaConstants.created, instanceEdit);
-							referenceGeneProduct.setAttributeValue(ReactomeJavaConstants.modified, instanceEdit);
-							referenceGeneProduct.setAttributeValue(ReactomeJavaConstants.referenceDatabase, UniprotUpdater.ensemblHSapiensRefDB);
-							referenceGeneProduct.setAttributeValue(ReactomeJavaConstants.identifier, accession);
+							GKInstance referenceGeneProduct = createNewReferenceGeneProduct(adaptor, instanceEdit, accession);
 							// update with the rest of the values in "data"... TODO: complete something that is like the Perl version of uniprot_xml2sql_isoform::updateInstance
+							
 							Long newRefGeneProductDBID = adaptor.storeInstance(referenceGeneProduct);
 							// Now create new ReferenceIsoform for this ReferenceGeneProduct.
 							for (Isoform isoform : data.getIsoforms())
@@ -253,8 +244,32 @@ public class UniprotUpdater
 		}
 	}
 
-	private void createNewReferenceIsoform(MySQLAdaptor adaptor, InstanceEdit instanceEdit, String accession, GKInstance referenceGeneProduct, String isoformID) throws InvalidAttributeException, InvalidAttributeValueException, Exception
+	private GKInstance createNewReferenceGeneProduct(MySQLAdaptor adaptor, InstanceEdit instanceEdit, String accession) throws InvalidAttributeException, InvalidAttributeValueException
 	{
+		GKInstance referenceGeneProduct = new GKInstance(adaptor.getSchema().getClassByName(ReactomeJavaConstants.ReferenceGeneProduct));
+		referenceGeneProduct.setAttributeValue(ReactomeJavaConstants.created, instanceEdit);
+		referenceGeneProduct.setAttributeValue(ReactomeJavaConstants.modified, instanceEdit);
+		referenceGeneProduct.setAttributeValue(ReactomeJavaConstants.referenceDatabase, UniprotUpdater.ensemblHSapiensRefDB);
+		referenceGeneProduct.setAttributeValue(ReactomeJavaConstants.identifier, accession);
+		return referenceGeneProduct;
+	}
+
+	private GKInstance createNewReferenceDNASequence(MySQLAdaptor adaptor, InstanceEdit instanceEdit, List<String> flattenedGeneNames, String primaryGeneName, String ensemblGeneID) throws InvalidAttributeException, InvalidAttributeValueException
+	{
+		GKInstance newRefDNASequence = new GKInstance(adaptor.getSchema().getClassByName(ReactomeJavaConstants.ReferenceDNASequence));
+		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.identifier, ensemblGeneID);
+		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.species, humanSpecies);
+		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.referenceDatabase, UniprotUpdater.ensemblHSapiensRefDB);
+		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.geneName, flattenedGeneNames);
+		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.created, instanceEdit);
+		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.modified, null);
+		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.name, primaryGeneName);
+		return newRefDNASequence;
+	}
+
+	private Long createNewReferenceIsoform(MySQLAdaptor adaptor, InstanceEdit instanceEdit, String accession, GKInstance referenceGeneProduct, String isoformID) throws InvalidAttributeException, InvalidAttributeValueException, Exception
+	{
+		Long dbID;
 		GKInstance referenceIsoform = new GKInstance(adaptor.getSchema().getClassByName(ReactomeJavaConstants.ReferenceIsoform));
 		referenceIsoform.setAttributeValue(ReactomeJavaConstants.created, instanceEdit);
 		referenceIsoform.setAttributeValue(ReactomeJavaConstants.identifier, accession);
@@ -262,7 +277,8 @@ public class UniprotUpdater
 		referenceIsoform.setAttributeValue(ReactomeJavaConstants.isoformParent, referenceGeneProduct);
 		referenceIsoform.setAttributeValue(ReactomeJavaConstants.variantIdentifier, isoformID);
 		// now update with the rest of the values in "data"...
-		adaptor.storeInstance(referenceIsoform);
+		dbID = adaptor.storeInstance(referenceIsoform);
+		return dbID;
 	}
 
 	private void updateReferenceGeneProduct(MySQLAdaptor adaptor, GKInstance referenceGeneProduct, UniprotData data, InstanceEdit instanceEdit, String accession) throws Exception
@@ -272,6 +288,7 @@ public class UniprotUpdater
 		
 		String isoformID = ""; //TODO: loop through isoforms of this refeference gene product.
 		updateIsoforms(adaptor, referenceGeneProduct, data.getIsoforms(), instanceEdit, accession, isoformID);
+		
 	}
 	
 	private void updateIsoforms(MySQLAdaptor adaptor, GKInstance referenceGeneProduct, List<Isoform> isoforms, InstanceEdit instanceEdit, String accession, String isoformID) throws Exception

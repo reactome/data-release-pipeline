@@ -2,7 +2,7 @@ package org.reactome.release.uniprotupdate;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -12,13 +12,12 @@ import java.util.stream.Collectors;
 
 import org.gk.model.GKInstance;
 import org.gk.model.InstanceEdit;
-import org.gk.model.InstanceUtilities;
 import org.gk.model.ReactomeJavaConstants;
 import org.gk.persistence.MySQLAdaptor;
 import org.gk.persistence.MySQLAdaptor.AttributeQueryRequest;
-import org.gk.schema.GKSchemaAttribute;
 import org.gk.schema.InvalidAttributeException;
 import org.gk.schema.InvalidAttributeValueException;
+import org.reactome.release.uniprotupdate.dataschema.Chain;
 import org.reactome.release.uniprotupdate.dataschema.Gene;
 import org.reactome.release.uniprotupdate.dataschema.Isoform;
 import org.reactome.release.uniprotupdate.dataschema.Name;
@@ -43,7 +42,7 @@ public class UniprotUpdater
 	private static GKInstance ensemblHSapiensRefDB;
 	private static GKInstance humanSpecies;
 	
-	private static String geneNamesListToString(List<Gene> geneNames)
+	private static String geneNamesListToString(Collection<Gene> geneNames)
 	{
 		StringBuilder sb = new StringBuilder();
 		for (Gene gene : geneNames)
@@ -111,17 +110,14 @@ public class UniprotUpdater
 					// Will need a flattened list of geneNames. Maybe move this code to a new function in UniprotData?
 					List<String> flattenedGeneNames = new ArrayList<String>();
 					String primaryGeneName="";
-					for (Gene gene : data.getGenes())
+					
+					flattenedGeneNames = data.getFlattenedGeneNames();
+					if (flattenedGeneNames.size() > 0)
 					{
-						for (Name name : gene.getNames())
-						{
-							flattenedGeneNames.add(name.getValue());
-							if (name.getType().equals("primary"))
-							{
-								primaryGeneName = name.getValue();
-							}
-						}
+						primaryGeneName = flattenedGeneNames.get(0);
 					}
+							
+					
 					// If there was no gene name marked as "primary", just take the first one in the list.
 					if (primaryGeneName.equals(""))
 					{
@@ -220,9 +216,8 @@ public class UniprotUpdater
 						{
 							//create new RefGeneProd...
 							GKInstance referenceGeneProduct = createNewReferenceGeneProduct(adaptor, instanceEdit, accession);
-							// update with the rest of the values in "data"... TODO: complete something that is like the Perl version of uniprot_xml2sql_isoform::updateInstance
-							
 							Long newRefGeneProductDBID = adaptor.storeInstance(referenceGeneProduct);
+							updateInstanceWithData(adaptor, referenceGeneProduct, data);
 							// Now create new ReferenceIsoform for this ReferenceGeneProduct.
 							for (Isoform isoform : data.getIsoforms())
 							{
@@ -244,6 +239,169 @@ public class UniprotUpdater
 		}
 	}
 
+	/**
+	 * This function will update attributes on an instance, based on the content of a UniprotData object.
+	 * @param adaptor - The database adaptor to use.
+	 * @param instance - The instance to try updating.
+	 * @param data - The UniprotData object that may contain new data for the instance.
+	 * @param attributes - A list of attributes to update. If you do not pass a list, the default list (everything!) will be attempted:
+	 * <ul>
+	 * <li>secondaryIdentifier</li><li>description</li><li>sequenceLength</li><li>species</li><li>checksum</li><li>name</li><li>geneName</li>
+	 * <li>comment</li><li>keyword</li><li>chain</li>
+	 * </ul>
+	 * If you pass in your own list of attributes, <b>make sure they are valid</b> for <code>instance</code>! This function does <em>not</em> check attribute
+	 * validity.
+	 */
+	private void updateInstanceWithData(MySQLAdaptor adaptor, GKInstance instance, UniprotData data, String ... attributes )
+	{
+		if (attributes == null || attributes.length == 0)
+		{
+			attributes = new String[] { ReactomeJavaConstants.secondaryIdentifier, ReactomeJavaConstants.description, ReactomeJavaConstants.sequenceLength,
+										ReactomeJavaConstants.species, "checksum", ReactomeJavaConstants.name, ReactomeJavaConstants.geneName,
+										ReactomeJavaConstants.comment, ReactomeJavaConstants.keyword, "chain" };
+		}
+		//if (attributes!=null && attributes.length > 0) {
+		for (String attribute : attributes )
+		{
+			try
+			{
+				switch (attribute)
+				{
+					case ReactomeJavaConstants.secondaryIdentifier:
+					{
+						if (data.getAccessions()!=null && data.getAccessions().size()>0)
+						{
+							instance.setAttributeValue(ReactomeJavaConstants.secondaryIdentifier, data.getAccessions());
+						}
+						break;
+					}
+					case ReactomeJavaConstants.description:
+					{
+						if (data.getRecommendedName()!=null)
+						{
+							instance.setAttributeValue(ReactomeJavaConstants.description, data.getRecommendedName());
+						}
+						break;
+					}
+					case ReactomeJavaConstants.sequenceLength:
+					{
+						if (data.getSequenceLength()!=null)
+						{
+							instance.setAttributeValue(ReactomeJavaConstants.sequenceLength, data.getSequenceLength());
+						}
+						break;
+					}
+					case ReactomeJavaConstants.species:
+					{
+						String speciesName = data.getScientificName();
+						try
+						{
+							// Using a list here because that's what fetchInstanceByAttribute returns but I honestly don't expect more than one result.
+							// It would be very weird if two different Species objects existed with the same name.
+							@SuppressWarnings("unchecked")
+							List<GKInstance> dataSpeciesInst = (List<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.Species, ReactomeJavaConstants.name, "=", speciesName);
+							Set<Long> speciesDBIDs = new HashSet<Long>();
+							for (GKInstance inst : dataSpeciesInst)
+							{
+								speciesDBIDs.add(inst.getDBID());
+							}
+							GKInstance speciesInst = (GKInstance) instance.getAttributeValue(ReactomeJavaConstants.species);
+							// The list of Species that we got by looking up the name from "data" does not contain the Species DB ID on the current instance. 
+							// This means we need to update the instance to use the one from the input.
+							if (!speciesDBIDs.contains(speciesInst.getDBID()))
+							{
+								instance.setAttributeValue(ReactomeJavaConstants.species, dataSpeciesInst.get(0));
+							}
+						}
+						catch (Exception e)
+						{
+							e.printStackTrace();
+						}
+						break;
+					}
+					case "checksum":
+					{
+						try
+						{
+							String oldChecksum = (String) instance.getAttributeValue("checksum");
+							if (oldChecksum != null && oldChecksum.length() > 0 && data.getSequenceChecksum().equals(oldChecksum))
+							{
+								System.out.println("Checksum has changed! DB ID: "+instance.getDBID() + "\tOld checksum: "+oldChecksum+"\tNew checksum:"+data.getSequenceChecksum());
+								instance.setAttributeValue("isSequenceChanged", true);
+							}
+							else
+							{
+								instance.setAttributeValue("isSequenceChanged", false);
+							}
+							
+							
+						}
+						catch (Exception e)
+						{
+							e.printStackTrace();
+						}
+						
+						
+						break;
+					}
+					case ReactomeJavaConstants.name:
+					{
+						
+						if (data.getFlattenedGeneNames()!=null && data.getFlattenedGeneNames().size() > 0)
+						{
+							// The first item in the flattened gene names list is the primary gene name.
+							instance.setAttributeValue(ReactomeJavaConstants.name,  data.getFlattenedGeneNames().get(0));
+						}
+						break;
+					}
+					case ReactomeJavaConstants.geneName:
+					{
+						if (data.getFlattenedGeneNames()!=null && data.getFlattenedGeneNames().size() > 0)
+						{
+							instance.setAttributeValue(ReactomeJavaConstants.geneName, data.getFlattenedGeneNames());
+						}
+						break;
+					}
+					case ReactomeJavaConstants.comment:
+					{
+						if (!data.getFlattenedCommentsText().isEmpty())
+						{
+							instance.setAttributeValue(ReactomeJavaConstants.comment, data.getFlattenedCommentsText());
+						}
+						break;
+					}
+					case ReactomeJavaConstants.keyword:
+					{
+						if (!data.getFlattenedKeywords().isEmpty())
+						{
+							instance.setAttributeValue(ReactomeJavaConstants.keyword, data.getFlattenedKeywords());
+						}
+						break;
+					}
+					case "chain":
+					{
+						if (data.getChains()!=null && data.getChains().size() > 0)
+						{
+							List<String> chainStrings = new ArrayList<String>();
+							for (Chain chain : data.getChains())
+							{
+								chainStrings.add(chain.toString());
+							}
+							instance.setAttributeValue("chain", chainStrings);
+						}
+						break;
+					}
+				}
+				
+			}
+			catch (InvalidAttributeException | InvalidAttributeValueException e)
+			{
+				e.printStackTrace();
+			}
+		}
+		
+	}
+	
 	private GKInstance createNewReferenceGeneProduct(MySQLAdaptor adaptor, InstanceEdit instanceEdit, String accession) throws InvalidAttributeException, InvalidAttributeValueException
 	{
 		GKInstance referenceGeneProduct = new GKInstance(adaptor.getSchema().getClassByName(ReactomeJavaConstants.ReferenceGeneProduct));
@@ -284,14 +442,13 @@ public class UniprotUpdater
 	private void updateReferenceGeneProduct(MySQLAdaptor adaptor, GKInstance referenceGeneProduct, UniprotData data, InstanceEdit instanceEdit, String accession) throws Exception
 	{
 		// TODO: add code to check for duplicates.
-		// Update with other values from "data"...
-		
+		updateInstanceWithData(adaptor, referenceGeneProduct, data);
 		String isoformID = ""; //TODO: loop through isoforms of this refeference gene product.
-		updateIsoforms(adaptor, referenceGeneProduct, data.getIsoforms(), instanceEdit, accession, isoformID);
+		updateIsoforms(adaptor, referenceGeneProduct, data.getIsoforms(), instanceEdit, accession, isoformID, data);
 		
 	}
 	
-	private void updateIsoforms(MySQLAdaptor adaptor, GKInstance referenceGeneProduct, List<Isoform> isoforms, InstanceEdit instanceEdit, String accession, String isoformID) throws Exception
+	private void updateIsoforms(MySQLAdaptor adaptor, GKInstance referenceGeneProduct, List<Isoform> isoforms, InstanceEdit instanceEdit, String accession, String isoformID, UniprotData data) throws Exception
 	{
 		for (Isoform isoform : isoforms)
 		{
@@ -306,7 +463,7 @@ public class UniprotUpdater
 					{
 						if (((String)refIsoformFromDB.getAttributeValue(ReactomeJavaConstants.variantIdentifier)).equals(isoformID))
 						{
-							// update instance with values...
+							updateInstanceWithData(adaptor, refIsoformFromDB, data);
 						}
 					}
 				}

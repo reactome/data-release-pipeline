@@ -64,7 +64,7 @@ public class UniprotUpdater
 	 * @param referenceIsoforms - A map of ReferenceIsoforms objects, keyed by their VariantIdentifier (ReferenceIsoforms without an identifier should not be in this list).
 	 * @throws Exception 
 	 */
-	public void updateUniprotInstances(MySQLAdaptor adaptor, List<UniprotData> uniprotData, Map<String, GKInstance> referenceDNASequences, Map<String, GKInstance> referenceGeneProducts, Map<String, GKInstance> referenceIsoforms, InstanceEdit instanceEdit) throws Exception
+	public void updateUniprotInstances(MySQLAdaptor adaptor, List<UniprotData> uniprotData, Map<String, GKInstance> referenceDNASequences, Map<String, GKInstance> referenceGeneProducts, Map<String, GKInstance> referenceIsoforms, GKInstance instanceEdit) throws Exception
 	{
 		synchronized (UniprotUpdater.ensemblHSapiensRefDB)
 		{
@@ -402,7 +402,7 @@ public class UniprotUpdater
 		
 	}
 	
-	private GKInstance createNewReferenceGeneProduct(MySQLAdaptor adaptor, InstanceEdit instanceEdit, String accession) throws InvalidAttributeException, InvalidAttributeValueException
+	private GKInstance createNewReferenceGeneProduct(MySQLAdaptor adaptor, GKInstance instanceEdit, String accession) throws InvalidAttributeException, InvalidAttributeValueException
 	{
 		GKInstance referenceGeneProduct = new GKInstance(adaptor.getSchema().getClassByName(ReactomeJavaConstants.ReferenceGeneProduct));
 		referenceGeneProduct.setAttributeValue(ReactomeJavaConstants.created, instanceEdit);
@@ -412,7 +412,7 @@ public class UniprotUpdater
 		return referenceGeneProduct;
 	}
 
-	private GKInstance createNewReferenceDNASequence(MySQLAdaptor adaptor, InstanceEdit instanceEdit, List<String> flattenedGeneNames, String primaryGeneName, String ensemblGeneID) throws InvalidAttributeException, InvalidAttributeValueException
+	private GKInstance createNewReferenceDNASequence(MySQLAdaptor adaptor, GKInstance instanceEdit, List<String> flattenedGeneNames, String primaryGeneName, String ensemblGeneID) throws InvalidAttributeException, InvalidAttributeValueException
 	{
 		GKInstance newRefDNASequence = new GKInstance(adaptor.getSchema().getClassByName(ReactomeJavaConstants.ReferenceDNASequence));
 		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.identifier, ensemblGeneID);
@@ -425,7 +425,7 @@ public class UniprotUpdater
 		return newRefDNASequence;
 	}
 
-	private Long createNewReferenceIsoform(MySQLAdaptor adaptor, InstanceEdit instanceEdit, String accession, GKInstance referenceGeneProduct, String isoformID) throws InvalidAttributeException, InvalidAttributeValueException, Exception
+	private Long createNewReferenceIsoform(MySQLAdaptor adaptor, GKInstance instanceEdit, String accession, GKInstance referenceGeneProduct, String isoformID) throws InvalidAttributeException, InvalidAttributeValueException, Exception
 	{
 		Long dbID;
 		GKInstance referenceIsoform = new GKInstance(adaptor.getSchema().getClassByName(ReactomeJavaConstants.ReferenceIsoform));
@@ -439,7 +439,7 @@ public class UniprotUpdater
 		return dbID;
 	}
 
-	private void updateReferenceGeneProduct(MySQLAdaptor adaptor, GKInstance referenceGeneProduct, UniprotData data, InstanceEdit instanceEdit, String accession) throws Exception
+	private void updateReferenceGeneProduct(MySQLAdaptor adaptor, GKInstance referenceGeneProduct, UniprotData data, GKInstance instanceEdit, String accession) throws Exception
 	{
 		// TODO: add code to check for duplicates.
 		updateInstanceWithData(adaptor, referenceGeneProduct, data);
@@ -448,7 +448,7 @@ public class UniprotUpdater
 		
 	}
 	
-	private void updateIsoforms(MySQLAdaptor adaptor, GKInstance referenceGeneProduct, List<Isoform> isoforms, InstanceEdit instanceEdit, String accession, String isoformID, UniprotData data) throws Exception
+	private void updateIsoforms(MySQLAdaptor adaptor, GKInstance referenceGeneProduct, List<Isoform> isoforms, GKInstance instanceEdit, String accession, String isoformID, UniprotData data) throws Exception
 	{
 		for (Isoform isoform : isoforms)
 		{

@@ -1,8 +1,12 @@
 package org.reactome.release.uniprotupdate;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -12,11 +16,14 @@ import java.util.stream.Collectors;
 
 import org.gk.model.GKInstance;
 import org.gk.model.InstanceEdit;
+import org.gk.model.InstanceUtilities;
 import org.gk.model.ReactomeJavaConstants;
 import org.gk.persistence.MySQLAdaptor;
 import org.gk.persistence.MySQLAdaptor.AttributeQueryRequest;
+import org.gk.schema.GKSchemaAttribute;
 import org.gk.schema.InvalidAttributeException;
 import org.gk.schema.InvalidAttributeValueException;
+import org.reactome.release.common.database.InstanceEditUtils;
 import org.reactome.release.uniprotupdate.dataschema.Chain;
 import org.reactome.release.uniprotupdate.dataschema.Gene;
 import org.reactome.release.uniprotupdate.dataschema.Isoform;
@@ -232,11 +239,47 @@ public class UniprotUpdater
 								{
 									// log an error about mismatched isoform ID and accession.
 									System.out.println("Isoform ID "+ isoformID + " does not match Accession "+accession);
+									
+									// Update mismatched Isoforms
+									updateMismatchedIsoform(adaptor, isoformID, accession);
 								}
 							}
 						}
 					}
 				}
+			}
+		}
+	}
+
+	private void updateMismatchedIsoform(MySQLAdaptor adaptor, String isoformID, String accession) throws Exception
+	{
+		// Again, I really don't expect more than 1 to be returned, but still need to treat this as a collection.
+		@SuppressWarnings("unchecked")
+		Collection<GKInstance> isoformsFromDB = (Collection<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceIsoform, ReactomeJavaConstants.variantIdentifier, "=", isoformID);
+		List<GKInstance> allParents = new ArrayList<GKInstance>();
+		if (isoformsFromDB != null && !isoformsFromDB.isEmpty())
+		{
+			for (GKInstance isoformFromDB : isoformsFromDB)
+			{
+				// Get the current values for "isoformParent" for the isoform.
+				@SuppressWarnings("unchecked")
+				Collection<GKInstance> isoformParents = (Collection<GKInstance>) isoformFromDB.getAttributeValue(ReactomeJavaConstants.isoformParent);
+				if (isoformParents!=null && !isoformParents.isEmpty())
+				{
+					allParents.addAll(isoformParents);
+				}
+				// Get the ReferenceGeneProduct(s) by accession (probably should only return 1, but who knows? I don't think anything enforces RGPs to have unique accessions).
+				@SuppressWarnings("unchecked")
+				Collection<GKInstance> referenceGeneProducts = (Collection<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceGeneProduct, ReactomeJavaConstants.identifier, "=", accession);
+				if (referenceGeneProducts!=null && !referenceGeneProducts.isEmpty())
+				{
+					allParents.addAll(referenceGeneProducts);
+				}
+				// print a message. This was copied from the Perl implementation, but I do not think it is very clear. Need a better message!
+				System.out.println("Mismatched parent: "+isoformID+" ("+isoformFromDB.getDBID()+")\t"+accession);
+				// Now correct isoformParent
+				isoformFromDB.setAttributeValue(ReactomeJavaConstants.isoformParent, allParents);
+				adaptor.updateInstanceAttribute(isoformFromDB, ReactomeJavaConstants.isoformParent);
 			}
 		}
 	}
@@ -305,6 +348,7 @@ public class UniprotUpdater
 						{
 							// Using a list here because that's what fetchInstanceByAttribute returns but I honestly don't expect more than one result.
 							// It would be *very* weird if two different Species objects existed with the same name.
+							// TODO: Maybe introduce a cache for species, keyed by name. Might save a little time on looking things up in the database.
 							@SuppressWarnings("unchecked")
 							List<GKInstance> dataSpeciesInst = (List<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.Species, ReactomeJavaConstants.name, "=", speciesName);
 							Set<Long> speciesDBIDs = new HashSet<Long>();
@@ -351,8 +395,6 @@ public class UniprotUpdater
 						{
 							e.printStackTrace();
 						}
-						
-						
 						break;
 					}
 					case ReactomeJavaConstants.name:
@@ -404,6 +446,7 @@ public class UniprotUpdater
 							}
 							instance.setAttributeValue("chain", chainStrings);
 							adaptor.updateInstanceAttribute(instance, "chain");
+							// TODO: implement "update_chain_log" functionality.
 						}
 						break;
 					}
@@ -496,6 +539,42 @@ public class UniprotUpdater
 			{
 				// log a message about mismatches...
 				System.out.println("Isoform ID "+isoformID + " does not match with Accession "+accession);
+				// Update mismatched Isoforms
+				updateMismatchedIsoform(adaptor, isoformID, accession);
+			}
+		}
+	}
+	
+	public void deleteObsoleteInstances(MySQLAdaptor adaptor, String pathToUnreviewedUniprotIDsFile) throws Exception
+	{
+		// starting size for set determined by doing `wc -l uniprot-reviewed\:no.list`
+		Set<String> unreviewedUniprotIDs = Collections.synchronizedSet(new HashSet<String>(13000000));
+		
+		Files.readAllLines(Paths.get(pathToUnreviewedUniprotIDsFile)).parallelStream().forEach( line -> unreviewedUniprotIDs.add(line));
+		
+		@SuppressWarnings("unchecked")
+		Collection<GKInstance> allReferenceGeneProducts = (Collection<GKInstance>)adaptor.fetchInstancesByClass(ReactomeJavaConstants.ReferenceGeneProduct);
+		
+		for (GKInstance referenceGeneProduct : allReferenceGeneProducts)
+		{
+			String accession = (String) referenceGeneProduct.getAttributeValue(ReactomeJavaConstants.accession);
+			// If there's no variantIdentifier and the accession is NOT in the unreviewed UniprotIDs list, we can try to delete the ReferenceGeneProduct if it has no referrers.
+			if (referenceGeneProduct.getAttributeValue(ReactomeJavaConstants.variantIdentifier) == null && !unreviewedUniprotIDs.contains(accession));
+			{
+				@SuppressWarnings("unchecked")
+				Collection<GKSchemaAttribute> referringAttributes = (Collection<GKSchemaAttribute>) referenceGeneProduct.getSchemClass().getReferers();
+				int referrerCount = 0;
+				for (GKSchemaAttribute referringAttribute : referringAttributes)
+				{
+					@SuppressWarnings("unchecked")
+					Collection<GKInstance> referrers = (Collection<GKInstance>) referenceGeneProduct.getReferers(referringAttribute);
+					referrerCount += referrers.size();
+				}
+				if (referrerCount == 0)
+				{
+					System.out.println("ReferenceGeneProduct "+referenceGeneProduct.toString() + " has 0 referrers, no variantIdentifier, and is not in the unreviewed Uniprot IDs list, so it will be deleted.");
+					adaptor.deleteByDBID(referenceGeneProduct.getDBID());
+				}
 			}
 		}
 	}

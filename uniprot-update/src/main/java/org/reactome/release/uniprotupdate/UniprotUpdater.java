@@ -1,12 +1,13 @@
 package org.reactome.release.uniprotupdate;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -15,15 +16,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.gk.model.GKInstance;
-import org.gk.model.InstanceEdit;
-import org.gk.model.InstanceUtilities;
 import org.gk.model.ReactomeJavaConstants;
 import org.gk.persistence.MySQLAdaptor;
 import org.gk.persistence.MySQLAdaptor.AttributeQueryRequest;
 import org.gk.schema.GKSchemaAttribute;
 import org.gk.schema.InvalidAttributeException;
 import org.gk.schema.InvalidAttributeValueException;
-import org.reactome.release.common.database.InstanceEditUtils;
 import org.reactome.release.uniprotupdate.dataschema.Chain;
 import org.reactome.release.uniprotupdate.dataschema.Gene;
 import org.reactome.release.uniprotupdate.dataschema.Isoform;
@@ -38,6 +36,7 @@ import org.reactome.release.uniprotupdate.dataschema.UniprotData;
 public class UniprotUpdater
 {
 
+	private static final String CHAIN_CHANGE_LOG = "_chainChangeLog";
 	private static final String ENSEMBL_HOMO_SAPIENS_GENE = "ENSEMBL_Homo_sapiens_GENE";
 	private static final String HOMO_SAPIENS = "Homo sapiens";
 	// List of species names was taken from uniprot_xml2sql_isoform.pl:84
@@ -444,9 +443,11 @@ public class UniprotUpdater
 							{
 								chainStrings.add(chain.toString());
 							}
+							logChainChanges(adaptor, new HashSet<String>(chainStrings), instance);
 							instance.setAttributeValue("chain", chainStrings);
 							adaptor.updateInstanceAttribute(instance, "chain");
 							// TODO: implement "update_chain_log" functionality.
+							
 						}
 						break;
 					}
@@ -464,6 +465,46 @@ public class UniprotUpdater
 		
 	}
 	
+	private void logChainChanges(MySQLAdaptor adaptor, Set<String> newChains, GKInstance instance) throws InvalidAttributeException, Exception
+	{
+		@SuppressWarnings("unchecked")
+		Set<String> oldChains = (HashSet<String>) instance.getAttributeValuesList("chain");
+		boolean needsUpdate = false;
+		Date currentDate = new Date();
+		// Perl code was:
+		// my $t = localtime;
+		// my $date = $t->day . ' ' . $t->fullmonth . ' ' . $t->mday . ' ' . $t->year;
+		// See "Patterns for Formatting and Parsing" on this page: https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE LLLL dd yyyy");
+		String dateString = formatter.toFormat().format(currentDate);
+
+		String priorLog = (String) instance.getAttributeValue(CHAIN_CHANGE_LOG);
+		String logEntry = priorLog;
+		for (String oldChain : oldChains)
+		{
+			if (!newChains.contains(oldChain))
+			{
+				logEntry = logEntry + " ; " + oldChain + " for " + instance.getDBID() + " removed on "+dateString;
+				needsUpdate = true;
+			}
+		}
+		
+		for (String newChain : newChains)
+		{
+			if (!oldChains.contains(newChain))
+			{
+				logEntry = logEntry + " ; " + newChain + " for " + instance.getDBID() + " added on "+dateString;
+				needsUpdate = true;
+			}
+		}
+		
+		if (needsUpdate)
+		{
+			instance.setAttributeValue(CHAIN_CHANGE_LOG, logEntry);
+			adaptor.updateInstanceAttribute(instance, CHAIN_CHANGE_LOG);
+		}
+	}
+
 	private GKInstance createNewReferenceGeneProduct(MySQLAdaptor adaptor, GKInstance instanceEdit, String accession) throws InvalidAttributeException, InvalidAttributeValueException
 	{
 		GKInstance referenceGeneProduct = new GKInstance(adaptor.getSchema().getClassByName(ReactomeJavaConstants.ReferenceGeneProduct));
@@ -547,7 +588,7 @@ public class UniprotUpdater
 	
 	public void deleteObsoleteInstances(MySQLAdaptor adaptor, String pathToUnreviewedUniprotIDsFile) throws Exception
 	{
-		// starting size for set determined by doing `wc -l uniprot-reviewed\:no.list`
+		// starting size for set determined by `wc -l uniprot-reviewed\:no.list`
 		Set<String> unreviewedUniprotIDs = Collections.synchronizedSet(new HashSet<String>(13000000));
 		
 		Files.readAllLines(Paths.get(pathToUnreviewedUniprotIDsFile)).parallelStream().forEach( line -> unreviewedUniprotIDs.add(line));

@@ -25,10 +25,13 @@ public class UniprotUpdateStep extends ReleaseStep
 	@Override
 	public void executeStep(Properties props) throws Exception
 	{
-		String pathToUniprotFile = props.getProperty("pathToUnioprotFile");
+		String pathToUniprotFile = props.getProperty("pathToUniprotFile");
 		String pathToUnreviewedUniprotIDsFile = props.getProperty("pathToUnreviewedUniprotIDsFile");
 		MySQLAdaptor adaptor = getMySQLAdaptorFromProperties(props);
-		String personID = props.getProperty("personID"); 
+		String personID = props.getProperty("person.id"); 
+		
+		this.loadTestModeFromProperties(props);
+		
 		List<UniprotData> uniprotData = ProcessUniprotXML.getDataFromUniprotFile(pathToUniprotFile);
 		UniprotUpdater updater = new UniprotUpdater();
 		String creatorName = this.getClass().getName();
@@ -40,8 +43,18 @@ public class UniprotUpdateStep extends ReleaseStep
 		System.out.println(referenceGeneProducts.size() + " ReferenceGeneProducts mapped by Identifier.");
 		Map<String, GKInstance> referenceDNASequences = getIdentifierMappedCollectionOfType(adaptor, ReactomeJavaConstants.ReferenceDNASequence);
 		System.out.println(referenceDNASequences.size() + " ReferenceDNASequences mapped by Identifier.");
+		adaptor.startTransaction();
 		updater.updateUniprotInstances(adaptor, uniprotData, referenceDNASequences, referenceGeneProducts, referenceIsoforms, instanceEdit);
 		updater.deleteObsoleteInstances(adaptor, pathToUnreviewedUniprotIDsFile);
+		if (testMode)
+		{
+			adaptor.rollback();
+		}
+		else
+		{
+			//adaptor.commit();
+			adaptor.rollback();
+		}
 	}
 
 	private Map<String, GKInstance> getIdentifierMappedCollectionOfType(MySQLAdaptor adaptor, String reactomeClassName) throws Exception, InvalidAttributeException

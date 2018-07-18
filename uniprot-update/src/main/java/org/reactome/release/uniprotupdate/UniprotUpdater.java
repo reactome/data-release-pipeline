@@ -2,6 +2,9 @@ package org.reactome.release.uniprotupdate;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,22 +75,22 @@ public class UniprotUpdater
 	 */
 	public void updateUniprotInstances(MySQLAdaptor adaptor, List<UniprotData> uniprotData, Map<String, GKInstance> referenceDNASequences, Map<String, GKInstance> referenceGeneProducts, Map<String, GKInstance> referenceIsoforms, GKInstance instanceEdit) throws Exception
 	{
-		synchronized (UniprotUpdater.ensemblHSapiensRefDB)
+		synchronized (this)
 		{
 			// initialize if it's null.
 			if (UniprotUpdater.ensemblHSapiensRefDB == null)
 			{
 				@SuppressWarnings("unchecked")
-				List<GKInstance> refDBs = (List<GKInstance>)adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceDatabase, ReactomeJavaConstants.name, "=", ENSEMBL_HOMO_SAPIENS_GENE);
+				List<GKInstance> refDBs = new ArrayList<GKInstance>((Collection<GKInstance>)adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceDatabase, ReactomeJavaConstants.name, "=", ENSEMBL_HOMO_SAPIENS_GENE));
 				UniprotUpdater.ensemblHSapiensRefDB = refDBs.get(0);
 			}
 		}
-		synchronized (UniprotUpdater.humanSpecies)
+		synchronized (this)
 		{
 			if (UniprotUpdater.humanSpecies == null)
 			{
 				@SuppressWarnings("unchecked")
-				List<GKInstance> species = (List<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.species, ReactomeJavaConstants.name, "=", HOMO_SAPIENS);
+				List<GKInstance> species = new ArrayList<GKInstance>((Collection<GKInstance>)adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.Species, ReactomeJavaConstants.name, "=", HOMO_SAPIENS));
 				UniprotUpdater.humanSpecies = species.get(0);
 			}
 		}
@@ -119,19 +122,19 @@ public class UniprotUpdater
 					String primaryGeneName="";
 					
 					flattenedGeneNames = data.getFlattenedGeneNames();
-					if (flattenedGeneNames.size() > 0)
+					if (flattenedGeneNames != null && !flattenedGeneNames.isEmpty())
 					{
 						primaryGeneName = flattenedGeneNames.get(0);
 					}
 							
 					
 					// If there was no gene name marked as "primary", just take the first one in the list.
-					if (primaryGeneName.equals(""))
+					if (primaryGeneName.equals("") && flattenedGeneNames != null && !flattenedGeneNames.isEmpty())
 					{
 						primaryGeneName = flattenedGeneNames.get(0);
 					}
 					// Report when there are multiple gene names.
-					if (data.getGenes().size() > 0)
+					if (data.getGenes() != null && data.getGenes().size() > 0)
 					{
 						System.out.println("Accession " + data.getAccessions().toString() + "multiple gene names: " + geneNamesListToString(data.getGenes()));
 					}
@@ -147,100 +150,106 @@ public class UniprotUpdater
 					//		</dbReference>
 					// In this case, there are two different dbReference entities that refer to the same ENSEMBL Gene ID. So that's why I have added the .stream().distinct(...)
 					// to the for-loop.
-					for (String ensemblGeneID : data.getEnsembleGeneIDs().stream().distinct().collect(Collectors.toList()))
+					if (data.getEnsembleGeneIDs()!=null)
 					{
-						boolean modified = false;
-						// Check to see if the ENSEMBL ID (Remember: the XSL only selects for "Ensembl" gene names) is in the list of ReferenceDNASequences.
-						// String geneNameFromFile = name.getValue();
-						if (referenceDNASequences.containsKey(ensemblGeneID))
+						for (String ensemblGeneID : data.getEnsembleGeneIDs().stream().distinct().collect(Collectors.toList()))
 						{
-							
-							// If this instance already exists in the database, let's update it.
-							GKInstance referenceDNASequence = referenceDNASequences.get(ensemblGeneID);
-							GKInstance speciesFromDB = (GKInstance) referenceDNASequence.getAttributeValue(ReactomeJavaConstants.Species);
-							@SuppressWarnings("unchecked")
-							Set<String> speciesNamesFromDB = (Set<String>) speciesFromDB.getAttributeValuesList(ReactomeJavaConstants.name);
-							// The old Perl code forces the species to be changed if the one in the database does not match the one in the file.
-							if (!speciesNamesFromDB.contains(data.getScientificName()))
+							boolean modified = false;
+							// Check to see if the ENSEMBL ID (Remember: the XSL only selects for "Ensembl" gene names) is in the list of ReferenceDNASequences.
+							// String geneNameFromFile = name.getValue();
+							if (referenceDNASequences.containsKey(ensemblGeneID))
 							{
-								referenceDNASequence.setAttributeValue(ReactomeJavaConstants.species, humanSpecies);
-								adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.species);
-								modified = true;
-							}
-							
-							@SuppressWarnings("unchecked")
-							Set<String> geneNamesFromDB = (Set<String>)referenceDNASequence.getAttributeValuesList(ReactomeJavaConstants.geneName);
-							// The old Perl code adds the geneName from the file, if it's not already in the database.
-							
-							
-							// The old Perl code sets the reference database if it's not ENSEMBL_Homo_sapiens_GENE
-							if (!((String)((GKInstance)referenceDNASequence.getAttributeValue(ReactomeJavaConstants.referenceDatabase)).getAttributeValue(ReactomeJavaConstants.name)).equals(UniprotUpdater.ENSEMBL_HOMO_SAPIENS_GENE) )
-							{
-								referenceDNASequence.setAttributeValue(ReactomeJavaConstants.referenceDatabase, UniprotUpdater.ensemblHSapiensRefDB);
-								adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.referenceDatabase);
-								modified = true;
-							}
-							// if the instance was modified, attach a new InstanceEdit to the modified attribute.
-							if (modified)
-							{
-								referenceDNASequence.getAttributeValuesList(ReactomeJavaConstants.modified);
-								referenceDNASequence.addAttributeValue(ReactomeJavaConstants.modified, instanceEdit);
-								adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.modified);
-							}
-							
-
-						}
-						// if the gene ID was NOT in the ReferenceDNASequences map, we may need to add it to the database.
-						else
-						{
-
-							GKInstance newRefDNASequence = createNewReferenceDNASequence(adaptor, instanceEdit, flattenedGeneNames, primaryGeneName, ensemblGeneID);
-							Long newDBID = adaptor.storeInstance(newRefDNASequence);
-							System.out.println("New ReferenceDNASequence \""+newRefDNASequence.toString()+"\" with Gene ID "+ensemblGeneID+" has DB ID"+newDBID);
-						}
-						// For all species...
-						// Process the rest of the data - chains, isoforms...
-
-						// We need to query for ReferenceGeneProducts that have a specific identifier and are also in the "ENSEMBL - Human" reference database.
-						AttributeQueryRequest aqrIdentifier = adaptor.new AttributeQueryRequest(ReactomeJavaConstants.ReferenceGeneProduct, ReactomeJavaConstants.identifier, "=", accession);
-						AttributeQueryRequest aqrRefDB = adaptor.new AttributeQueryRequest(ReactomeJavaConstants.ReferenceGeneProduct, ReactomeJavaConstants.referenceDatabase, "=", UniprotUpdater.ensemblHSapiensRefDB);
-						List<AttributeQueryRequest> aqrList = Arrays.asList(aqrIdentifier, aqrRefDB);
-						@SuppressWarnings("unchecked")
-						List<GKInstance> refGeneProductsFromDB = (List<GKInstance>) adaptor._fetchInstance(aqrList);
-						// Update existing ReferenceGeneProduct
-						if (refGeneProductsFromDB.size() > 0)
-						{
-							for (GKInstance referenceGeneProduct : refGeneProductsFromDB)
-							{
-								if (!referenceGeneProduct.getSchemClass().isa(ReactomeJavaConstants.ReferenceIsoform))
+								
+								// If this instance already exists in the database, let's update it.
+								GKInstance referenceDNASequence = referenceDNASequences.get(ensemblGeneID);
+								GKInstance speciesFromDB = (GKInstance) referenceDNASequence.getAttributeValue(ReactomeJavaConstants.species);
+								@SuppressWarnings("unchecked")
+								Set<String> speciesNamesFromDB = new HashSet<String>((List<String>) speciesFromDB.getAttributeValuesList(ReactomeJavaConstants.name));
+								// The old Perl code forces the species to be changed if the one in the database does not match the one in the file.
+								if (!speciesNamesFromDB.contains(data.getScientificName()))
 								{
-									// TODO: Check for duplicates, see: uniprot_xml2sql_isoform.sql:434-438
-									updateReferenceGeneProduct(adaptor, referenceGeneProduct, data, instanceEdit, accession);
+									referenceDNASequence.setAttributeValue(ReactomeJavaConstants.species, humanSpecies);
+									adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.species);
+									modified = true;
 								}
-							}
-						}	
-						else
-						{
-							//create new RefGeneProd...
-							GKInstance referenceGeneProduct = createNewReferenceGeneProduct(adaptor, instanceEdit, accession);
-							Long newRefGeneProductDBID = adaptor.storeInstance(referenceGeneProduct);
-							updateInstanceWithData(adaptor, referenceGeneProduct, data);
-							// Now create new ReferenceIsoform for this ReferenceGeneProduct.
-							for (Isoform isoform : data.getIsoforms())
-							{
-								String isoformID = isoform.getIsoformID();
-								// Check to see if isoformID == accession - it should happen!
-								if (isoformID.contains(accession))
+								
+								@SuppressWarnings("unchecked")
+								Set<String> geneNamesFromDB = new HashSet<String>((List<String>)referenceDNASequence.getAttributeValuesList(ReactomeJavaConstants.geneName));
+								// The old Perl code adds the geneName from the file, if it's not already in the database.
+								
+								
+								// The old Perl code sets the reference database if it's not ENSEMBL_Homo_sapiens_GENE
+								if (!((String)((GKInstance)referenceDNASequence.getAttributeValue(ReactomeJavaConstants.referenceDatabase)).getAttributeValue(ReactomeJavaConstants.name)).equals(UniprotUpdater.ENSEMBL_HOMO_SAPIENS_GENE) )
 								{
-									createNewReferenceIsoform(adaptor, instanceEdit, accession, referenceGeneProduct, isoformID);
+									referenceDNASequence.setAttributeValue(ReactomeJavaConstants.referenceDatabase, UniprotUpdater.ensemblHSapiensRefDB);
+									adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.referenceDatabase);
+									modified = true;
 								}
-								else
+								// if the instance was modified, attach a new InstanceEdit to the modified attribute.
+								if (modified)
 								{
-									// log an error about mismatched isoform ID and accession.
-									System.out.println("Isoform ID "+ isoformID + " does not match Accession "+accession);
-									
-									// Update mismatched Isoforms
-									updateMismatchedIsoform(adaptor, isoformID, accession);
+									referenceDNASequence.getAttributeValuesList(ReactomeJavaConstants.modified);
+									referenceDNASequence.addAttributeValue(ReactomeJavaConstants.modified, instanceEdit);
+									adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.modified);
+								}
+								
+	
+							}
+							// if the gene ID was NOT in the ReferenceDNASequences map, we may need to add it to the database.
+							else
+							{
+	
+								GKInstance newRefDNASequence = createNewReferenceDNASequence(adaptor, instanceEdit, flattenedGeneNames, primaryGeneName, ensemblGeneID);
+								Long newDBID = adaptor.storeInstance(newRefDNASequence);
+								System.out.println("New ReferenceDNASequence \""+newRefDNASequence.toString()+"\" with Gene ID "+ensemblGeneID+" has DB ID"+newDBID);
+							}
+							// For all species...
+							// Process the rest of the data - chains, isoforms...
+	
+							// We need to query for ReferenceGeneProducts that have a specific identifier and are also in the "ENSEMBL - Human" reference database.
+							AttributeQueryRequest aqrIdentifier = adaptor.new AttributeQueryRequest(ReactomeJavaConstants.ReferenceGeneProduct, ReactomeJavaConstants.identifier, "=", accession);
+							AttributeQueryRequest aqrRefDB = adaptor.new AttributeQueryRequest(ReactomeJavaConstants.ReferenceGeneProduct, ReactomeJavaConstants.referenceDatabase, "=", UniprotUpdater.ensemblHSapiensRefDB);
+							List<AttributeQueryRequest> aqrList = Arrays.asList(aqrIdentifier, aqrRefDB);
+							@SuppressWarnings("unchecked")
+							List<GKInstance> refGeneProductsFromDB = new ArrayList<GKInstance>((Set<GKInstance>) adaptor._fetchInstance(aqrList));
+							// Update existing ReferenceGeneProduct
+							if (refGeneProductsFromDB.size() > 0)
+							{
+								for (GKInstance referenceGeneProduct : refGeneProductsFromDB)
+								{
+									if (!referenceGeneProduct.getSchemClass().isa(ReactomeJavaConstants.ReferenceIsoform))
+									{
+										// TODO: Check for duplicates, see: uniprot_xml2sql_isoform.sql:434-438
+										updateReferenceGeneProduct(adaptor, referenceGeneProduct, data, instanceEdit, accession);
+									}
+								}
+							}	
+							else
+							{
+								//create new RefGeneProd...
+								GKInstance referenceGeneProduct = createNewReferenceGeneProduct(adaptor, instanceEdit, accession);
+								Long newRefGeneProductDBID = adaptor.storeInstance(referenceGeneProduct);
+								updateInstanceWithData(adaptor, referenceGeneProduct, data);
+								// Now create new ReferenceIsoform for this ReferenceGeneProduct.
+								if (data.getIsoforms()!=null)
+								{
+									for (Isoform isoform : data.getIsoforms())
+									{
+										String isoformID = isoform.getIsoformID();
+										// Check to see if isoformID == accession - it should happen!
+										if (isoformID.contains(accession))
+										{
+											createNewReferenceIsoform(adaptor, instanceEdit, accession, referenceGeneProduct, isoformID);
+										}
+										else
+										{
+											// log an error about mismatched isoform ID and accession.
+											System.out.println("Isoform ID "+ isoformID + " does not match Accession "+accession);
+											
+											// Update mismatched Isoforms
+											updateMismatchedIsoform(adaptor, isoformID, accession);
+										}
+									}
 								}
 							}
 						}
@@ -254,7 +263,10 @@ public class UniprotUpdater
 	{
 		// Again, I really don't expect more than 1 to be returned, but still need to treat this as a collection.
 		@SuppressWarnings("unchecked")
-		Collection<GKInstance> isoformsFromDB = (Collection<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceIsoform, ReactomeJavaConstants.variantIdentifier, "=", isoformID);
+		Set<GKInstance> isoformsFromDB = (Set<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceIsoform, ReactomeJavaConstants.variantIdentifier, "=", isoformID);
+//		GKInstance isoformsFromDBTmp = (GKInstance) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceIsoform, ReactomeJavaConstants.variantIdentifier, "=", isoformID);
+//		Collection<GKInstance> isoformsFromDB = new ArrayList<GKInstance>();
+//		isoformsFromDB.add(isoformsFromDBTmp);
 		List<GKInstance> allParents = new ArrayList<GKInstance>();
 		if (isoformsFromDB != null && !isoformsFromDB.isEmpty())
 		{
@@ -262,14 +274,14 @@ public class UniprotUpdater
 			{
 				// Get the current values for "isoformParent" for the isoform.
 				@SuppressWarnings("unchecked")
-				Collection<GKInstance> isoformParents = (Collection<GKInstance>) isoformFromDB.getAttributeValue(ReactomeJavaConstants.isoformParent);
+				Set<GKInstance> isoformParents = (Set<GKInstance>) isoformFromDB.getAttributeValue(ReactomeJavaConstants.isoformParent);
 				if (isoformParents!=null && !isoformParents.isEmpty())
 				{
 					allParents.addAll(isoformParents);
 				}
 				// Get the ReferenceGeneProduct(s) by accession (probably should only return 1, but who knows? I don't think anything enforces RGPs to have unique accessions).
 				@SuppressWarnings("unchecked")
-				Collection<GKInstance> referenceGeneProducts = (Collection<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceGeneProduct, ReactomeJavaConstants.identifier, "=", accession);
+				Set<GKInstance> referenceGeneProducts = (Set<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceGeneProduct, ReactomeJavaConstants.identifier, "=", accession);
 				if (referenceGeneProducts!=null && !referenceGeneProducts.isEmpty())
 				{
 					allParents.addAll(referenceGeneProducts);
@@ -335,7 +347,7 @@ public class UniprotUpdater
 					{
 						if (data.getSequenceLength()!=null)
 						{
-							instance.setAttributeValue(ReactomeJavaConstants.sequenceLength, data.getSequenceLength());
+							instance.setAttributeValue(ReactomeJavaConstants.sequenceLength, new Integer(data.getSequenceLength()));
 							adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.sequenceLength);
 						}
 						break;
@@ -349,7 +361,7 @@ public class UniprotUpdater
 							// It would be *very* weird if two different Species objects existed with the same name.
 							// TODO: Maybe introduce a cache for species, keyed by name. Might save a little time on looking things up in the database.
 							@SuppressWarnings("unchecked")
-							List<GKInstance> dataSpeciesInst = (List<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.Species, ReactomeJavaConstants.name, "=", speciesName);
+							List<GKInstance> dataSpeciesInst = new ArrayList<GKInstance>((Set<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.Species, ReactomeJavaConstants.name, "=", speciesName));
 							Set<Long> speciesDBIDs = new HashSet<Long>();
 							for (GKInstance inst : dataSpeciesInst)
 							{
@@ -358,7 +370,8 @@ public class UniprotUpdater
 							GKInstance speciesInst = (GKInstance) instance.getAttributeValue(ReactomeJavaConstants.species);
 							// The list of Species that we got by looking up the name from "data" does not contain the Species DB ID on the current instance. 
 							// This means we need to update the instance to use the one from the input.
-							if (!speciesDBIDs.contains(speciesInst.getDBID()))
+							// does it make sense in the data model for speciesInst to be null?
+							if (speciesInst!=null && !speciesDBIDs.contains(speciesInst.getDBID()))
 							{
 								instance.setAttributeValue(ReactomeJavaConstants.species, dataSpeciesInst.get(0));
 								adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.species);
@@ -465,12 +478,12 @@ public class UniprotUpdater
 		
 	}
 	
-	private void logChainChanges(MySQLAdaptor adaptor, Set<String> newChains, GKInstance instance) throws InvalidAttributeException, Exception
+	private void logChainChanges(MySQLAdaptor adaptor, Set<String> newChains, GKInstance instance) throws Exception
 	{
 		@SuppressWarnings("unchecked")
-		Set<String> oldChains = (HashSet<String>) instance.getAttributeValuesList("chain");
+		Set<String> oldChains = new HashSet<String>((List<String>) instance.getAttributeValuesList("chain"));
 		boolean needsUpdate = false;
-		Date currentDate = new Date();
+		LocalDateTime currentDate = LocalDateTime.now();
 		// Perl code was:
 		// my $t = localtime;
 		// my $date = $t->day . ' ' . $t->fullmonth . ' ' . $t->mday . ' ' . $t->year;
@@ -512,6 +525,7 @@ public class UniprotUpdater
 		referenceGeneProduct.setAttributeValue(ReactomeJavaConstants.modified, instanceEdit);
 		referenceGeneProduct.setAttributeValue(ReactomeJavaConstants.referenceDatabase, UniprotUpdater.ensemblHSapiensRefDB);
 		referenceGeneProduct.setAttributeValue(ReactomeJavaConstants.identifier, accession);
+		referenceGeneProduct.setDbAdaptor(adaptor);
 		return referenceGeneProduct;
 	}
 
@@ -525,6 +539,7 @@ public class UniprotUpdater
 		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.created, instanceEdit);
 		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.modified, null);
 		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.name, primaryGeneName);
+		newRefDNASequence.setDbAdaptor(adaptor);
 		return newRefDNASequence;
 	}
 
@@ -537,6 +552,7 @@ public class UniprotUpdater
 		referenceIsoform.setAttributeValue(ReactomeJavaConstants.referenceDatabase, UniprotUpdater.ensemblHSapiensRefDB);
 		referenceIsoform.setAttributeValue(ReactomeJavaConstants.isoformParent, referenceGeneProduct);
 		referenceIsoform.setAttributeValue(ReactomeJavaConstants.variantIdentifier, isoformID);
+		referenceIsoform.setDbAdaptor(adaptor);
 		// now update with the rest of the values in "data"...
 		dbID = adaptor.storeInstance(referenceIsoform);
 		return dbID;
@@ -553,35 +569,38 @@ public class UniprotUpdater
 	
 	private void updateIsoforms(MySQLAdaptor adaptor, GKInstance referenceGeneProduct, List<Isoform> isoforms, GKInstance instanceEdit, String accession, String isoformID, UniprotData data) throws Exception
 	{
-		for (Isoform isoform : isoforms)
+		if(isoforms != null)
 		{
-			@SuppressWarnings("unchecked")
-			List<GKInstance> refIsoformsFromDB = (List<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceIsoform, ReactomeJavaConstants.variantIdentifier, "=", isoform.getIsoformID());
-			if (isoformID.contains(accession))
+			for (Isoform isoform : isoforms)
 			{
-				// Update existing ReferenceIsoforms
-				if (refIsoformsFromDB.size() > 0)
+				@SuppressWarnings("unchecked")
+				List<GKInstance> refIsoformsFromDB = new ArrayList<GKInstance>((Set<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceIsoform, ReactomeJavaConstants.variantIdentifier, "=", isoform.getIsoformID()));
+				if (isoformID.contains(accession))
 				{
-					for (GKInstance refIsoformFromDB : refIsoformsFromDB)
+					// Update existing ReferenceIsoforms
+					if (refIsoformsFromDB.size() > 0)
 					{
-						if (((String)refIsoformFromDB.getAttributeValue(ReactomeJavaConstants.variantIdentifier)).equals(isoformID))
+						for (GKInstance refIsoformFromDB : refIsoformsFromDB)
 						{
-							updateInstanceWithData(adaptor, refIsoformFromDB, data);
+							if (((String)refIsoformFromDB.getAttributeValue(ReactomeJavaConstants.variantIdentifier)).equals(isoformID))
+							{
+								updateInstanceWithData(adaptor, refIsoformFromDB, data);
+							}
 						}
 					}
+					// Create a shiny *NEW* ReferenceIsoform!
+					else
+					{
+						createNewReferenceIsoform(adaptor, instanceEdit, accession, referenceGeneProduct, isoformID);
+					}
 				}
-				// Create a shiny *NEW* ReferenceIsoform!
 				else
 				{
-					createNewReferenceIsoform(adaptor, instanceEdit, accession, referenceGeneProduct, isoformID);
+					// log a message about mismatches...
+					System.out.println("Isoform ID "+isoformID + " does not match with Accession "+accession);
+					// Update mismatched Isoforms
+					updateMismatchedIsoform(adaptor, isoformID, accession);
 				}
-			}
-			else
-			{
-				// log a message about mismatches...
-				System.out.println("Isoform ID "+isoformID + " does not match with Accession "+accession);
-				// Update mismatched Isoforms
-				updateMismatchedIsoform(adaptor, isoformID, accession);
 			}
 		}
 	}

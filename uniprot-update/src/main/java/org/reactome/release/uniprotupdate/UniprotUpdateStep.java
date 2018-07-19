@@ -35,8 +35,9 @@ public class UniprotUpdateStep extends ReleaseStep
 		String personID = props.getProperty("person.id"); 
 		
 		this.loadTestModeFromProperties(props);
-		
-		List<UniprotData> uniprotData = ProcessUniprotXML.getDataFromUniprotFile(pathToUniprotFile);
+		boolean debugXML = Boolean.valueOf( props.getProperty("debugXML", "false") );
+				
+		List<UniprotData> uniprotData = ProcessUniprotXML.getDataFromUniprotFile(pathToUniprotFile, debugXML);
 		UniprotUpdater updater = new UniprotUpdater();
 		String creatorName = this.getClass().getName();
 		GKInstance instanceEdit = InstanceEditUtils.createInstanceEdit(adaptor, Long.valueOf(personID), creatorName );

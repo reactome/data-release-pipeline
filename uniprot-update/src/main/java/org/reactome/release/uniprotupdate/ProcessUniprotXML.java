@@ -51,7 +51,7 @@ public class ProcessUniprotXML
 	 * @throws TransformerConfigurationException
 	 * @throws FileNotFoundException
 	 */
-	public static List<UniprotData> getDataFromUniprotFile(String pathToFile) throws JAXBException, XMLStreamException, TransformerConfigurationException, FileNotFoundException
+	public static List<UniprotData> getDataFromUniprotFile(String pathToFile, boolean debugXML) throws JAXBException, XMLStreamException, TransformerConfigurationException, FileNotFoundException
 	{
 		// Starting size of ArrayList was determined by counting the number of "<entry>" lines in the input file.
 		// In fact, there were only about 530000 when I checked, but I figure it can't hurt to have a little extra room.
@@ -74,7 +74,12 @@ public class ProcessUniprotXML
 		marshaller.setProperty("jaxb.formatted.output", true);
 		marshaller.setProperty("jaxb.fragment", true);
 		
-		OutputStream debugOutputStream = new FileOutputStream("simplified_uniprot_sprot.xml");
+		OutputStream debugOutputStream = null; 
+		
+		if (debugXML)
+		{
+			debugOutputStream = new FileOutputStream("simplified_uniprot_sprot.xml");
+		}
 		long startTime = System.currentTimeMillis();
 		while (xsr.nextTag() == XMLStreamConstants.START_ELEMENT)
 		{
@@ -90,7 +95,10 @@ public class ProcessUniprotXML
 					JAXBResult result = new JAXBResult(unmarshallerContext);
 					transformer.transform(src, result);
 					// Try to also send to a file.
-					marshaller.marshal((UniprotData)result.getResult(), debugOutputStream);
+					if (debugXML)
+					{
+						marshaller.marshal((UniprotData)result.getResult(), debugOutputStream);
+					}
 					
 					// Add the result to the list.
 					uniprotData.add((UniprotData)result.getResult());
@@ -116,7 +124,7 @@ public class ProcessUniprotXML
 		}
 		long endTime = System.currentTimeMillis();
 		logger.info("{} records extracted in {} seconds.", uniprotData.size(), Duration.ofMillis(endTime - startTime).toString() );
-		
+		xsr.close();
 		return uniprotData;
 	}
 }

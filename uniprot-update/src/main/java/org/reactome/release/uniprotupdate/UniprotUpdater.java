@@ -1,17 +1,16 @@
 package org.reactome.release.uniprotupdate;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.FileInputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -145,7 +144,7 @@ public class UniprotUpdater
 						primaryGeneName = flattenedGeneNames.get(0);
 					}
 					// Report when there are multiple gene names.
-					if (data.getGenes() != null && data.getGenes().size() > 0)
+					if (data.getGenes() != null && data.getGenes().size() > 1)
 					{
 						referenceDNASequenceLog.info("Accession " + data.getAccessions().toString() + "multiple gene names: " + geneNamesListToString(data.getGenes()));
 					}
@@ -626,19 +625,33 @@ public class UniprotUpdater
 	
 	public void deleteObsoleteInstances(MySQLAdaptor adaptor, String pathToUnreviewedUniprotIDsFile) throws Exception
 	{
+		logger.info("Preparing to delete obsolete instances...");
 		// starting size for set determined by `wc -l uniprot-reviewed\:no.list`
-		Set<String> unreviewedUniprotIDs = Collections.synchronizedSet(new HashSet<String>(13000000));
+		Set<String> unreviewedUniprotIDs = new HashSet<String>(200000000);
+		logger.info("Loading file: {}",pathToUnreviewedUniprotIDsFile);
 		
-		Files.readAllLines(Paths.get(pathToUnreviewedUniprotIDsFile)).parallelStream().forEach( line -> unreviewedUniprotIDs.add(line));
+		FileInputStream fis = new FileInputStream(pathToUnreviewedUniprotIDsFile);
+		try(Scanner scanner = new Scanner(fis))
+		{
+			while (scanner.hasNextLine())
+			{
+				if (unreviewedUniprotIDs.size()%1000000 == 0)
+				{
+					logger.info("{} lines read", unreviewedUniprotIDs.size());
+				}
+				unreviewedUniprotIDs.add(scanner.nextLine());
+			}
+		}
 		
 		@SuppressWarnings("unchecked")
 		Collection<GKInstance> allReferenceGeneProducts = (Collection<GKInstance>)adaptor.fetchInstancesByClass(ReactomeJavaConstants.ReferenceGeneProduct);
-		
+		logger.info("{} ReferenceGeneProducts need to be checked.", allReferenceGeneProducts.size());
 		for (GKInstance referenceGeneProduct : allReferenceGeneProducts)
 		{
-			String accession = (String) referenceGeneProduct.getAttributeValue(ReactomeJavaConstants.accession);
+			String identifier = (String) referenceGeneProduct.getAttributeValue(ReactomeJavaConstants.identifier);
 			// If there's no variantIdentifier and the accession is NOT in the unreviewed UniprotIDs list, we can try to delete the ReferenceGeneProduct if it has no referrers.
-			if (referenceGeneProduct.getAttributeValue(ReactomeJavaConstants.variantIdentifier) == null && !unreviewedUniprotIDs.contains(accession));
+			// Why is the Perl code checking variantIdentifier? That's not even valid for ReferenceGeneProduct... Weird...
+			if (/*referenceGeneProduct.getAttributeValue(ReactomeJavaConstants.variantIdentifier) == null &&*/ !unreviewedUniprotIDs.contains(identifier));
 			{
 				@SuppressWarnings("unchecked")
 				Collection<GKSchemaAttribute> referringAttributes = (Collection<GKSchemaAttribute>) referenceGeneProduct.getSchemClass().getReferers();

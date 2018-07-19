@@ -10,7 +10,7 @@ public class Name
 {
 	private String type;
 
-	@XmlAttribute
+	@XmlAttribute(name="type")
 	public String getType()
 	{
 		return type;

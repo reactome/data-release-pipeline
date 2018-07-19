@@ -10,7 +10,7 @@ public class CommentText
 	private String type;
 	private String text;
 	
-	@XmlAttribute
+	@XmlAttribute(name="type")
 	public String getType()
 	{
 		return type;
@@ -20,7 +20,7 @@ public class CommentText
 		this.type = type;
 	}
 	
-	@XmlElement
+	@XmlElement(name="text")
 	public String getText()
 	{
 		return text;

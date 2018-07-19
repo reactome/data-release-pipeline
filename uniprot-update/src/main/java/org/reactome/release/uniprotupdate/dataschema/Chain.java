@@ -1,5 +1,6 @@
 package org.reactome.release.uniprotupdate.dataschema;
 
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
@@ -11,7 +12,8 @@ public class Chain
 	private String end;
 	private String position;
 	
-	@XmlElement
+	
+	@XmlAttribute(name="type")
 	public String getType()
 	{
 		return type;
@@ -22,7 +24,7 @@ public class Chain
 		this.type = type;
 	}
 
-	@XmlElement
+	@XmlAttribute(name="begin")
 	public String getBegin()
 	{
 		return begin;
@@ -33,7 +35,7 @@ public class Chain
 		this.begin = begin;
 	}
 	
-	@XmlElement
+	@XmlAttribute(name="end")
 	public String getEnd()
 	{
 		return end;
@@ -44,7 +46,7 @@ public class Chain
 		this.end = end;
 	}
 	
-	@XmlElement
+	@XmlAttribute(name="position")
 	public String getPosition()
 	{
 		return position;

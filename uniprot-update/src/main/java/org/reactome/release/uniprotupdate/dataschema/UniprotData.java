@@ -6,9 +6,12 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlList;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 @XmlRootElement(name="entry")
+@XmlType(name="entry", namespace="http://uniprot.org/uniprot")
 public class UniprotData
 {
 
@@ -53,7 +56,7 @@ public class UniprotData
 	{
 		// Don't allow the collection to be modified, since that would have
 		// an impact on the flattened gene list.
-		return Collections.unmodifiableCollection(genes);
+		return genes != null ? Collections.unmodifiableCollection(genes) : genes;
 	}
 
 	public void setGenes(List<Gene> genes)
@@ -172,7 +175,7 @@ public class UniprotData
 		this.ensembleGeneIDs = ensembleGeneIDs;
 	}
 
-	@XmlElement
+	@XmlElement(name="commentText")
 	public List<CommentText> getCommentTexts()
 	{
 		return commentTexts;
@@ -191,10 +194,12 @@ public class UniprotData
 	public String getFlattenedCommentsText()
 	{
 		StringBuilder flattenedCommentsText = new StringBuilder();
-		
-		for (CommentText comment : this.commentTexts)
+		if (this.commentTexts!=null)
 		{
-			flattenedCommentsText.append(comment.getType().toUpperCase()).append(" ").append(comment.getText()).append(" ");
+			for (CommentText comment : this.commentTexts)
+			{
+				flattenedCommentsText.append(comment.getType().toUpperCase()).append(" ").append(comment.getText()).append(" ");
+			}
 		}
 		// TODO: move the bulk of this code to the setter method for commentTexts?
 		return flattenedCommentsText.toString().trim();
@@ -203,10 +208,12 @@ public class UniprotData
 	public List<String> getFlattenedKeywords()
 	{
 		List<String> flattenedKeywords = new ArrayList<String>();
-		
-		for (Keyword keyword : this.keywords)
+		if (this.keywords!=null)
 		{
-			flattenedKeywords.add(keyword.getValue());
+			for (Keyword keyword : this.keywords)
+			{
+				flattenedKeywords.add(keyword.getKeyword());
+			}
 		}
 		// TODO: move the bulk of this code to the setter method for keywords?
 		return flattenedKeywords;

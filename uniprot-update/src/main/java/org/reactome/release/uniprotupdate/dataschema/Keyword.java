@@ -8,8 +8,9 @@ import javax.xml.bind.annotation.XmlValue;
 public class Keyword
 {
 	private String id;
-	private String value;
 	
+	private String keyword;
+
 	@XmlAttribute(name="id")
 	public String getId()
 	{
@@ -20,15 +21,15 @@ public class Keyword
 	{
 		this.id = id;
 	}
-	
+
 	@XmlValue
-	public String getValue()
+	public String getKeyword()
 	{
-		return value;
+		return keyword;
 	}
 	
-	public void setValue(String value)
+	public void setKeyword(String value)
 	{
-		this.value = value;
+		this.keyword = value;
 	}
 }

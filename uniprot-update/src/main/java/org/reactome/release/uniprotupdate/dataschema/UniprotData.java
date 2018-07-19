@@ -52,11 +52,11 @@ public class UniprotData
 	}
 
 	@XmlElement(name="gene")
-	public Collection<Gene> getGenes()
+	public List<Gene> getGenes()
 	{
 		// Don't allow the collection to be modified, since that would have
 		// an impact on the flattened gene list.
-		return genes != null ? Collections.unmodifiableCollection(genes) : genes;
+		return genes != null ? Collections.unmodifiableList(genes) : genes;
 	}
 
 	public void setGenes(List<Gene> genes)

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="info">
+	<Appenders>
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout pattern="%d{YYYY-MM-dd HH:mm:ss.SSS} [%t] %-5level %C - %msg%n" />
+		</Console>
+		<RollingFile name="LogFile" fileName="logs/Uniprot_Update-${date:MM-dd-yyyy_HH.mm.ss}.log" filePattern="logs/Uniprot_Update-%d{MM-dd-yyyy_HH.mm.ss}.log">
+			<PatternLayout>
+				<Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %C - %msg%n</Pattern>
+			</PatternLayout>
+				<Policies>
+					<OnStartupTriggeringPolicy />
+				</Policies>
+		</RollingFile>
+		<RollingFile name="uniprotRecordsLogFile" fileName="logs/Uniprot_Update_records-${date:MM-dd-yyyy_HH.mm.ss}.log" filePattern="logs/Uniprot_Update_records-%d{MM-dd-yyyy_HH.mm.ss}.log">
+			<PatternLayout>
+				<Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %C - %msg%n</Pattern>
+			</PatternLayout>
+				<Policies>
+					<OnStartupTriggeringPolicy />
+				</Policies>
+		</RollingFile>
+		<RollingFile name="sequencesLogFile" fileName="logs/Uniprot_Update_sequence-${date:MM-dd-yyyy_HH.mm.ss}.log" filePattern="logs/Uniprot_Update_sequence-%d{MM-dd-yyyy_HH.mm.ss}.log">
+			<PatternLayout>
+				<Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %C - %msg%n</Pattern>
+			</PatternLayout>
+				<Policies>
+					<OnStartupTriggeringPolicy />
+				</Policies>
+		</RollingFile>
+		<RollingFile name="referenceDNASequenceLogFile" fileName="logs/Uniprot_Update_referenceDNASequence-${date:MM-dd-yyyy_HH.mm.ss}.log" filePattern="logs/Uniprot_Update_referenceDNASequence-%d{MM-dd-yyyy_HH.mm.ss}.log">
+			<PatternLayout>
+				<Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %C - %msg%n</Pattern>
+			</PatternLayout>
+				<Policies>
+					<OnStartupTriggeringPolicy />
+				</Policies>
+		</RollingFile>
+	
+	</Appenders>
+	<Loggers>
+		<Logger name="uniprotRecordsLog" level="debug" additivity="false">
+			<AppenderRef ref="uniprotRecordsLogFile"/>
+		</Logger>
+		<Logger name="sequencesLog" level="debug" additivity="false">
+			<AppenderRef ref="sequencesLogFile"/>
+		</Logger>
+		<Logger name="referenceDNASequenceLog" level="debug" additivity="false">
+			<AppenderRef ref="referenceDNASequenceLogFile"/>
+		</Logger>
+		<Root level="debug">
+			<AppenderRef ref="Console" level="debug"/>
+			<AppenderRef ref="LogFile" level="info"/>
+		</Root>
+	</Loggers>
+</Configuration>

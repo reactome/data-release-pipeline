@@ -2,15 +2,12 @@ package org.reactome.release.uniprotupdate;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -18,7 +15,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.gk.model.GKInstance;
+import org.gk.model.InstanceDisplayNameGenerator;
 import org.gk.model.ReactomeJavaConstants;
 import org.gk.persistence.MySQLAdaptor;
 import org.gk.persistence.MySQLAdaptor.AttributeQueryRequest;
@@ -39,6 +39,12 @@ import org.reactome.release.uniprotupdate.dataschema.UniprotData;
 public class UniprotUpdater
 {
 
+	
+	private static final Logger logger = LogManager.getLogger();
+	private static final Logger uniprotRecordsLog = LogManager.getLogger("uniprotRecordsLog");
+	private static final Logger sequencesLog = LogManager.getLogger("sequencesLog");
+	private static final Logger referenceDNASequenceLog = LogManager.getLogger("referenceDNASequenceLog");
+	
 	private static final String CHAIN_CHANGE_LOG = "_chainChangeLog";
 	private static final String ENSEMBL_HOMO_SAPIENS_GENE = "ENSEMBL_Homo_sapiens_GENE";
 	private static final String HOMO_SAPIENS = "Homo sapiens";
@@ -96,10 +102,15 @@ public class UniprotUpdater
 		}
 		
 		Map<String,List<String>> secondaryAccessions = new HashMap<String, List<String>>();
-		
+		int i = 0;
 		for (UniprotData data : uniprotData)
 		{
-			// Should each pass through this loop be a single transactione? This might work well if this loop is run in parallel...
+			i++;
+			if (i%10000 == 0)
+			{
+				logger.info("{} Uniprot data records processed...",i);
+			}
+			// Should each pass through this loop be a single transaction? This might work well if this loop is run in parallel...
 			// first, let's make sure this piece of data is for a species that we can update via Uniprot Update.
 			if (speciesToUpdate.contains(data.getScientificName()))
 			{
@@ -136,7 +147,7 @@ public class UniprotUpdater
 					// Report when there are multiple gene names.
 					if (data.getGenes() != null && data.getGenes().size() > 0)
 					{
-						System.out.println("Accession " + data.getAccessions().toString() + "multiple gene names: " + geneNamesListToString(data.getGenes()));
+						referenceDNASequenceLog.info("Accession " + data.getAccessions().toString() + "multiple gene names: " + geneNamesListToString(data.getGenes()));
 					}
 					// For each ENSEMBL Gene ID that is in this chunk of Data. 
 					// Note: It could happen that the same Gene ID could be repeted more than once. For example: the source XML could contain:
@@ -201,7 +212,8 @@ public class UniprotUpdater
 	
 								GKInstance newRefDNASequence = createNewReferenceDNASequence(adaptor, instanceEdit, flattenedGeneNames, primaryGeneName, ensemblGeneID);
 								Long newDBID = adaptor.storeInstance(newRefDNASequence);
-								System.out.println("New ReferenceDNASequence \""+newRefDNASequence.toString()+"\" with Gene ID "+ensemblGeneID+" has DB ID"+newDBID);
+								InstanceDisplayNameGenerator.setDisplayName(newRefDNASequence);
+								referenceDNASequenceLog.info("New ReferenceDNASequence \""+newRefDNASequence.toString()+"\" with Gene ID "+ensemblGeneID+" has DB ID"+newDBID);
 							}
 							// For all species...
 							// Process the rest of the data - chains, isoforms...
@@ -223,12 +235,13 @@ public class UniprotUpdater
 										updateReferenceGeneProduct(adaptor, referenceGeneProduct, data, instanceEdit, accession);
 									}
 								}
-							}	
+							}
 							else
 							{
 								//create new RefGeneProd...
 								GKInstance referenceGeneProduct = createNewReferenceGeneProduct(adaptor, instanceEdit, accession);
 								Long newRefGeneProductDBID = adaptor.storeInstance(referenceGeneProduct);
+								InstanceDisplayNameGenerator.setDisplayName(referenceGeneProduct);
 								updateInstanceWithData(adaptor, referenceGeneProduct, data);
 								// Now create new ReferenceIsoform for this ReferenceGeneProduct.
 								if (data.getIsoforms()!=null)
@@ -244,7 +257,7 @@ public class UniprotUpdater
 										else
 										{
 											// log an error about mismatched isoform ID and accession.
-											System.out.println("Isoform ID "+ isoformID + " does not match Accession "+accession);
+											referenceDNASequenceLog.info("Isoform ID "+ isoformID + " does not match Accession "+accession);
 											
 											// Update mismatched Isoforms
 											updateMismatchedIsoform(adaptor, isoformID, accession);
@@ -274,10 +287,10 @@ public class UniprotUpdater
 			{
 				// Get the current values for "isoformParent" for the isoform.
 				@SuppressWarnings("unchecked")
-				Set<GKInstance> isoformParents = (Set<GKInstance>) isoformFromDB.getAttributeValue(ReactomeJavaConstants.isoformParent);
-				if (isoformParents!=null && !isoformParents.isEmpty())
+				GKInstance isoformParents = (GKInstance) isoformFromDB.getAttributeValue(ReactomeJavaConstants.isoformParent);
+				if (isoformParents!=null /*&& !isoformParents.isEmpty()*/)
 				{
-					allParents.addAll(isoformParents);
+					allParents.add(isoformParents);
 				}
 				// Get the ReferenceGeneProduct(s) by accession (probably should only return 1, but who knows? I don't think anything enforces RGPs to have unique accessions).
 				@SuppressWarnings("unchecked")
@@ -287,7 +300,7 @@ public class UniprotUpdater
 					allParents.addAll(referenceGeneProducts);
 				}
 				// print a message. This was copied from the Perl implementation, but I do not think it is very clear. Need a better message!
-				System.out.println("Mismatched parent: "+isoformID+" ("+isoformFromDB.getDBID()+")\t"+accession);
+				referenceDNASequenceLog.info("Mismatched parent: "+isoformID+" ("+isoformFromDB.getDBID()+")\t"+accession);
 				// Now correct isoformParent
 				isoformFromDB.setAttributeValue(ReactomeJavaConstants.isoformParent, allParents);
 				adaptor.updateInstanceAttribute(isoformFromDB, ReactomeJavaConstants.isoformParent);
@@ -391,7 +404,7 @@ public class UniprotUpdater
 							if (oldChecksum != null && oldChecksum.length() > 0 && data.getSequenceChecksum().equals(oldChecksum))
 							{
 								// The old Perl code prints a warning when the checksum changes.
-								System.out.println("Checksum has changed! DB ID: "+instance.getDBID() + "\tOld checksum: "+oldChecksum+"\tNew checksum:"+data.getSequenceChecksum());
+								sequencesLog.info("Checksum has changed! DB ID: "+instance.getDBID() + "\tOld checksum: "+oldChecksum+"\tNew checksum:"+data.getSequenceChecksum());
 								instance.setAttributeValue("isSequenceChanged", true);
 								instance.setAttributeValue("checksum", data.getSequenceChecksum());
 								adaptor.updateInstanceAttribute(instance, "isSequenceChanged");
@@ -492,12 +505,16 @@ public class UniprotUpdater
 		String dateString = formatter.toFormat().format(currentDate);
 
 		String priorLog = (String) instance.getAttributeValue(CHAIN_CHANGE_LOG);
+		if (priorLog == null)
+		{
+			priorLog = "";
+		}
 		String logEntry = priorLog;
 		for (String oldChain : oldChains)
 		{
 			if (!newChains.contains(oldChain))
 			{
-				logEntry = logEntry + " ; " + oldChain + " for " + instance.getDBID() + " removed on "+dateString;
+				logEntry = (logEntry.trim().equals("") ? "" : logEntry + " ; ") + oldChain + " for " + instance.getDBID().longValue() + " removed on "+dateString;
 				needsUpdate = true;
 			}
 		}
@@ -506,13 +523,14 @@ public class UniprotUpdater
 		{
 			if (!oldChains.contains(newChain))
 			{
-				logEntry = logEntry + " ; " + newChain + " for " + instance.getDBID() + " added on "+dateString;
+				logEntry = (logEntry.trim().equals("") ? "" : logEntry + " ; ") + newChain + " for " + instance.getDBID().longValue() + " added on "+dateString;
 				needsUpdate = true;
 			}
 		}
 		
 		if (needsUpdate)
 		{
+			sequencesLog.info("Chain differences: {} ; For: {}", logEntry, instance.toString());
 			instance.setAttributeValue(CHAIN_CHANGE_LOG, logEntry);
 			adaptor.updateInstanceAttribute(instance, CHAIN_CHANGE_LOG);
 		}
@@ -555,6 +573,7 @@ public class UniprotUpdater
 		referenceIsoform.setDbAdaptor(adaptor);
 		// now update with the rest of the values in "data"...
 		dbID = adaptor.storeInstance(referenceIsoform);
+		InstanceDisplayNameGenerator.setDisplayName(referenceIsoform);
 		return dbID;
 	}
 
@@ -597,7 +616,7 @@ public class UniprotUpdater
 				else
 				{
 					// log a message about mismatches...
-					System.out.println("Isoform ID "+isoformID + " does not match with Accession "+accession);
+					referenceDNASequenceLog.info("Isoform ID "+isoformID + " does not match with Accession "+accession);
 					// Update mismatched Isoforms
 					updateMismatchedIsoform(adaptor, isoformID, accession);
 				}
@@ -632,7 +651,7 @@ public class UniprotUpdater
 				}
 				if (referrerCount == 0)
 				{
-					System.out.println("ReferenceGeneProduct "+referenceGeneProduct.toString() + " has 0 referrers, no variantIdentifier, and is not in the unreviewed Uniprot IDs list, so it will be deleted.");
+					referenceDNASequenceLog.info("ReferenceGeneProduct "+referenceGeneProduct.toString() + " has 0 referrers, no variantIdentifier, and is not in the unreviewed Uniprot IDs list, so it will be deleted.");
 					adaptor.deleteByDBID(referenceGeneProduct.getDBID());
 				}
 			}

@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.gk.model.GKInstance;
 import org.gk.model.ReactomeJavaConstants;
 import org.gk.persistence.MySQLAdaptor;
@@ -22,6 +24,8 @@ import org.reactome.release.uniprotupdate.dataschema.UniprotData;
 public class UniprotUpdateStep extends ReleaseStep 
 {
 
+	private static final Logger logger = LogManager.getLogger();
+	
 	@Override
 	public void executeStep(Properties props) throws Exception
 	{
@@ -38,23 +42,26 @@ public class UniprotUpdateStep extends ReleaseStep
 		GKInstance instanceEdit = InstanceEditUtils.createInstanceEdit(adaptor, Long.valueOf(personID), creatorName );
 		
 		Map<String, GKInstance> referenceIsoforms = getIdentifierMappedCollectionOfType(adaptor, ReactomeJavaConstants.ReferenceIsoform);
-		System.out.println(referenceIsoforms.size() + " ReferenceIsoforms mapped by Identifier.");
+		logger.info("{} ReferenceIsoforms mapped by Identifier.", referenceIsoforms.size());
 		Map<String, GKInstance> referenceGeneProducts = getIdentifierMappedCollectionOfType(adaptor, ReactomeJavaConstants.ReferenceGeneProduct);
-		System.out.println(referenceGeneProducts.size() + " ReferenceGeneProducts mapped by Identifier.");
+		logger.info("{} ReferenceGeneProducts mapped by Identifier.", referenceGeneProducts.size());
 		Map<String, GKInstance> referenceDNASequences = getIdentifierMappedCollectionOfType(adaptor, ReactomeJavaConstants.ReferenceDNASequence);
-		System.out.println(referenceDNASequences.size() + " ReferenceDNASequences mapped by Identifier.");
+		logger.info("{} ReferenceDNASequences mapped by Identifier.", referenceDNASequences.size());
 		adaptor.startTransaction();
 		updater.updateUniprotInstances(adaptor, uniprotData, referenceDNASequences, referenceGeneProducts, referenceIsoforms, instanceEdit);
 		updater.deleteObsoleteInstances(adaptor, pathToUnreviewedUniprotIDsFile);
 		if (testMode)
 		{
+			logger.info("Test mode is set - Rolling back transaction...");
 			adaptor.rollback();
 		}
 		else
 		{
+			logger.info("Test mode is NOT set - Committing transaction...");
 			//adaptor.commit();
 			adaptor.rollback();
 		}
+		logger.info("Done.");
 	}
 
 	private Map<String, GKInstance> getIdentifierMappedCollectionOfType(MySQLAdaptor adaptor, String reactomeClassName) throws Exception, InvalidAttributeException

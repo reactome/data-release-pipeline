@@ -2,14 +2,18 @@ package org.reactome.release.uniprotupdate;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.OutputStream;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import javax.xml.bind.util.JAXBResult;
+import javax.xml.bind.util.JAXBSource;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -20,8 +24,11 @@ import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stax.StAXSource;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.reactome.release.uniprotupdate.dataschema.UniprotData;
 
 /**
@@ -31,7 +38,7 @@ import org.reactome.release.uniprotupdate.dataschema.UniprotData;
  */
 public class ProcessUniprotXML
 {
-
+	private static final Logger logger = LogManager.getLogger();
 	private static final String ENTRY_ELEMENT_NAME = "entry";
 	private static final String PATH_TO_XSL = "src/main/resources/uniprotXMLProcessor.xsl";
 
@@ -61,7 +68,13 @@ public class ProcessUniprotXML
 		Source xsl = new StreamSource(new FileInputStream(PATH_TO_XSL));
 		Transformer transformer = tf.newTransformer(xsl);
 		// ...AND we'll use JAXB to take the transformed output and turn it into an object!
-		JAXBContext unmarshaller = JAXBContext.newInstance(org.reactome.release.uniprotupdate.dataschema.UniprotData.class);
+		JAXBContext unmarshallerContext = JAXBContext.newInstance(org.reactome.release.uniprotupdate.dataschema.UniprotData.class);
+		JAXBContext marshallerContext = JAXBContext.newInstance(org.reactome.release.uniprotupdate.dataschema.UniprotData.class);
+		Marshaller marshaller = marshallerContext.createMarshaller();
+		marshaller.setProperty("jaxb.formatted.output", true);
+		marshaller.setProperty("jaxb.fragment", true);
+		
+		OutputStream debugOutputStream = new FileOutputStream("simplified_uniprot_sprot.xml");
 		long startTime = System.currentTimeMillis();
 		while (xsr.nextTag() == XMLStreamConstants.START_ELEMENT)
 		{
@@ -72,8 +85,13 @@ public class ProcessUniprotXML
 				{
 					// Create a new StAX source based on the current stream reader, which is pointing at "<entry>",
 					// and then pass that to the transformer, and then unmarshall that into a Java class (UniprotData).
-					JAXBResult result = new JAXBResult(unmarshaller);
-					transformer.transform(new StAXSource(xsr), result);
+					StAXSource src = new StAXSource(xsr);
+					
+					JAXBResult result = new JAXBResult(unmarshallerContext);
+					transformer.transform(src, result);
+					// Try to also send to a file.
+					marshaller.marshal((UniprotData)result.getResult(), debugOutputStream);
+					
 					// Add the result to the list.
 					uniprotData.add((UniprotData)result.getResult());
 				}
@@ -92,12 +110,12 @@ public class ProcessUniprotXML
 				{
 					long endTime = System.currentTimeMillis();
 					
-					System.out.println(uniprotData.size() + " records processed in " + Duration.ofMillis(endTime - startTime).toString() + " seconds.");
+					logger.info("{} records extracted in {} seconds.", uniprotData.size()   , Duration.ofMillis(endTime - startTime).toString() );
 				}
 			}
 		}
 		long endTime = System.currentTimeMillis();
-		System.out.println(uniprotData.size() + " records processed in " + Duration.ofMillis(endTime - startTime).toString() + " seconds.");
+		logger.info("{} records extracted in {} seconds.", uniprotData.size(), Duration.ofMillis(endTime - startTime).toString() );
 		
 		return uniprotData;
 	}

@@ -42,11 +42,11 @@ public class UniprotUpdateStep extends ReleaseStep
 		String creatorName = this.getClass().getName();
 		GKInstance instanceEdit = InstanceEditUtils.createInstanceEdit(adaptor, Long.valueOf(personID), creatorName );
 		
-		Map<String, GKInstance> referenceIsoforms = getIdentifierMappedCollectionOfType(adaptor, ReactomeJavaConstants.ReferenceIsoform);
+		Map<String, GKInstance> referenceIsoforms = getIdentifierMappedCollectionOfType(adaptor, ReactomeJavaConstants.ReferenceIsoform, "UniProt");
 		logger.info("{} ReferenceIsoforms mapped by Identifier.", referenceIsoforms.size());
-		Map<String, GKInstance> referenceGeneProducts = getIdentifierMappedCollectionOfType(adaptor, ReactomeJavaConstants.ReferenceGeneProduct);
+		Map<String, GKInstance> referenceGeneProducts = getIdentifierMappedCollectionOfType(adaptor, ReactomeJavaConstants.ReferenceGeneProduct, "UniProt");
 		logger.info("{} ReferenceGeneProducts mapped by Identifier.", referenceGeneProducts.size());
-		Map<String, GKInstance> referenceDNASequences = getIdentifierMappedCollectionOfType(adaptor, ReactomeJavaConstants.ReferenceDNASequence);
+		Map<String, GKInstance> referenceDNASequences = getIdentifierMappedCollectionOfType(adaptor, ReactomeJavaConstants.ReferenceDNASequence, null);
 		logger.info("{} ReferenceDNASequences mapped by Identifier.", referenceDNASequences.size());
 		adaptor.startTransaction();
 		updater.updateUniprotInstances(adaptor, uniprotData, referenceDNASequences, referenceGeneProducts, referenceIsoforms, instanceEdit);
@@ -65,7 +65,7 @@ public class UniprotUpdateStep extends ReleaseStep
 		logger.info("Done.");
 	}
 
-	private Map<String, GKInstance> getIdentifierMappedCollectionOfType(MySQLAdaptor adaptor, String reactomeClassName) throws Exception, InvalidAttributeException
+	private Map<String, GKInstance> getIdentifierMappedCollectionOfType(MySQLAdaptor adaptor, String reactomeClassName, String refDBName) throws Exception, InvalidAttributeException
 	{
 		@SuppressWarnings("unchecked")
 		Collection<GKInstance> instances = (Collection<GKInstance>)adaptor.fetchInstancesByClass(reactomeClassName);
@@ -77,7 +77,15 @@ public class UniprotUpdateStep extends ReleaseStep
 			{
 				// fast-load the attributes now so accessing them later will be faster.
 				adaptor.fastLoadInstanceAttributeValues(instance);
-				instanceMap.put(identifier, instance);
+				// Specify a ReferenceDatabase name that the instances should be constrained by.
+				if (refDBName!=null)
+				{
+					GKInstance refDB = (GKInstance) instance.getAttributeValue(ReactomeJavaConstants.referenceDatabase);
+					if (refDBName.equals(refDB.getAttributeValue(ReactomeJavaConstants.name)))
+					{
+						instanceMap.put(identifier, instance);
+					}
+				}
 			}
 		}
 		return instanceMap;

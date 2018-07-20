@@ -86,6 +86,10 @@ public class UniprotUpdateStep extends ReleaseStep
 						instanceMap.put(identifier, instance);
 					}
 				}
+				else
+				{
+					instanceMap.put(identifier, instance);
+				}
 			}
 		}
 		return instanceMap;

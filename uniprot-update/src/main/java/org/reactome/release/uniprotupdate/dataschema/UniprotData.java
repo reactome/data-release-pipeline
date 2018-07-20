@@ -15,7 +15,7 @@ import javax.xml.bind.annotation.XmlType;
 public class UniprotData
 {
 
-	private List<String> flattenedGeneNames;
+	private List<String> flattenedGeneNames = new ArrayList<String>();
 	private String primaryGeneName;
 	private List<String> accessions;
 	private List<Chain> chains;
@@ -65,37 +65,7 @@ public class UniprotData
 		// Only execute the gene name-flattening code when the genes list is actually set.
 		// This is the only place where the data structures that underly flattenedGeneNames
 		// can be modified.
-		int i = 0;
-		if (this.genes!=null)
-		{
-			for (Gene gene : this.getGenes())
-			{
-				for (Name name : gene.getNames())
-				{
-					this.flattenedGeneNames.add(name.getValue());
-					if (name.getType().equals("primary"))
-					{
-						this.primaryGeneName = name.getValue();
-					}
-					else
-					{
-						// only have to count positions until after primary gene name has been found.
-						if (this.primaryGeneName == null)
-						{
-							i ++;
-						}
-					}
-				}
-			}
-		}
-		// Move the primary gene name to the head of the array, if it's not already there.
-		if (i>0 && this.primaryGeneName != null)
-		{
-			// remove primary gene name from its current position.
-			this.flattenedGeneNames.remove(i);
-			// add it at the begining.
-			this.flattenedGeneNames.add(0, primaryGeneName);
-		}
+		
 	}
 
 	@XmlElement(name="isoform")
@@ -188,6 +158,38 @@ public class UniprotData
 	
 	public List<String> getFlattenedGeneNames()
 	{
+		int i = 0;
+		if (this.genes!=null)
+		{
+			for (Gene gene : this.getGenes())
+			{
+				for (Name name : gene.getNames())
+				{
+					this.flattenedGeneNames.add(name.getValue());
+					if (name.getType().equals("primary"))
+					{
+						this.primaryGeneName = name.getValue();
+					}
+					else
+					{
+						// only have to count positions until after primary gene name has been found.
+						if (this.primaryGeneName == null)
+						{
+							i ++;
+						}
+					}
+				}
+			}
+		}
+		// Move the primary gene name to the head of the array, if it's not already there.
+		if (i>0 && this.primaryGeneName != null)
+		{
+			// remove primary gene name from its current position.
+			this.flattenedGeneNames.remove(i);
+			// add it at the begining.
+			this.flattenedGeneNames.add(0, primaryGeneName);
+		}
+		
 		return this.flattenedGeneNames;
 	}
 	

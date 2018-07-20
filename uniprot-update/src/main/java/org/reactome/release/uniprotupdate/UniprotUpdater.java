@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -123,15 +124,24 @@ public class UniprotUpdater
 		
 		Map<String, List<String>> secondaryAccessions = new HashMap<String, List<String>>();
 		int i = 0;
+		long startTime = System.currentTimeMillis();
 		for (UniprotData data : uniprotData)
 		{
-			List<String> geneList = data.getEnsembleGeneIDs().stream().distinct().collect(Collectors.toList());
+			List<String> geneList = new ArrayList<String>();
+			if (data.getEnsembleGeneIDs()!=null)
+			{
+				geneList = data.getEnsembleGeneIDs().stream().distinct().collect(Collectors.toList());
+			}
 			List<GKInstance> referenceDNASequencesForThisUniprot = new ArrayList<GKInstance>(geneList.size());
 			
 			i++;
-			if (i % 10000 == 0)
+			long currentTime = System.currentTimeMillis();
+			//if (i % 10000 == 0)
+			if ( TimeUnit.MILLISECONDS.toSeconds(currentTime - startTime) > 30 )
 			{
-				logger.info("{} Uniprot data records processed...", i);
+				logger.info("{} Uniprot data records processed in the last {} seconds...", i, Duration.ofSeconds(TimeUnit.MILLISECONDS.toSeconds(currentTime - startTime)));
+				startTime = currentTime;
+				i = 0;
 			}
 			// Should each pass through this loop be a single transaction? This might work well if this loop is run in parallel...
 			// first, let's make sure this piece of data is for a species that we can update via Uniprot Update.
@@ -207,15 +217,23 @@ public class UniprotUpdater
 								// The old Perl code adds the geneName from the file, if it's not already in the
 								// database.
 								boolean modifiedGeneName = false;
-								for (String geneName : flattenedGeneNames)
+								if (flattenedGeneNames!=null && !flattenedGeneNames.isEmpty())
 								{
-									if (!geneNamesFromDB.contains(geneName))
+									for (String geneName : flattenedGeneNames)
 									{
-										referenceDNASequence.addAttributeValue(ReactomeJavaConstants.geneName, geneName);
-										modified = true;
-										modifiedGeneName = true;
+										if (!geneNamesFromDB.contains(geneName))
+										{
+											referenceDNASequence.addAttributeValue(ReactomeJavaConstants.geneName, geneName);
+											modified = true;
+											modifiedGeneName = true;
+										}
 									}
 								}
+								else
+								{
+									referenceDNASequenceLog.info("UniprotData with ENSEMBL Gene ID {} has empty/NULL flattenedGeneNames!", ensemblGeneID);
+								}
+								
 								if (modifiedGeneName)
 								{
 									adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.geneName);
@@ -397,7 +415,7 @@ public class UniprotUpdater
 			HttpGet get = new HttpGet(builder.build());
 			String queryResponse = queryENSEMBLForGeneID(get);
 			// According to the old Perl code, seq_region_name must match any of these: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y MT
-			Pattern validSeqRegionPatter = Pattern.compile(".* seq_region_name=\"(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|X|Y|MT)\" .*");
+			Pattern validSeqRegionPatter = Pattern.compile(".* seq_region_name=\"(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|X|Y|MT)\" .*", Pattern.MULTILINE);
 			Matcher m = validSeqRegionPatter.matcher(queryResponse);
 			if (m.matches())
 			{

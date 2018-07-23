@@ -11,6 +11,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -18,6 +19,7 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -35,7 +37,6 @@ import org.gk.model.GKInstance;
 import org.gk.model.InstanceDisplayNameGenerator;
 import org.gk.model.ReactomeJavaConstants;
 import org.gk.persistence.MySQLAdaptor;
-import org.gk.persistence.MySQLAdaptor.AttributeQueryRequest;
 import org.gk.schema.GKSchemaAttribute;
 import org.gk.schema.InvalidAttributeException;
 import org.gk.schema.InvalidAttributeValueException;
@@ -121,7 +122,51 @@ public class UniprotUpdater
 			}
 
 		}
-		
+		AtomicInteger totalEnsemblGeneCount = new AtomicInteger(0);
+		Set<String> genesOKWithENSEMBL = Collections.synchronizedSet(new HashSet<String>());
+		// 8 threads (my workstation has 8 cores, parallelStream defaults to 8 threads) and we start getting told "too many requests - please wait 2 seconds". This slows
+		// everything down, so we should try to send as many requests as we can without hitting the 15/second rate limit.
+		// I've determined experimentally that no matter how many threads try to make requests, the best rate I can get is 10 requests per second.
+		// It seems that with 5 threads, I can get 10 requests/second with almost no "please wait" responses.
+		System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "5");
+		final long startTimeEnsemblLookup = System.currentTimeMillis();
+		uniprotData.parallelStream().forEach( data -> {
+			if (data.getEnsembleGeneIDs()!=null && speciesToUpdate.contains(data.getScientificName()))
+			{
+				List<String> geneList = new ArrayList<String>();
+				geneList = data.getEnsembleGeneIDs().stream().distinct().collect(Collectors.toList());
+				for(String ensemblGeneID : geneList)
+				{
+					try
+					{
+						if (checkOKWithENSEMBL(ensemblGeneID))
+						{
+							genesOKWithENSEMBL.add(ensemblGeneID);
+						}
+						int amt = totalEnsemblGeneCount.getAndIncrement();
+						int size = genesOKWithENSEMBL.size();
+						if (amt % 500 == 0)
+						{
+							long currentTime = System.currentTimeMillis();
+							// unlikely, but it happened at least once during testing.
+							if (currentTime == startTimeEnsemblLookup)
+							{
+								currentTime += 1;
+							}
+							logger.info("{} genes were checked with ENSEMBL, {} were \"OK\"; query rate: {} per second", amt, size,(double)size / (double)((currentTime-startTimeEnsemblLookup)/1000.0));
+						}
+						
+					}
+					catch (URISyntaxException e)
+					{
+						e.printStackTrace();
+					}
+				}
+			}
+		});
+		long currentTimeEnsembl = System.currentTimeMillis();
+		logger.info("{} genes were checked with ENSEMBL, {} were \"OK\". Time spent: ", totalEnsemblGeneCount.get(), genesOKWithENSEMBL.size(), Duration.ofMillis(currentTimeEnsembl - startTimeEnsemblLookup).toMinutes());
+
 		Map<String, List<String>> secondaryAccessions = new HashMap<String, List<String>>();
 		int i = 0;
 		long startTime = System.currentTimeMillis();
@@ -261,7 +306,7 @@ public class UniprotUpdater
 							// if the gene ID was NOT in the ReferenceDNASequences map, we may need to add it to the database.
 							else
 							{
-								if (geneList.size() > 1 && !checkOKWithENSEMBL(ensemblGeneID))
+								if (geneList.size() > 1 && !genesOKWithENSEMBL.contains(ensemblGeneID) /*!checkOKWithENSEMBL(ensemblGeneID)*/)
 								{
 									referenceDNASequenceLog.info("{} is not a primary/canonical gene -- skipping creation of ReferenceDNASequence", ensemblGeneID);
 								}
@@ -414,12 +459,16 @@ public class UniprotUpdater
 		{
 			HttpGet get = new HttpGet(builder.build());
 			String queryResponse = queryENSEMBLForGeneID(get);
-			// According to the old Perl code, seq_region_name must match any of these: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y MT
-			Pattern validSeqRegionPatter = Pattern.compile(".* seq_region_name=\"(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|X|Y|MT)\" .*", Pattern.MULTILINE);
-			Matcher m = validSeqRegionPatter.matcher(queryResponse);
-			if (m.matches())
+			if (queryResponse != null)
 			{
-				isOK = true;
+				queryResponse = queryResponse.replaceAll("\n", "");
+				// According to the old Perl code, seq_region_name must match any of these: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y MT
+				Pattern validSeqRegionPatter = Pattern.compile(".* seq_region_name=\"(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|X|Y|MT)\" .*", Pattern.MULTILINE);
+				Matcher m = validSeqRegionPatter.matcher(queryResponse);
+				if (m.matches())
+				{
+					isOK = true;
+				}
 			}
 		}
 		catch (URISyntaxException e)
@@ -462,13 +511,23 @@ public class UniprotUpdater
 					if (result.getStatus() == HttpStatus.SC_OK)
 					{
 						String content = result.getResult().trim();
-						// TODO: Check content!
+						done = true;
 						return content;
-					} else if (result.getStatus() == HttpStatus.SC_BAD_REQUEST)
+					}
+					else if (result.getStatus() == HttpStatus.SC_BAD_REQUEST)
 					{
 						logger.trace("Got BAD_REQUEST reponse. This was the request that was sent: {}", get.toString());
+						done = true;
 					}
-					done = true;
+					else if (result.getResult() == null && result.isOkToRetry())
+					{
+						logger.trace("No result, status was {}, but it is OK to retry. Retrying...", result.getStatus());
+						done = false;
+					}
+					else
+					{
+						done = true;
+					}
 				}
 			}
 			catch (InterruptedException e)

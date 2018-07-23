@@ -2,9 +2,12 @@ package org.reactome.release.uniprotupdate;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -124,28 +127,69 @@ public class UniprotUpdater
 		}
 		AtomicInteger totalEnsemblGeneCount = new AtomicInteger(0);
 		Set<String> genesOKWithENSEMBL = Collections.synchronizedSet(new HashSet<String>());
+		
+		String ensemblGenesFileName = "ensemblGeneIDs.list";
+		boolean usePreexistingEnsemblGeneList = true;
+		// If the file already exists, load it into memory, into genesOKWithENSEMBL
+		if (Files.exists(Paths.get(ensemblGenesFileName)) && usePreexistingEnsemblGeneList )
+		{
+			Files.readAllLines(Paths.get(ensemblGenesFileName)).parallelStream().forEach(line -> genesOKWithENSEMBL.add(line));
+		}
+		int startingSize = genesOKWithENSEMBL.size();
+		// we'll write in append mode, just in case we encounter new Gene IDs that weren't in the file originally. 
+		FileWriter fileWriter = new FileWriter(ensemblGenesFileName, true);
 		// 8 threads (my workstation has 8 cores, parallelStream defaults to 8 threads) and we start getting told "too many requests - please wait 2 seconds". This slows
 		// everything down, so we should try to send as many requests as we can without hitting the 15/second rate limit.
 		// I've determined experimentally that no matter how many threads try to make requests, the best rate I can get is 10 requests per second.
 		// It seems that with 5 threads, I can get 10 requests/second with almost no "please wait" responses.
 		System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "5");
 		final long startTimeEnsemblLookup = System.currentTimeMillis();
-		uniprotData.parallelStream().forEach( data -> {
-			if (data.getEnsembleGeneIDs()!=null && speciesToUpdate.contains(data.getScientificName()))
+		List<String> geneBuffer = Collections.synchronizedList(new ArrayList<String>(1000));
+		uniprotData.parallelStream()
+					.filter(data ->  data.getEnsembleGeneIDs()!=null && data.getScientificName().equals(HOMO_SAPIENS))
+					.forEach( data -> {
+			List<String> geneList = new ArrayList<String>();
+			geneList = data.getEnsembleGeneIDs().stream().distinct().collect(Collectors.toList());
+			for(String ensemblGeneID : geneList)
 			{
-				List<String> geneList = new ArrayList<String>();
-				geneList = data.getEnsembleGeneIDs().stream().distinct().collect(Collectors.toList());
-				for(String ensemblGeneID : geneList)
+				try
 				{
-					try
+					// If the gene ID is not already in the set (could happen if you're using a pre-existing gene list).
+					// We'll assume that if it a Gene ID is in the list, it's OK. This *might* not be a very good assumption for Production (unless you know the list is fresh),
+					// but for testing purposes, it will probably speed things up greatly.
+					if (!genesOKWithENSEMBL.contains(ensemblGeneID))
 					{
+						// Check if the gene is "OK" with ENSEMBL. Here, "OK" means the response matches this regexp:
+						// .* seq_region_name=\"(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|X|Y|MT)\" .*
 						if (checkOKWithENSEMBL(ensemblGeneID))
 						{
 							genesOKWithENSEMBL.add(ensemblGeneID);
+							// If the buffer has > 1000 genes, write to file.
+							synchronized (geneBuffer)
+							{
+								geneBuffer.add(ensemblGeneID);
+								if (geneBuffer.size() >= 1000 )
+								{
+									logger.info("Dumping genes to file: {}",ensemblGenesFileName);
+									geneBuffer.stream().forEach(gene -> {
+										try
+										{
+											fileWriter.write(gene + "\n");
+										}
+										catch (IOException e)
+										{
+											e.printStackTrace();
+										}
+									});
+									// clear the buffer.
+									geneBuffer.clear();
+								}
+							}
+							
 						}
 						int amt = totalEnsemblGeneCount.getAndIncrement();
 						int size = genesOKWithENSEMBL.size();
-						if (amt % 500 == 0)
+						if (amt % 1000 == 0)
 						{
 							long currentTime = System.currentTimeMillis();
 							// unlikely, but it happened at least once during testing.
@@ -155,12 +199,12 @@ public class UniprotUpdater
 							}
 							logger.info("{} genes were checked with ENSEMBL, {} were \"OK\"; query rate: {} per second", amt, size,(double)size / (double)((currentTime-startTimeEnsemblLookup)/1000.0));
 						}
-						
 					}
-					catch (URISyntaxException e)
-					{
-						e.printStackTrace();
-					}
+					
+				}
+				catch (URISyntaxException e)
+				{
+					e.printStackTrace();
 				}
 			}
 		});

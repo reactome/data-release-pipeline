@@ -36,9 +36,25 @@
 					<OnStartupTriggeringPolicy />
 				</Policies>
 		</RollingFile>
-	
+		<RollingFile name="commLog" fileName="logs/Uniprot_Update_communication-${date:MM-dd-yyyy_HH.mm.ss}.log" filePattern="logs/Uniprot_Update_communication-%d{MM-dd-yyyy_HH.mm.ss}.log">
+			<PatternLayout>
+				<Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %C - %msg%n</Pattern>
+			</PatternLayout>
+				<Policies>
+					<OnStartupTriggeringPolicy />
+				</Policies>
+		</RollingFile>
 	</Appenders>
 	<Loggers>
+		<Logger name="org.apache.http.client.protocol.RequestAddCookies" level="warn" additivity="false">
+			<AppenderRef ref="commLog"/>
+		</Logger>
+		<Logger name="org.reactome.release.common.*" level="warn" additivity="false">
+			<AppenderRef ref="commLog"/>
+		</Logger>
+		<Logger name="org.reactome.util.ensembl.EnsemblServiceResponseProcessor" level="trace" additivity="false">
+			<AppenderRef ref="commLog"/>
+		</Logger>
 		<Logger name="uniprotRecordsLog" level="debug" additivity="false">
 			<AppenderRef ref="uniprotRecordsLogFile"/>
 		</Logger>

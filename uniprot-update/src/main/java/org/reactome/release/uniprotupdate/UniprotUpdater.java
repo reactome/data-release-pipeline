@@ -411,20 +411,7 @@ public class UniprotUpdater
 								{
 									for (Isoform isoform : data.getIsoforms())
 									{
-										String isoformID = isoform.getIsoformID();
-										// Check to see if isoformID == accession - it should happen!
-										if (isoformID.contains(accession))
-										{
-											createNewReferenceIsoform(adaptor, instanceEdit, accession, referenceGeneProduct, isoformID);
-										}
-										else
-										{
-											// log an error about mismatched isoform ID and accession.
-											referenceDNASequenceLog.info("Isoform ID " + isoformID + " does not match Accession " + accession);
-
-											// Update mismatched Isoforms
-											updateMismatchedIsoform(adaptor, isoformID, accession);
-										}
+										createOrUpdateIsoform(adaptor, instanceEdit, accession, referenceGeneProduct, isoform);
 									}
 								}
 							}
@@ -447,20 +434,7 @@ public class UniprotUpdater
 						{
 							for (Isoform isoform : data.getIsoforms())
 							{
-								String isoformID = isoform.getIsoformID();
-								// Check to see if isoformID == accession - it should happen!
-								if (isoformID.contains(accession))
-								{
-									createNewReferenceIsoform(adaptor, instanceEdit, accession, newRefGeneProduct, isoformID);
-								}
-								else
-								{
-									// log an error about mismatched isoform ID and accession.
-									referenceDNASequenceLog.info("Isoform ID " + isoformID + " does not match Accession " + accession);
-
-									// Update mismatched Isoforms
-									updateMismatchedIsoform(adaptor, isoformID, accession);
-								}
+								createOrUpdateIsoform(adaptor, instanceEdit, accession, newRefGeneProduct, isoform);
 							}
 						}
 						
@@ -487,6 +461,24 @@ public class UniprotUpdater
 					}
 				}
 			}
+		}
+	}
+
+	private void createOrUpdateIsoform(MySQLAdaptor adaptor, GKInstance instanceEdit, String accession, GKInstance referenceGeneProduct, Isoform isoform) throws InvalidAttributeException, InvalidAttributeValueException, Exception
+	{
+		String isoformID = isoform.getIsoformID();
+		// Check to see if isoformID == accession - it should happen!
+		if (isoformID.contains(accession))
+		{
+			createNewReferenceIsoform(adaptor, instanceEdit, accession, referenceGeneProduct, isoformID);
+		}
+		else
+		{
+			// log an error about mismatched isoform ID and accession.
+			referenceDNASequenceLog.info("Isoform ID " + isoformID + " does not match Accession " + accession);
+
+			// Update mismatched Isoforms
+			updateMismatchedIsoform(adaptor, isoformID, accession);
 		}
 	}
 

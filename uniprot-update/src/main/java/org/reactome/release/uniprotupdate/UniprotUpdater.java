@@ -194,8 +194,9 @@ public class UniprotUpdater
 				}
 			}
 		});
+		fileWriter.close();
 		long currentTimeEnsembl = System.currentTimeMillis();
-		logger.info("{} genes were checked with ENSEMBL, {} were \"OK\". Time spent: ", totalEnsemblGeneCount.get(), genesOKWithENSEMBL.size(), Duration.ofMillis(currentTimeEnsembl - startTimeEnsemblLookup).toMinutes());
+		logger.info("{} genes were checked with ENSEMBL, {} were \"OK\". Time spent: {}", totalEnsemblGeneCount.get(), genesOKWithENSEMBL.size(), Duration.ofMillis(currentTimeEnsembl - startTimeEnsemblLookup).toMinutes());
 
 		Map<String, List<String>> secondaryAccessions = new HashMap<String, List<String>>();
 		int i = 0;
@@ -211,7 +212,6 @@ public class UniprotUpdater
 			
 			i++;
 			long currentTime = System.currentTimeMillis();
-			//if (i % 10000 == 0)
 			if ( TimeUnit.MILLISECONDS.toSeconds(currentTime - startTime) > 30 )
 			{
 				logger.info("{} Uniprot data records processed in the last {} seconds...", i, Duration.ofSeconds(TimeUnit.MILLISECONDS.toSeconds(currentTime - startTime)));
@@ -269,7 +269,6 @@ public class UniprotUpdater
 						{
 							boolean modified = false;
 							// Check to see if the ENSEMBL ID (Remember: the XSL only selects for "Ensembl" gene names) is in the list of ReferenceDNASequences.
-							// String geneNameFromFile = name.getValue();
 							if (referenceDNASequences.containsKey(ensemblGeneID))
 							{
 								// If this instance already exists in the database, let's update it.
@@ -332,7 +331,7 @@ public class UniprotUpdater
 							// if the gene ID was NOT in the ReferenceDNASequences map, we may need to add it to the database.
 							else
 							{
-								if (geneList.size() > 1 && !genesOKWithENSEMBL.contains(ensemblGeneID) /*!checkOKWithENSEMBL(ensemblGeneID)*/)
+								if (geneList.size() > 1 && !genesOKWithENSEMBL.contains(ensemblGeneID))
 								{
 									referenceDNASequenceLog.info("{} is not a primary/canonical gene -- skipping creation of ReferenceDNASequence", ensemblGeneID);
 								}
@@ -345,35 +344,21 @@ public class UniprotUpdater
 									referenceDNASequenceLog.info("New ReferenceDNASequence \"" + newRefDNASequence.toString() + "\" with Gene ID " + ensemblGeneID + " has DB ID" + newDBID);
 								}
 							}
-							// For all species...
-							// Process the rest of the data - chains, isoforms...
 
-							// We need to query for ReferenceGeneProducts that have a specific identifier
-							// and are also in the "ENSEMBL - Human" reference database.
-//							AttributeQueryRequest aqrIdentifier = adaptor.new AttributeQueryRequest(ReactomeJavaConstants.ReferenceGeneProduct, ReactomeJavaConstants.identifier, "=", accession);
-//							AttributeQueryRequest aqrRefDB = adaptor.new AttributeQueryRequest(ReactomeJavaConstants.ReferenceGeneProduct, ReactomeJavaConstants.referenceDatabase, "=", UniprotUpdater.ensemblHSapiensRefDB);
-//							List<AttributeQueryRequest> aqrList = Arrays.asList(aqrIdentifier, aqrRefDB);
-//							@SuppressWarnings("unchecked")
-//							List<GKInstance> refGeneProductsFromDB = new ArrayList<GKInstance>((Set<GKInstance>) adaptor._fetchInstance(aqrList));
-							// Update existing ReferenceGeneProduct
-//							if (refGeneProductsFromDB.size() > 0)
 							if (referenceGeneProducts.containsKey(accession))
 							{
 								int instanceCount = 0;
-//								for (GKInstance referenceGeneProduct : refGeneProductsFromDB)
+								GKInstance referenceGeneProduct = referenceGeneProducts.get(accession);
+								if (!referenceGeneProduct.getSchemClass().isa(ReactomeJavaConstants.ReferenceIsoform))
 								{
-									GKInstance referenceGeneProduct = referenceGeneProducts.get(accession);
-									if (!referenceGeneProduct.getSchemClass().isa(ReactomeJavaConstants.ReferenceIsoform))
+									if (instanceCount < 1)
 									{
-										if (instanceCount < 1)
-										{
-											instanceCount++;
-											this.updateReferenceGeneProduct(adaptor, referenceGeneProduct, data, instanceEdit, accession);
-										}
-										else
-										{
-											referenceDNASequenceLog.info("Duplicate ReferenceGeneProduct instance for identifier {} - this instance will NOT be updated.", accession);
-										}
+										instanceCount++;
+										this.updateReferenceGeneProduct(adaptor, referenceGeneProduct, data, instanceEdit, accession);
+									}
+									else
+									{
+										referenceDNASequenceLog.info("Duplicate ReferenceGeneProduct instance for identifier {} - this instance will NOT be updated.", accession);
 									}
 								}
 							}
@@ -467,9 +452,6 @@ public class UniprotUpdater
 		// Again, I really don't expect more than 1 to be returned, but still need to treat this as a collection.
 		@SuppressWarnings("unchecked")
 		Set<GKInstance> isoformsFromDB = (Set<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceIsoform, ReactomeJavaConstants.variantIdentifier, "=", isoformID);
-//		GKInstance isoformsFromDBTmp = (GKInstance) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceIsoform, ReactomeJavaConstants.variantIdentifier, "=", isoformID);
-//		Collection<GKInstance> isoformsFromDB = new ArrayList<GKInstance>();
-//		isoformsFromDB.add(isoformsFromDBTmp);
 		List<GKInstance> allParents = new ArrayList<GKInstance>();
 		if (isoformsFromDB != null && !isoformsFromDB.isEmpty())
 		{
@@ -854,6 +836,10 @@ public class UniprotUpdater
 
 		Collection<GKSchemaAttribute> referringAttributes = null;
 
+		// TODO: The number of items in the file will be much larger than the number of ReferenceGeneProducts (120243849 vs 115769, at the time of writing 2018-07-31).
+		// So... instead of trying to load the whole file into memory, convert the ReferenceGeneProducts into a Map (keyed by identifier) and check the
+		// map for each line read - then you don't have to store the whole file in memory, just the current line!
+		// Will probably be faster. The file has 120243849 lines and Java is slowing down when trying to load each line into a Set (TreeSet or HashSet - they both perform poorly).
 		for (GKInstance referenceGeneProduct : allReferenceGeneProducts)
 		{
 			String identifier = (String) referenceGeneProduct.getAttributeValue(ReactomeJavaConstants.identifier);

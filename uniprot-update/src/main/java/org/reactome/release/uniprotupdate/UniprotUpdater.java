@@ -4,7 +4,6 @@ import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -21,19 +20,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.apache.http.HttpStatus;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.gk.model.GKInstance;
@@ -48,8 +39,6 @@ import org.reactome.release.uniprotupdate.dataschema.Gene;
 import org.reactome.release.uniprotupdate.dataschema.Isoform;
 import org.reactome.release.uniprotupdate.dataschema.Name;
 import org.reactome.release.uniprotupdate.dataschema.UniprotData;
-import org.reactome.util.ensembl.EnsemblServiceResponseProcessor;
-import org.reactome.util.ensembl.EnsemblServiceResponseProcessor.EnsemblServiceResult;
 
 /**
  * 
@@ -123,7 +112,6 @@ public class UniprotUpdater
 				List<GKInstance> refDBs = new ArrayList<GKInstance>((Collection<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceDatabase, ReactomeJavaConstants.name, "=", UNI_PROT));
 				UniprotUpdater.uniprotRefDB = refDBs.get(0);
 			}
-
 		}
 		AtomicInteger totalEnsemblGeneCount = new AtomicInteger(0);
 		Set<String> genesOKWithENSEMBL = Collections.synchronizedSet(new HashSet<String>());
@@ -185,7 +173,6 @@ public class UniprotUpdater
 									geneBuffer.clear();
 								}
 							}
-							
 						}
 						int amt = totalEnsemblGeneCount.getAndIncrement();
 						int size = genesOKWithENSEMBL.size();
@@ -200,7 +187,6 @@ public class UniprotUpdater
 							logger.info("{} genes were checked with ENSEMBL, {} were \"OK\"; query rate: {} per second", amt, size,(double)size / (double)((currentTime-startTimeEnsemblLookup)/1000.0));
 						}
 					}
-					
 				}
 				catch (URISyntaxException e)
 				{
@@ -286,7 +272,6 @@ public class UniprotUpdater
 							// String geneNameFromFile = name.getValue();
 							if (referenceDNASequences.containsKey(ensemblGeneID))
 							{
-
 								// If this instance already exists in the database, let's update it.
 								GKInstance referenceDNASequence = referenceDNASequences.get(ensemblGeneID);
 								referenceDNASequencesForThisUniprot.add(referenceDNASequence);
@@ -303,8 +288,7 @@ public class UniprotUpdater
 
 								@SuppressWarnings("unchecked")
 								Set<String> geneNamesFromDB = new HashSet<String>((List<String>) referenceDNASequence.getAttributeValuesList(ReactomeJavaConstants.geneName));
-								// The old Perl code adds the geneName from the file, if it's not already in the
-								// database.
+								// The old Perl code adds the geneName from the file, if it's not already in the database.
 								boolean modifiedGeneName = false;
 								if (flattenedGeneNames!=null && !flattenedGeneNames.isEmpty())
 								{
@@ -328,16 +312,14 @@ public class UniprotUpdater
 									adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.geneName);
 								}
 
-								// The old Perl code sets the reference database if it's not
-								// ENSEMBL_Homo_sapiens_GENE
+								// The old Perl code sets the reference database if it's not ENSEMBL_Homo_sapiens_GENE
 								if (!((String) ((GKInstance) referenceDNASequence.getAttributeValue(ReactomeJavaConstants.referenceDatabase)).getAttributeValue(ReactomeJavaConstants.name)).equals(UniprotUpdater.ENSEMBL_HOMO_SAPIENS_GENE))
 								{
 									referenceDNASequence.setAttributeValue(ReactomeJavaConstants.referenceDatabase, UniprotUpdater.ensemblHSapiensRefDB);
 									adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.referenceDatabase);
 									modified = true;
 								}
-								// if the instance was modified, attach a new InstanceEdit to the modified
-								// attribute.
+								// if the instance was modified, attach a new InstanceEdit to the modified attribute.
 								if (modified)
 								{
 									referenceDNASequence.getAttributeValuesList(ReactomeJavaConstants.modified);
@@ -404,7 +386,7 @@ public class UniprotUpdater
 								referenceGeneProduct.setAttributeValue(ReactomeJavaConstants.referenceGene, referenceDNASequencesForThisUniprot);
 								adaptor.updateInstanceAttribute(referenceGeneProduct, ReactomeJavaConstants.referenceGene);
 								InstanceDisplayNameGenerator.setDisplayName(referenceGeneProduct);
-								adaptor.txUpdateInstanceAttribute(referenceGeneProduct, ReactomeJavaConstants._displayName);
+								adaptor.updateInstanceAttribute(referenceGeneProduct, ReactomeJavaConstants._displayName);
 								uniprotRecordsLog.info("New UniProt: \"{}\" {} {}", referenceGeneProduct.toString(), accession, newRefGeneProductDBID);
 								// Now create new ReferenceIsoform for this ReferenceGeneProduct.
 								if (data.getIsoforms() != null)
@@ -420,7 +402,6 @@ public class UniprotUpdater
 				}
 				else // Not human, but still need to process it...
 				{
-
 					if (!referenceGeneProducts.containsKey(accession))
 					{
 						GKInstance newRefGeneProduct = this.createNewReferenceGeneProduct(adaptor, instanceEdit, accession);
@@ -437,7 +418,6 @@ public class UniprotUpdater
 								createOrUpdateIsoform(adaptor, instanceEdit, accession, newRefGeneProduct, isoform);
 							}
 						}
-						
 						uniprotRecordsLog.info("New UniProt: \"{}\" {} {}", newRefGeneProduct.toString(), accession, newRefGeneProduct.getDBID());
 					}
 					else
@@ -848,7 +828,7 @@ public class UniprotUpdater
 	{
 		logger.info("Preparing to delete obsolete instances...");
 		// starting size for set determined by `wc -l uniprot-reviewed\:no.list`
-		Set<String> unreviewedUniprotIDs = new HashSet<String>(200000000);
+		Set<String> unreviewedUniprotIDs = new TreeSet<String>();
 		logger.info("Loading file: {}", pathToUnreviewedUniprotIDsFile);
 
 		FileInputStream fis = new FileInputStream(pathToUnreviewedUniprotIDsFile);

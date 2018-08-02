@@ -810,63 +810,123 @@ public class UniprotUpdater
 	{
 		logger.info("Preparing to delete obsolete instances...");
 		// starting size for set determined by `wc -l uniprot-reviewed\:no.list`
-		Set<String> unreviewedUniprotIDs = new TreeSet<String>();
-		logger.info("Loading file: {}", pathToUnreviewedUniprotIDsFile);
+//		Set<String> unreviewedUniprotIDs = new TreeSet<String>();
 
-		FileInputStream fis = new FileInputStream(pathToUnreviewedUniprotIDsFile);
-
-		BufferedInputStream bis = new BufferedInputStream(fis);
-
-		try (Scanner scanner = new Scanner(bis))
-		{
-			while (scanner.hasNextLine())
-			{
-				if (unreviewedUniprotIDs.size() % 1000000 == 0)
-				{
-					logger.info("{} IDs read", unreviewedUniprotIDs.size());
-				}
-				unreviewedUniprotIDs.add(scanner.nextLine());
-			}
-		}
-		logger.info("{} IDs read", unreviewedUniprotIDs.size());
+//		try (Scanner scanner = new Scanner(bis))
+//		{
+//			while (scanner.hasNextLine())
+//			{
+//				if (unreviewedUniprotIDs.size() % 1000000 == 0)
+//				{
+//					logger.info("{} IDs read", unreviewedUniprotIDs.size());
+//				}
+//				unreviewedUniprotIDs.add(scanner.nextLine());
+//			}
+//		}
+//		logger.info("{} IDs read", unreviewedUniprotIDs.size());
 
 		@SuppressWarnings("unchecked")
 		Collection<GKInstance> allReferenceGeneProducts = (Collection<GKInstance>) adaptor.fetchInstancesByClass(ReactomeJavaConstants.ReferenceGeneProduct);
 		logger.info("{} ReferenceGeneProducts need to be checked.", allReferenceGeneProducts.size());
-
+		Map<String, GKInstance> referenceGeneProductMap = new HashMap<String, GKInstance>(allReferenceGeneProducts.size());
+		for (GKInstance referenceGeneProduct : allReferenceGeneProducts)
+		{
+			String identifier = (String) referenceGeneProduct.getAttributeValue(ReactomeJavaConstants.identifier);
+			if (identifier != null)
+			{
+				referenceGeneProductMap.put(identifier, referenceGeneProduct);
+			}
+		}
+		logger.info("{} ReferenceGeneProducts in map.", referenceGeneProductMap.size());
+		Set<String> identifiersInFileAndDB = new HashSet<String>();
+		List<GKInstance> identifiersToDelete = new ArrayList<GKInstance>();
 		Collection<GKSchemaAttribute> referringAttributes = null;
+		logger.info("Loading file: {}", pathToUnreviewedUniprotIDsFile);
+		FileInputStream fis = new FileInputStream(pathToUnreviewedUniprotIDsFile);
+		BufferedInputStream bis = new BufferedInputStream(fis);
+		try (Scanner scanner = new Scanner(bis))
+		{
+			while (scanner.hasNextLine())
+			{
+				String identifierFromFile = scanner.nextLine().trim();
+				if (referenceGeneProductMap.containsKey(identifierFromFile))
+				{
+					identifiersInFileAndDB.add(identifierFromFile);
+				}
+			}
+		}
+		logger.info("{} identifiers that are in the database AND in the unreviewed Uniprot identifier file.", identifiersInFileAndDB.size());
+		// Now that we know which identifiers *are* in the list of unreviewed Uniprot identifiers, 
+		// we need to look at all ReferenceGeneProducts *not* in that list. Might need to delete some of them.
+		List<String> identifiersToCheck = referenceGeneProductMap.keySet().parallelStream()
+														.filter(identifier -> !identifiersInFileAndDB.contains(identifier))
+														.collect(Collectors.toList());
+		logger.info("{} identifiers need to be checked for referrer count.", identifiersToCheck.size());
+		for (String identifier : identifiersToCheck)
+		{
+			GKInstance referenceGeneProduct = referenceGeneProductMap.get(identifier);
+			// ReferenceGeneProducts should all have the same referring attributes, so this
+			// collection should only be populated once.
+			if (referringAttributes == null)
+			{
+				referringAttributes = (Collection<GKSchemaAttribute>) referenceGeneProduct.getSchemClass().getReferers();
+			}
+
+			int referrerCount = 0;
+			for (GKSchemaAttribute referringAttribute : referringAttributes)
+			{
+				@SuppressWarnings("unchecked")
+				Collection<GKInstance> referrers = (Collection<GKInstance>) referenceGeneProduct.getReferers(referringAttribute);
+				referrerCount += referrers.size();
+			}
+			if (referrerCount == 0)
+			{
+				referenceDNASequenceLog.info("ReferenceGeneProduct " + referenceGeneProduct.toString() + " has 0 referrers, no variantIdentifier, and is not in the unreviewed Uniprot IDs list, so it will be deleted.");
+				//adaptor.deleteByDBID(referenceGeneProduct.getDBID());
+				identifiersToDelete.add(referenceGeneProduct);
+			}
+		}
+		// Now do the actual deletions
+		for (GKInstance referenceGeneProuductToDelete : identifiersToDelete)
+		{
+			adaptor.deleteByDBID(referenceGeneProuductToDelete.getDBID());
+		}
+		
 
 		// TODO: The number of items in the file will be much larger than the number of ReferenceGeneProducts (120243849 vs 115769, at the time of writing 2018-07-31).
 		// So... instead of trying to load the whole file into memory, convert the ReferenceGeneProducts into a Map (keyed by identifier) and check the
 		// map for each line read - then you don't have to store the whole file in memory, just the current line!
 		// Will probably be faster. The file has 120243849 lines and Java is slowing down when trying to load each line into a Set (TreeSet or HashSet - they both perform poorly).
-		for (GKInstance referenceGeneProduct : allReferenceGeneProducts)
-		{
-			String identifier = (String) referenceGeneProduct.getAttributeValue(ReactomeJavaConstants.identifier);
-			// If there's no variantIdentifier and the accession is NOT in the unreviewed UniprotIDs list, we can try to delete the ReferenceGeneProduct if it has no referrers.
-			// Why is the Perl code checking variantIdentifier? That's not even valid for ReferenceGeneProduct... Weird...
-			if (/*referenceGeneProduct.getAttributeValue(ReactomeJavaConstants.variantIdentifier) == null &&*/ !unreviewedUniprotIDs.contains(identifier))
-			{
-				// ReferenceGeneProducts should all have the same referring attributes, so this
-				// collection should only be populated once.
-				if (referringAttributes == null)
-				{
-					referringAttributes = (Collection<GKSchemaAttribute>) referenceGeneProduct.getSchemClass().getReferers();
-				}
-
-				int referrerCount = 0;
-				for (GKSchemaAttribute referringAttribute : referringAttributes)
-				{
-					@SuppressWarnings("unchecked")
-					Collection<GKInstance> referrers = (Collection<GKInstance>) referenceGeneProduct.getReferers(referringAttribute);
-					referrerCount += referrers.size();
-				}
-				if (referrerCount == 0)
-				{
-					referenceDNASequenceLog.info("ReferenceGeneProduct " + referenceGeneProduct.toString() + " has 0 referrers, no variantIdentifier, and is not in the unreviewed Uniprot IDs list, so it will be deleted.");
-					adaptor.deleteByDBID(referenceGeneProduct.getDBID());
-				}
-			}
-		}
+		// TODO: Idea for parallelization: instead of deleting objects in this loop, process these items in parallel and add the DB IDs of things to delete to a thread-safe list,
+		// then go through that list (serially) and delete things.
+		// TODO: Add a progress meter/counter for this loop.
+//		for (GKInstance referenceGeneProduct : allReferenceGeneProducts)
+//		{
+//			String identifier = (String) referenceGeneProduct.getAttributeValue(ReactomeJavaConstants.identifier);
+//			// If there's no variantIdentifier and the accession is NOT in the unreviewed UniprotIDs list, we can try to delete the ReferenceGeneProduct if it has no referrers.
+//			// Why is the Perl code checking variantIdentifier? That's not even valid for ReferenceGeneProduct... Weird...
+//			if (/*referenceGeneProduct.getAttributeValue(ReactomeJavaConstants.variantIdentifier) == null &&*/ !unreviewedUniprotIDs.contains(identifier))
+//			{
+//				// ReferenceGeneProducts should all have the same referring attributes, so this
+//				// collection should only be populated once.
+//				if (referringAttributes == null)
+//				{
+//					referringAttributes = (Collection<GKSchemaAttribute>) referenceGeneProduct.getSchemClass().getReferers();
+//				}
+//
+//				int referrerCount = 0;
+//				for (GKSchemaAttribute referringAttribute : referringAttributes)
+//				{
+//					@SuppressWarnings("unchecked")
+//					Collection<GKInstance> referrers = (Collection<GKInstance>) referenceGeneProduct.getReferers(referringAttribute);
+//					referrerCount += referrers.size();
+//				}
+//				if (referrerCount == 0)
+//				{
+//					referenceDNASequenceLog.info("ReferenceGeneProduct " + referenceGeneProduct.toString() + " has 0 referrers, no variantIdentifier, and is not in the unreviewed Uniprot IDs list, so it will be deleted.");
+//					adaptor.deleteByDBID(referenceGeneProduct.getDBID());
+//				}
+//			}
+//		}
 	}
 }

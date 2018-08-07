@@ -809,22 +809,6 @@ public class UniprotUpdater
 	public void deleteObsoleteInstances(MySQLAdaptor adaptor, String pathToUnreviewedUniprotIDsFile) throws Exception
 	{
 		logger.info("Preparing to delete obsolete instances...");
-		// starting size for set determined by `wc -l uniprot-reviewed\:no.list`
-//		Set<String> unreviewedUniprotIDs = new TreeSet<String>();
-
-//		try (Scanner scanner = new Scanner(bis))
-//		{
-//			while (scanner.hasNextLine())
-//			{
-//				if (unreviewedUniprotIDs.size() % 1000000 == 0)
-//				{
-//					logger.info("{} IDs read", unreviewedUniprotIDs.size());
-//				}
-//				unreviewedUniprotIDs.add(scanner.nextLine());
-//			}
-//		}
-//		logger.info("{} IDs read", unreviewedUniprotIDs.size());
-
 		@SuppressWarnings("unchecked")
 		Collection<GKInstance> allReferenceGeneProducts = (Collection<GKInstance>) adaptor.fetchInstancesByClass(ReactomeJavaConstants.ReferenceGeneProduct);
 		logger.info("{} ReferenceGeneProducts need to be checked.", allReferenceGeneProducts.size());
@@ -882,17 +866,16 @@ public class UniprotUpdater
 			if (referrerCount == 0)
 			{
 				referenceDNASequenceLog.info("ReferenceGeneProduct " + referenceGeneProduct.toString() + " has 0 referrers, no variantIdentifier, and is not in the unreviewed Uniprot IDs list, so it will be deleted.");
-				//adaptor.deleteByDBID(referenceGeneProduct.getDBID());
 				identifiersToDelete.add(referenceGeneProduct);
 			}
 		}
 		// Now do the actual deletions
+		logger.info("{} ReferenceGeneProducts will be deleted.", identifiersToDelete.size());
 		for (GKInstance referenceGeneProuductToDelete : identifiersToDelete)
 		{
 			adaptor.deleteByDBID(referenceGeneProuductToDelete.getDBID());
 		}
-		
-
+		logger.info("Finished deleting obsolete ReferenceGeneProducts with no referrers.");
 		// TODO: The number of items in the file will be much larger than the number of ReferenceGeneProducts (120243849 vs 115769, at the time of writing 2018-07-31).
 		// So... instead of trying to load the whole file into memory, convert the ReferenceGeneProducts into a Map (keyed by identifier) and check the
 		// map for each line read - then you don't have to store the whole file in memory, just the current line!
@@ -900,33 +883,5 @@ public class UniprotUpdater
 		// TODO: Idea for parallelization: instead of deleting objects in this loop, process these items in parallel and add the DB IDs of things to delete to a thread-safe list,
 		// then go through that list (serially) and delete things.
 		// TODO: Add a progress meter/counter for this loop.
-//		for (GKInstance referenceGeneProduct : allReferenceGeneProducts)
-//		{
-//			String identifier = (String) referenceGeneProduct.getAttributeValue(ReactomeJavaConstants.identifier);
-//			// If there's no variantIdentifier and the accession is NOT in the unreviewed UniprotIDs list, we can try to delete the ReferenceGeneProduct if it has no referrers.
-//			// Why is the Perl code checking variantIdentifier? That's not even valid for ReferenceGeneProduct... Weird...
-//			if (/*referenceGeneProduct.getAttributeValue(ReactomeJavaConstants.variantIdentifier) == null &&*/ !unreviewedUniprotIDs.contains(identifier))
-//			{
-//				// ReferenceGeneProducts should all have the same referring attributes, so this
-//				// collection should only be populated once.
-//				if (referringAttributes == null)
-//				{
-//					referringAttributes = (Collection<GKSchemaAttribute>) referenceGeneProduct.getSchemClass().getReferers();
-//				}
-//
-//				int referrerCount = 0;
-//				for (GKSchemaAttribute referringAttribute : referringAttributes)
-//				{
-//					@SuppressWarnings("unchecked")
-//					Collection<GKInstance> referrers = (Collection<GKInstance>) referenceGeneProduct.getReferers(referringAttribute);
-//					referrerCount += referrers.size();
-//				}
-//				if (referrerCount == 0)
-//				{
-//					referenceDNASequenceLog.info("ReferenceGeneProduct " + referenceGeneProduct.toString() + " has 0 referrers, no variantIdentifier, and is not in the unreviewed Uniprot IDs list, so it will be deleted.");
-//					adaptor.deleteByDBID(referenceGeneProduct.getDBID());
-//				}
-//			}
-//		}
 	}
 }

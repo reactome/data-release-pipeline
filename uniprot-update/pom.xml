@@ -15,7 +15,7 @@
 		<dependency>
 			<groupId>org.reactome.release</groupId>
 			<artifactId>release-common-lib</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>1.0.1</version>
 		</dependency>
 		<dependency>
 			<groupId>uk.ac.ebi.chebi.webapps.chebiWS.client</groupId>
@@ -91,7 +91,6 @@
 			<id>EBI_m2repo</id>
 			<url>https://www.ebi.ac.uk/~maven/m2repo/</url>
 		</repository>
-
 		<repository>
 			<id>nexus-ebi-repo</id>
 			<name>The EBI internal repository</name>

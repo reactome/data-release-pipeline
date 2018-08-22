@@ -168,7 +168,8 @@ public class DBObjectComparer
 							}
 							else
 							{
-								sb.append("Count mismatch for multi-valued attribute \"" + attrib.getName() + "\" Instance 1 has " + values1.size() + " elements but Instance 2 has " + values2.size() + " elements.\n");
+								sb.append("Count mismatch for multi-valued attribute \"" + attrib.getName() + "\" Instance 1 has " + values1.size() + " elements but Instance 2 has " + values2.size() + " elements.\n")
+								  .append("  Attributes for Instance 1: ").append(values1.toString()).append("\n").append("  Attributes for Instance 2: ").append(values2.toString()).append("\n");
 								count ++;
 							}
 						}
@@ -220,7 +221,8 @@ public class DBObjectComparer
 							}
 							else
 							{
-								sb.append("Count mismatch for multi-valued attribute \"" + attrib.getName() + "\"Instance 1 has " + values1.size() + " elements but Instance 2 has " + values2.size() + " elements.\n");
+								sb.append("Count mismatch for multi-valued attribute \"" + attrib.getName() + "\" Instance 1 has " + values1.size() + " elements but Instance 2 has " + values2.size() + " elements.\n")
+								  .append("  Attributes for Instance 1: ").append(values1.toString()).append("\n").append("  Attributes for Instance 2: ").append(values2.toString()).append("\n");
 								count ++;
 							}
 

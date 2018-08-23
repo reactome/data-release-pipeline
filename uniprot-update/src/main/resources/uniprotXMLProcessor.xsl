@@ -8,8 +8,7 @@
 		indent="yes" encoding="utf-8" media-type="text/plain" standalone="yes"
 		xalan:indent-amount="4" />
 
-	<xsl:variable name="featureTypes"
-		select="'|chain|peptide|propeptide|signal peptide|transit peptide|'" />
+	<xsl:variable name="featureTypes" select="'|chain|peptide|propeptide|signal peptide|transit peptide|'" />
 
 	<xsl:template match="/uniprot:uniprot">
 		<simplifiedUniprot>
@@ -19,6 +18,10 @@
 
 	<xsl:template match="uniprot:entry">
 		<entry>
+			<!-- The "name" element must be the first accession in the list, as per the old Perl code. -->
+			<accession>
+				<xsl:value-of select="./uniprot:name" />
+			</accession>
 			<xsl:for-each select="./uniprot:accession">
 				<accession>
 					<xsl:value-of select="." />
@@ -38,9 +41,21 @@
 
 	<xsl:template match="uniprot:protein">
 		<recommendedName>
-			<xsl:value-of
-				select="./uniprot:recommendedName/uniprot:fullName" />
+			<xsl:text>recommendedName: </xsl:text>
+			<xsl:value-of select="./uniprot:recommendedName/uniprot:fullName" />
+			<xsl:if test="./uniprot:recommendedName/uniprot:shortName">
+				<xsl:text> shortName: </xsl:text>
+				<xsl:value-of select="./uniprot:recommendedName/uniprot:shortName" />	
+			</xsl:if>
 		</recommendedName>
+		<xsl:for-each select="./uniprot:alternativeName">
+			<alternativeName>
+				<xsl:text>alternativeName: </xsl:text>
+				<xsl:value-of select="./uniprot:fullName" />
+				<xsl:text> shortName: </xsl:text>
+				<xsl:value-of select="./uniprot:shortName" />
+			</alternativeName>
+		</xsl:for-each>
 	</xsl:template>
 
 	<xsl:template match="uniprot:sequence">
@@ -65,11 +80,9 @@
 		</gene>
 	</xsl:template>
 
-	<xsl:template
-		match="uniprot:dbReference[contains(@type,'Ensembl')]">
+	<xsl:template match="uniprot:dbReference[contains(@type,'Ensembl')]">
 		<ensemblGeneID>
-			<xsl:value-of
-				select="./uniprot:property[@type='gene ID']/@value" />
+			<xsl:value-of select="./uniprot:property[@type='gene ID']/@value" />
 		</ensemblGeneID>
 	</xsl:template>
 
@@ -106,8 +119,7 @@
 		</xsl:element>
 	</xsl:template>
 
-	<xsl:template
-		match="uniprot:feature[@type='initiator methionine']">
+	<xsl:template match="uniprot:feature[@type='initiator methionine']">
 		<xsl:element name="chain">
 			<xsl:attribute name="type">
 				<xsl:value-of select="@type" />
@@ -120,8 +132,7 @@
 	</xsl:template>
 
 	<xsl:template match="uniprot:feature">
-		<xsl:if
-			test=" contains($featureTypes, concat('|', @type, '|') ) ">
+		<xsl:if test=" contains($featureTypes, concat('|', @type, '|') ) ">
 			<xsl:element name="chain">
 				<xsl:attribute name="type">
 					<xsl:value-of select="@type" />

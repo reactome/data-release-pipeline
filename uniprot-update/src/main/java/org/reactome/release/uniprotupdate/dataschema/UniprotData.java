@@ -28,6 +28,7 @@ public class UniprotData
 	private String sequenceChecksum;
 	private String scientificName;
 	private String recommendedName;
+	private List<String> alternativeNames;
 	
 	@XmlElement(name="accession")
 	public List<String> getAccessions()
@@ -219,5 +220,16 @@ public class UniprotData
 		}
 		// TODO: move the bulk of this code to the setter method for keywords?
 		return flattenedKeywords;
+	}
+
+	@XmlElement(name="alternativeName")
+	public List<String> getAlternativeNames()
+	{
+		return alternativeNames;
+	}
+
+	public void setAlternativeNames(List<String> alternativeNames)
+	{
+		this.alternativeNames = alternativeNames;
 	}
 }

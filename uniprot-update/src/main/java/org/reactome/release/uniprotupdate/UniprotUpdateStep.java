@@ -1,6 +1,8 @@
 package org.reactome.release.uniprotupdate;
 
+import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +26,8 @@ import org.reactome.release.uniprotupdate.dataschema.UniprotData;
 public class UniprotUpdateStep extends ReleaseStep 
 {
 
+	private static final String SAVEPOINT_NAME = "PRE_UNIPROT_UPDATE";
+	
 	private static final Logger logger = LogManager.getLogger();
 	
 	@Override
@@ -48,19 +52,22 @@ public class UniprotUpdateStep extends ReleaseStep
 		logger.info("{} ReferenceGeneProducts mapped by Identifier.", referenceGeneProducts.size());
 		Map<String, GKInstance> referenceDNASequences = getIdentifierMappedCollectionOfType(adaptor, ReactomeJavaConstants.ReferenceDNASequence, null);
 		logger.info("{} ReferenceDNASequences mapped by Identifier.", referenceDNASequences.size());
+		adaptor.executeQuery("SAVEPOINT " + SAVEPOINT_NAME , null);
 		adaptor.startTransaction();
 		updater.updateUniprotInstances(adaptor, uniprotData, referenceDNASequences, referenceGeneProducts, referenceIsoforms, instanceEdit);
+		// commit changes so far - deletion will be multithreaded, so each adaptor will need its own transaction.
+		adaptor.commit();
 		updater.deleteObsoleteInstances(adaptor, pathToUnreviewedUniprotIDsFile);
 		if (testMode)
 		{
 			logger.info("Test mode is set - Rolling back transaction...");
-			adaptor.rollback();
+			//adaptor.rollback();
+			adaptor.executeQuery("ROLLBACK TO " + SAVEPOINT_NAME , null);	
 		}
 		else
 		{
 			logger.info("Test mode is NOT set - Committing transaction...");
-			//adaptor.commit();
-			adaptor.rollback();
+			adaptor.commit();
 		}
 		logger.info("Done.");
 	}
@@ -69,29 +76,68 @@ public class UniprotUpdateStep extends ReleaseStep
 	{
 		@SuppressWarnings("unchecked")
 		Collection<GKInstance> instances = (Collection<GKInstance>)adaptor.fetchInstancesByClass(reactomeClassName);
-		Map<String, GKInstance> instanceMap = new HashMap<String, GKInstance>(instances.size());
-		for (GKInstance instance : instances)
+		Map<String, GKInstance> instanceMap = Collections.synchronizedMap(new HashMap<String, GKInstance>(instances.size()));
+		//for (GKInstance instance : instances)
+		Map<String, MySQLAdaptor> adaptorPool = Collections.synchronizedMap(new HashMap<String, MySQLAdaptor>());
+		
+		instances.parallelStream().forEach( instance -> 
 		{
-			String identifier = (String) instance.getAttributeValue(ReactomeJavaConstants.identifier);
-			if (identifier !=null && identifier.length() > 0)
+			try
 			{
-				// fast-load the attributes now so accessing them later will be faster.
-				adaptor.fastLoadInstanceAttributeValues(instance);
-				// Specify a ReferenceDatabase name that the instances should be constrained by.
-				if (refDBName!=null)
+				MySQLAdaptor tmpAdaptor;
+				if (adaptorPool.containsKey(Thread.currentThread().getName()))
 				{
-					GKInstance refDB = (GKInstance) instance.getAttributeValue(ReactomeJavaConstants.referenceDatabase);
-					if (refDBName.equals(refDB.getAttributeValue(ReactomeJavaConstants.name)))
-					{
-						instanceMap.put(identifier, instance);
-					}
+					tmpAdaptor = adaptorPool.get(Thread.currentThread().getName());
+					instance.setDbAdaptor(tmpAdaptor);
 				}
 				else
 				{
-					instanceMap.put(identifier, instance);
+						tmpAdaptor = new MySQLAdaptor( ((MySQLAdaptor)instance.getDbAdaptor()).getDBHost(), ((MySQLAdaptor)instance.getDbAdaptor()).getDBName(), ((MySQLAdaptor)instance.getDbAdaptor()).getDBUser(), ((MySQLAdaptor)instance.getDbAdaptor()).getDBPwd() ,((MySQLAdaptor)instance.getDbAdaptor()).getDBPort());
+						adaptorPool.put(Thread.currentThread().getName(), tmpAdaptor);
+						instance.setDbAdaptor(tmpAdaptor);
 				}
+				String identifier;
+				try
+				{
+					identifier = (String) instance.getAttributeValue(ReactomeJavaConstants.identifier);
+					if (identifier !=null && identifier.length() > 0)
+					{
+						// fast-load the attributes now so accessing them later will be faster.
+						// tmpAdaptor.fastLoadInstanceAttributeValues(instance);
+						// Specify a ReferenceDatabase name that the instances should be constrained by.
+						if (refDBName!=null)
+						{
+							GKInstance refDB = (GKInstance) instance.getAttributeValue(ReactomeJavaConstants.referenceDatabase);
+							if (refDB != null && refDBName.equals(refDB.getAttributeValue(ReactomeJavaConstants.name)))
+							{
+								instanceMap.put(identifier, instance);
+							}
+						}
+						else
+						{
+							instanceMap.put(identifier, instance);
+						}
+					}
+				} catch (Exception e)
+				{
+					e.printStackTrace();
+				}
+				// set back to the main adaptor
+				instance.setDbAdaptor(adaptor);
 			}
+			catch (SQLException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		});
+		
+		// Clean up other adaptors.
+		for (String k : adaptorPool.keySet())
+		{
+			adaptorPool.get(k).cleanUp();
 		}
+		
 		return instanceMap;
 	}
 

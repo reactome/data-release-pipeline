@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -20,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -196,11 +196,12 @@ public class UniprotUpdater
 		});
 		fileWriter.close();
 		long currentTimeEnsembl = System.currentTimeMillis();
-		logger.info("{} genes were checked with ENSEMBL, {} were \"OK\". Time spent: {}", totalEnsemblGeneCount.get(), genesOKWithENSEMBL.size(), Duration.ofMillis(currentTimeEnsembl - startTimeEnsemblLookup).toMinutes());
+		logger.info("{} genes were checked with ENSEMBL, {} were \"OK\". Time spent: {}", totalEnsemblGeneCount.get(), genesOKWithENSEMBL.size(), Duration.ofMillis(currentTimeEnsembl - startTimeEnsemblLookup).toString());
 
 		Map<String, List<String>> secondaryAccessions = new HashMap<String, List<String>>();
 		int i = 0;
 		long startTime = System.currentTimeMillis();
+		long totalUniprotRecords = 0;
 		for (UniprotData data : uniprotData)
 		{
 			List<String> geneList = new ArrayList<String>();
@@ -214,7 +215,8 @@ public class UniprotUpdater
 			long currentTime = System.currentTimeMillis();
 			if ( TimeUnit.MILLISECONDS.toSeconds(currentTime - startTime) > 30 )
 			{
-				logger.info("{} Uniprot data records processed in the last {} seconds...", i, Duration.ofSeconds(TimeUnit.MILLISECONDS.toSeconds(currentTime - startTime)));
+				totalUniprotRecords += i;
+				logger.info("{} uniprot records processed ", totalUniprotRecords);
 				startTime = currentTime;
 				i = 0;
 			}
@@ -521,7 +523,13 @@ public class UniprotUpdater
 					{
 						if (data.getRecommendedName() != null)
 						{
-							instance.setAttributeValue(ReactomeJavaConstants.description, data.getRecommendedName());
+							String alternativeNames = "";
+							if (data.getAlternativeNames() != null)
+							{
+								alternativeNames = data.getAlternativeNames().stream().reduce("", (x,y) -> { return x + " " + y; } );
+							}
+							String description = data.getRecommendedName() + " " + alternativeNames;
+							instance.setAttributeValue(ReactomeJavaConstants.description, description.trim());
 							adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.description);
 						}
 						break;
@@ -619,7 +627,8 @@ public class UniprotUpdater
 					{
 						if (data.getFlattenedGeneNames() != null && data.getFlattenedGeneNames().size() > 0)
 						{
-							instance.setAttributeValue(ReactomeJavaConstants.geneName, data.getFlattenedGeneNames());
+							// It could happen that there are duplicate gene names that come from the XML file, but we don't want to insert duplicate gene names.
+							instance.setAttributeValue(ReactomeJavaConstants.geneName, data.getFlattenedGeneNames().stream().distinct().collect(Collectors.toList()));
 							adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.geneName);
 						}
 						break;
@@ -806,6 +815,29 @@ public class UniprotUpdater
 		}
 	}
 
+	private Map<String, MySQLAdaptor> adaptorPool = Collections.synchronizedMap(new HashMap<String, MySQLAdaptor>());
+	private MySQLAdaptor getAdaptorForThread(MySQLAdaptor baseAdaptor, String threadIdentifier) throws SQLException
+	{
+		if (adaptorPool.containsKey(threadIdentifier))
+		{
+			return adaptorPool.get(threadIdentifier);
+		}
+		else
+		{
+			MySQLAdaptor adaptorForPool = new MySQLAdaptor(baseAdaptor.getDBHost(), baseAdaptor.getDBName(), baseAdaptor.getDBUser(), baseAdaptor.getDBPwd(), baseAdaptor.getDBPort());
+			adaptorPool.put(threadIdentifier, adaptorForPool);
+			return adaptorForPool;
+		}
+	}
+	private void cleanAdaptorPool() throws Exception
+	{
+		for (String k : adaptorPool.keySet())
+		{
+			adaptorPool.get(k).cleanUp();
+		}
+		this.adaptorPool.clear();
+	}
+	
 	public void deleteObsoleteInstances(MySQLAdaptor adaptor, String pathToUnreviewedUniprotIDsFile) throws Exception
 	{
 		logger.info("Preparing to delete obsolete instances...");
@@ -824,7 +856,7 @@ public class UniprotUpdater
 		logger.info("{} ReferenceGeneProducts in map.", referenceGeneProductMap.size());
 		Set<String> identifiersInFileAndDB = new HashSet<String>();
 		List<GKInstance> identifiersToDelete = new ArrayList<GKInstance>();
-		Collection<GKSchemaAttribute> referringAttributes = null;
+		//Collection<GKSchemaAttribute> referringAttributes = null;
 		logger.info("Loading file: {}", pathToUnreviewedUniprotIDsFile);
 		FileInputStream fis = new FileInputStream(pathToUnreviewedUniprotIDsFile);
 		BufferedInputStream bis = new BufferedInputStream(fis);
@@ -846,35 +878,78 @@ public class UniprotUpdater
 														.filter(identifier -> !identifiersInFileAndDB.contains(identifier))
 														.collect(Collectors.toList());
 		logger.info("{} identifiers need to be checked for referrer count.", identifiersToCheck.size());
-		for (String identifier : identifiersToCheck)
+		// TODO: this loop is slow. Multithread it somehow.
+		//for (String identifier : identifiersToCheck)
+		identifiersToCheck.parallelStream().forEach( identifier -> 
 		{
-			GKInstance referenceGeneProduct = referenceGeneProductMap.get(identifier);
-			// ReferenceGeneProducts should all have the same referring attributes, so this
-			// collection should only be populated once.
-			if (referringAttributes == null)
+			try
 			{
-				referringAttributes = (Collection<GKSchemaAttribute>) referenceGeneProduct.getSchemClass().getReferers();
-			}
-
-			int referrerCount = 0;
-			for (GKSchemaAttribute referringAttribute : referringAttributes)
-			{
+				MySQLAdaptor tmpAdaptor = this.getAdaptorForThread(adaptor, Thread.currentThread().getName());
+				GKInstance referenceGeneProduct = referenceGeneProductMap.get(identifier);
+				referenceGeneProduct.setDbAdaptor(tmpAdaptor);
+				// ReferenceGeneProducts should all have the same referring attributes, so this
+				// collection should only be populated once.
+	//			if (referringAttributes == null)
+	//			{
+	//				referringAttributes = (Collection<GKSchemaAttribute>) referenceGeneProduct.getSchemClass().getReferers();
+	//			}
 				@SuppressWarnings("unchecked")
-				Collection<GKInstance> referrers = (Collection<GKInstance>) referenceGeneProduct.getReferers(referringAttribute);
-				referrerCount += referrers.size();
+				Collection<GKSchemaAttribute> referringAttributes = (Collection<GKSchemaAttribute>) referenceGeneProduct.getSchemClass().getReferers();
+	
+				int referrerCount = 0;
+				for (GKSchemaAttribute referringAttribute : referringAttributes)
+				{
+					@SuppressWarnings("unchecked")
+					Collection<GKInstance> referrers = (Collection<GKInstance>) referenceGeneProduct.getReferers(referringAttribute);
+					referrerCount += referrers.size();
+				}
+				if (referrerCount == 0)
+				{
+					referenceDNASequenceLog.info("ReferenceGeneProduct " + referenceGeneProduct.toString() + " has 0 referrers, no variantIdentifier, and is not in the unreviewed Uniprot IDs list, so it will be deleted.");
+					identifiersToDelete.add(referenceGeneProduct);
+				}
+				referenceGeneProduct.setDbAdaptor(adaptor);
 			}
-			if (referrerCount == 0)
+			catch (Exception e)
 			{
-				referenceDNASequenceLog.info("ReferenceGeneProduct " + referenceGeneProduct.toString() + " has 0 referrers, no variantIdentifier, and is not in the unreviewed Uniprot IDs list, so it will be deleted.");
-				identifiersToDelete.add(referenceGeneProduct);
+				e.printStackTrace();
 			}
-		}
+		});
+		this.cleanAdaptorPool();
 		// Now do the actual deletions
 		logger.info("{} ReferenceGeneProducts will be deleted.", identifiersToDelete.size());
+		int deletedCount = 0;
+		int txnDeleteCount = 0;
+		adaptor.startTransaction();
 		for (GKInstance referenceGeneProuductToDelete : identifiersToDelete)
 		{
-			adaptor.deleteByDBID(referenceGeneProuductToDelete.getDBID());
+			try
+			{
+				// Deletion is SLOOOOOW... maybe have multiple threads to do deletion?
+				// ...tried that. It made things worse. :(
+				adaptor.deleteInstance(referenceGeneProuductToDelete);
+				if (txnDeleteCount == 1000)
+				{
+					adaptor.commit();
+					txnDeleteCount = 0;
+				}
+				else
+				{
+					txnDeleteCount++;
+				}
+				int count = deletedCount;
+				if (count % 1000 == 0)
+				{
+					logger.info("{} instances have been deleted.", count);
+				}
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
 		}
+		adaptor.commit();
+		logger.info("{} instances have been deleted.", deletedCount);
 		logger.info("Finished deleting obsolete ReferenceGeneProducts with no referrers.");
 		// TODO: The number of items in the file will be much larger than the number of ReferenceGeneProducts (120243849 vs 115769, at the time of writing 2018-07-31).
 		// So... instead of trying to load the whole file into memory, convert the ReferenceGeneProducts into a Map (keyed by identifier) and check the

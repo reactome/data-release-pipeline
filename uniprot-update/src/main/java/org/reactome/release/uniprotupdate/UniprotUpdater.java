@@ -57,7 +57,7 @@ public class UniprotUpdater
 	private static final String CHAIN_CHANGE_LOG = "_chainChangeLog";
 	private static final String ENSEMBL_HOMO_SAPIENS_GENE = "ENSEMBL_Homo_sapiens_GENE";
 	private static final String HOMO_SAPIENS = "Homo sapiens";
-	// List of species names was taken from uniprot_xml2sql_isoform.pl:84
+	// List of species names was taken from uniprot_xml2sql_isoform.pl:84 // TODO: move these values to a resource file.
 	private static final Set<String> speciesToUpdate = new HashSet<String>( Arrays.asList(HOMO_SAPIENS, "Mus musculus", "Rattus norvegicus",
 																			"Bos taurus", "Gallus gallus", "Drosophila melanogaster",
 																			"Caenorhabditis elegans", "Saccharomyces cerevisiae", "Schizosaccharomyces pombe",
@@ -124,79 +124,8 @@ public class UniprotUpdater
 			Files.readAllLines(Paths.get(ensemblGenesFileName)).parallelStream().forEach(line -> genesOKWithENSEMBL.add(line));
 		}
 		int startingSize = genesOKWithENSEMBL.size();
-		// we'll write in append mode, just in case we encounter new Gene IDs that weren't in the file originally. 
-		FileWriter fileWriter = new FileWriter(ensemblGenesFileName, true);
-		// 8 threads (my workstation has 8 cores, parallelStream defaults to 8 threads) and we start getting told "too many requests - please wait 2 seconds". This slows
-		// everything down, so we should try to send as many requests as we can without hitting the 15/second rate limit.
-		// I've determined experimentally that no matter how many threads try to make requests, the best rate I can get is 10 requests per second.
-		// It seems that with 5 threads, I can get 10 requests/second with almost no "please wait" responses.
-		System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "5");
-		final long startTimeEnsemblLookup = System.currentTimeMillis();
-		List<String> geneBuffer = Collections.synchronizedList(new ArrayList<String>(1000));
-		uniprotData.parallelStream()
-					.filter(data ->  data.getEnsembleGeneIDs()!=null && data.getScientificName().equals(HOMO_SAPIENS))
-					.forEach( data -> {
-			List<String> geneList = new ArrayList<String>();
-			geneList = data.getEnsembleGeneIDs().stream().distinct().collect(Collectors.toList());
-			for(String ensemblGeneID : geneList)
-			{
-				try
-				{
-					// If the gene ID is not already in the set (could happen if you're using a pre-existing gene list).
-					// We'll assume that if it a Gene ID is in the list, it's OK. This *might* not be a very good assumption for Production (unless you know the list is fresh),
-					// but for testing purposes, it will probably speed things up greatly.
-					if (!genesOKWithENSEMBL.contains(ensemblGeneID))
-					{
-						// Check if the gene is "OK" with ENSEMBL. Here, "OK" means the response matches this regexp:
-						// .* seq_region_name=\"(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|X|Y|MT)\" .*
-						if (ENSEMBLQueryUtil.checkOKWithENSEMBL(ensemblGeneID))
-						{
-							genesOKWithENSEMBL.add(ensemblGeneID);
-							// If the buffer has > 1000 genes, write to file.
-							synchronized (geneBuffer)
-							{
-								geneBuffer.add(ensemblGeneID);
-								if (geneBuffer.size() >= 1000 )
-								{
-									logger.info("Dumping genes to file: {}",ensemblGenesFileName);
-									geneBuffer.stream().forEach(gene -> {
-										try
-										{
-											fileWriter.write(gene + "\n");
-										}
-										catch (IOException e)
-										{
-											e.printStackTrace();
-										}
-									});
-									// clear the buffer.
-									geneBuffer.clear();
-								}
-							}
-						}
-						int amt = totalEnsemblGeneCount.getAndIncrement();
-						int size = genesOKWithENSEMBL.size();
-						if (amt % 1000 == 0)
-						{
-							long currentTime = System.currentTimeMillis();
-							// unlikely, but it happened at least once during testing.
-							if (currentTime == startTimeEnsemblLookup)
-							{
-								currentTime += 1;
-							}
-							logger.info("{} genes were checked with ENSEMBL, {} were \"OK\"; query rate: {} per second", amt, size,(double)size / (double)((currentTime-startTimeEnsemblLookup)/1000.0));
-						}
-					}
-				}
-				catch (URISyntaxException e)
-				{
-					e.printStackTrace();
-				}
-			}
-		});
-		fileWriter.close();
-		long currentTimeEnsembl = System.currentTimeMillis();
-		logger.info("{} genes were checked with ENSEMBL, {} were \"OK\". Time spent: {}", totalEnsemblGeneCount.get(), genesOKWithENSEMBL.size(), Duration.ofMillis(currentTimeEnsembl - startTimeEnsemblLookup).toString());
+		
+		this.checkGenesWithENSEMBL(uniprotData, totalEnsemblGeneCount, genesOKWithENSEMBL, ensemblGenesFileName);
 
 		Map<String, List<String>> secondaryAccessions = new HashMap<String, List<String>>();
 		int i = 0;
@@ -429,6 +358,83 @@ public class UniprotUpdater
 				}
 			}
 		}
+	}
+
+	private void checkGenesWithENSEMBL(List<UniprotData> uniprotData, AtomicInteger totalEnsemblGeneCount, Set<String> genesOKWithENSEMBL, String ensemblGenesFileName) throws IOException
+	{
+		// we'll write in append mode, just in case we encounter new Gene IDs that weren't in the file originally. 
+		FileWriter fileWriter = new FileWriter(ensemblGenesFileName, true);
+		// 8 threads (my workstation has 8 cores, parallelStream defaults to 8 threads) and we start getting told "too many requests - please wait 2 seconds". This slows
+		// everything down, so we should try to send as many requests as we can without hitting the 15/second rate limit.
+		// I've determined experimentally that no matter how many threads try to make requests, the best rate I can get is 10 requests per second.
+		// It seems that with 5 threads, I can get 10 requests/second with almost no "please wait" responses.
+		System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "5");
+		final long startTimeEnsemblLookup = System.currentTimeMillis();
+		List<String> geneBuffer = Collections.synchronizedList(new ArrayList<String>(1000));
+		uniprotData.parallelStream()
+					.filter(data ->  data.getEnsembleGeneIDs()!=null && data.getScientificName().equals(HOMO_SAPIENS))
+					.forEach( data -> {
+			List<String> geneList = new ArrayList<String>();
+			geneList = data.getEnsembleGeneIDs().stream().distinct().collect(Collectors.toList());
+			for(String ensemblGeneID : geneList)
+			{
+				try
+				{
+					// If the gene ID is not already in the set (could happen if you're using a pre-existing gene list).
+					// We'll assume that if it a Gene ID is in the list, it's OK. This *might* not be a very good assumption for Production (unless you know the list is fresh),
+					// but for testing purposes, it will probably speed things up greatly.
+					if (!genesOKWithENSEMBL.contains(ensemblGeneID))
+					{
+						// Check if the gene is "OK" with ENSEMBL. Here, "OK" means the response matches this regexp:
+						// .* seq_region_name=\"(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|X|Y|MT)\" .*
+						if (ENSEMBLQueryUtil.checkOKWithENSEMBL(ensemblGeneID))
+						{
+							genesOKWithENSEMBL.add(ensemblGeneID);
+							// If the buffer has > 1000 genes, write to file.
+							synchronized (geneBuffer)
+							{
+								geneBuffer.add(ensemblGeneID);
+								if (geneBuffer.size() >= 1000 )
+								{
+									logger.info("Dumping genes to file: {}",ensemblGenesFileName);
+									geneBuffer.stream().forEach(gene -> {
+										try
+										{
+											fileWriter.write(gene + "\n");
+										}
+										catch (IOException e)
+										{
+											e.printStackTrace();
+										}
+									});
+									// clear the buffer.
+									geneBuffer.clear();
+								}
+							}
+						}
+						int amt = totalEnsemblGeneCount.getAndIncrement();
+						int size = genesOKWithENSEMBL.size();
+						if (amt % 1000 == 0)
+						{
+							long currentTime = System.currentTimeMillis();
+							// unlikely, but it happened at least once during testing.
+							if (currentTime == startTimeEnsemblLookup)
+							{
+								currentTime += 1;
+							}
+							logger.info("{} genes were checked with ENSEMBL, {} were \"OK\"; query rate: {} per second", amt, size,(double)size / (double)((currentTime-startTimeEnsemblLookup)/1000.0));
+						}
+					}
+				}
+				catch (URISyntaxException e)
+				{
+					e.printStackTrace();
+				}
+			}
+		});
+		fileWriter.close();
+		long currentTimeEnsembl = System.currentTimeMillis();
+		logger.info("{} genes were checked with ENSEMBL, {} were \"OK\". Time spent: {}", totalEnsemblGeneCount.get(), genesOKWithENSEMBL.size(), Duration.ofMillis(currentTimeEnsembl - startTimeEnsemblLookup).toString());
 	}
 
 	private void createOrUpdateIsoform(MySQLAdaptor adaptor, GKInstance instanceEdit, String accession, GKInstance referenceGeneProduct, Isoform isoform) throws InvalidAttributeException, InvalidAttributeValueException, Exception

@@ -167,192 +167,202 @@ public class UniprotUpdater
 				// for human data, we may need to update a ReferenceDNASequence.
 				if (data.getScientificName().equals(HOMO_SAPIENS))
 				{
-					// Will need a flattened list of geneNames.
-					List<String> flattenedGeneNames = new ArrayList<String>();
-					String primaryGeneName = "";
-
-					flattenedGeneNames = data.getFlattenedGeneNames();
-					if (flattenedGeneNames != null && !flattenedGeneNames.isEmpty())
-					{
-						primaryGeneName = flattenedGeneNames.get(0);
-					}
-
-					// Report when there are multiple gene names.
-					if (data.getGenes() != null && data.getGenes().size() > 1)
-					{
-						referenceDNASequenceLog.info("Accession " + data.getAccessions().toString() + " has multiple gene names: " + geneNamesListToString(data.getGenes()));
-					}
-					// For each ENSEMBL Gene ID that is in this chunk of Data. 
-					// Note: It could happen that the same Gene ID could be repeted more than once. For example: the source XML could contain:
-					//		<dbReference id="ENST00000383605" type="Ensembl">
-					//			<property value="ENSP00000373100" type="protein sequence ID" />
-					//			<property value="ENSG00000206505" type="gene ID" />
-					//		</dbReference>
-					//		<dbReference id="ENST00000549224" type="Ensembl">
-					//			<property value="ENSP00000447990" type="protein sequence ID" />
-					//			<property value="ENSG00000206505" type="gene ID" />
-					//		</dbReference>
-					// In this case, there are two different dbReference entities that refer to the same ENSEMBL Gene ID. So that's why I have added the .stream().distinct(...)
-					// to the for-loop.
-					if (data.getEnsembleGeneIDs() != null)
-					{
-						for (String ensemblGeneID : geneList)
-						{
-							boolean modified = false;
-							// Check to see if the ENSEMBL ID (Remember: the XSL only selects for "Ensembl" gene names) is in the list of ReferenceDNASequences.
-							if (referenceDNASequences.containsKey(ensemblGeneID))
-							{
-								// If this instance already exists in the database, let's update it.
-								GKInstance referenceDNASequence = referenceDNASequences.get(ensemblGeneID);
-								referenceDNASequencesForThisUniprot.add(referenceDNASequence);
-								GKInstance speciesFromDB = (GKInstance) referenceDNASequence.getAttributeValue(ReactomeJavaConstants.species);
-								@SuppressWarnings("unchecked")
-								Set<String> speciesNamesFromDB = new HashSet<String>((List<String>) speciesFromDB.getAttributeValuesList(ReactomeJavaConstants.name));
-								// The old Perl code forces the species to be changed if the one in the database does not match the one in the file.
-								if (!speciesNamesFromDB.contains(data.getScientificName()))
-								{
-									referenceDNASequence.setAttributeValue(ReactomeJavaConstants.species, humanSpecies);
-									adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.species);
-									modified = true;
-								}
-
-								@SuppressWarnings("unchecked")
-								Set<String> geneNamesFromDB = new HashSet<String>((List<String>) referenceDNASequence.getAttributeValuesList(ReactomeJavaConstants.geneName));
-								// The old Perl code adds the geneName from the file, if it's not already in the database.
-								boolean modifiedGeneName = false;
-								if (flattenedGeneNames!=null && !flattenedGeneNames.isEmpty())
-								{
-									for (String geneName : flattenedGeneNames)
-									{
-										if (!geneNamesFromDB.contains(geneName))
-										{
-											referenceDNASequence.addAttributeValue(ReactomeJavaConstants.geneName, geneName);
-											modified = true;
-											modifiedGeneName = true;
-										}
-									}
-								}
-								else
-								{
-									referenceDNASequenceLog.info("UniprotData with ENSEMBL Gene ID {} has empty/NULL flattenedGeneNames!", ensemblGeneID);
-								}
-								
-								if (modifiedGeneName)
-								{
-									adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.geneName);
-								}
-
-								// The old Perl code sets the reference database if it's not ENSEMBL_Homo_sapiens_GENE
-								if (!((String) ((GKInstance) referenceDNASequence.getAttributeValue(ReactomeJavaConstants.referenceDatabase)).getAttributeValue(ReactomeJavaConstants.name)).equals(UniprotUpdater.ENSEMBL_HOMO_SAPIENS_GENE))
-								{
-									referenceDNASequence.setAttributeValue(ReactomeJavaConstants.referenceDatabase, UniprotUpdater.ensemblHSapiensRefDB);
-									adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.referenceDatabase);
-									modified = true;
-								}
-								// if the instance was modified, attach a new InstanceEdit to the modified attribute.
-								if (modified)
-								{
-									referenceDNASequence.getAttributeValuesList(ReactomeJavaConstants.modified);
-									referenceDNASequence.addAttributeValue(ReactomeJavaConstants.modified, instanceEdit);
-									adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.modified);
-									referenceDNASequenceLog.info("Updating existing reference DNA sequence for {} with DB ID: {}", ensemblGeneID, referenceDNASequence.getDBID().toString());
-								}
-
-							}
-							// if the gene ID was NOT in the ReferenceDNASequences map, we may need to add it to the database.
-							else
-							{
-								if (geneList.size() > 1 && !genesOKWithENSEMBL.contains(ensemblGeneID))
-								{
-									referenceDNASequenceLog.info("{} is not a primary/canonical gene -- skipping creation of ReferenceDNASequence", ensemblGeneID);
-								}
-								else
-								{
-									GKInstance newRefDNASequence = this.createNewReferenceDNASequence(adaptor, instanceEdit, flattenedGeneNames, primaryGeneName, ensemblGeneID);
-									Long newDBID = adaptor.storeInstance(newRefDNASequence);
-									InstanceDisplayNameGenerator.setDisplayName(newRefDNASequence);
-									adaptor.updateInstanceAttribute(newRefDNASequence, ReactomeJavaConstants._displayName);
-									referenceDNASequenceLog.info("New ReferenceDNASequence \"" + newRefDNASequence.toString() + "\" with Gene ID " + ensemblGeneID + " has DB ID" + newDBID);
-								}
-							}
-
-							if (referenceGeneProducts.containsKey(accession))
-							{
-								int instanceCount = 0;
-								GKInstance referenceGeneProduct = referenceGeneProducts.get(accession);
-								if (!referenceGeneProduct.getSchemClass().isa(ReactomeJavaConstants.ReferenceIsoform))
-								{
-									if (instanceCount < 1)
-									{
-										instanceCount++;
-										this.updateReferenceGeneProduct(adaptor, referenceGeneProduct, data, instanceEdit, accession);
-									}
-									else
-									{
-										referenceDNASequenceLog.info("Duplicate ReferenceGeneProduct instance for identifier {} - this instance will NOT be updated.", accession);
-									}
-								}
-							}
-							else
-							{
-								// create new RefGeneProd...
-								GKInstance referenceGeneProduct = this.createNewReferenceGeneProduct(adaptor, instanceEdit, accession);
-								Long newRefGeneProductDBID = adaptor.storeInstance(referenceGeneProduct);
-								updateInstanceWithData(adaptor, referenceGeneProduct, data);
-								referenceGeneProduct.setAttributeValue(ReactomeJavaConstants.referenceGene, referenceDNASequencesForThisUniprot);
-								adaptor.updateInstanceAttribute(referenceGeneProduct, ReactomeJavaConstants.referenceGene);
-								InstanceDisplayNameGenerator.setDisplayName(referenceGeneProduct);
-								adaptor.updateInstanceAttribute(referenceGeneProduct, ReactomeJavaConstants._displayName);
-								uniprotRecordsLog.info("New UniProt: \"{}\" {} {}", referenceGeneProduct.toString(), accession, newRefGeneProductDBID);
-								// Now create new ReferenceIsoform for this ReferenceGeneProduct.
-								if (data.getIsoforms() != null)
-								{
-									for (Isoform isoform : data.getIsoforms())
-									{
-										createOrUpdateIsoform(adaptor, instanceEdit, accession, referenceGeneProduct, isoform);
-									}
-								}
-							}
-						}
-					}
+					this.processHumanData(adaptor, referenceDNASequences, referenceGeneProducts, instanceEdit, genesOKWithENSEMBL, data, geneList, referenceDNASequencesForThisUniprot, accession);
 				}
 				else // Not human, but still need to process it...
 				{
-					if (!referenceGeneProducts.containsKey(accession))
+					this.processNonHumanData(adaptor, referenceGeneProducts, instanceEdit, data, referenceDNASequencesForThisUniprot, accession);
+				}
+			}
+		}
+	}
+
+	private void processNonHumanData(MySQLAdaptor adaptor, Map<String, GKInstance> referenceGeneProducts, GKInstance instanceEdit, UniprotData data, List<GKInstance> referenceDNASequencesForThisUniprot, String accession) throws InvalidAttributeException, InvalidAttributeValueException, Exception
+	{
+		if (!referenceGeneProducts.containsKey(accession))
+		{
+			GKInstance newRefGeneProduct = this.createNewReferenceGeneProduct(adaptor, instanceEdit, accession);
+			adaptor.storeInstance(newRefGeneProduct);
+			this.updateInstanceWithData(adaptor, newRefGeneProduct, data);
+			newRefGeneProduct.setAttributeValue(ReactomeJavaConstants.referenceGene, referenceDNASequencesForThisUniprot);
+			adaptor.updateInstanceAttribute(newRefGeneProduct, ReactomeJavaConstants.referenceGene);
+			InstanceDisplayNameGenerator.generateDisplayName(newRefGeneProduct);
+			// add Isoforms if available...
+			if (data.getIsoforms() != null)
+			{
+				for (Isoform isoform : data.getIsoforms())
+				{
+					createOrUpdateIsoform(adaptor, instanceEdit, accession, newRefGeneProduct, isoform);
+				}
+			}
+			uniprotRecordsLog.info("New UniProt: \"{}\" {} {}", newRefGeneProduct.toString(), accession, newRefGeneProduct.getDBID());
+		}
+		else
+		{
+			int instanceCount = 0;
+			{
+				GKInstance referenceGeneProduct = referenceGeneProducts.get(accession);
+				if (!referenceGeneProduct.getSchemClass().isa(ReactomeJavaConstants.ReferenceIsoform))
+				{
+					if (instanceCount < 1)
 					{
-						GKInstance newRefGeneProduct = this.createNewReferenceGeneProduct(adaptor, instanceEdit, accession);
-						adaptor.storeInstance(newRefGeneProduct);
-						this.updateInstanceWithData(adaptor, newRefGeneProduct, data);
-						newRefGeneProduct.setAttributeValue(ReactomeJavaConstants.referenceGene, referenceDNASequencesForThisUniprot);
-						adaptor.updateInstanceAttribute(newRefGeneProduct, ReactomeJavaConstants.referenceGene);
-						InstanceDisplayNameGenerator.generateDisplayName(newRefGeneProduct);
-						// add Isoforms if available...
-						if (data.getIsoforms() != null)
-						{
-							for (Isoform isoform : data.getIsoforms())
-							{
-								createOrUpdateIsoform(adaptor, instanceEdit, accession, newRefGeneProduct, isoform);
-							}
-						}
-						uniprotRecordsLog.info("New UniProt: \"{}\" {} {}", newRefGeneProduct.toString(), accession, newRefGeneProduct.getDBID());
+						instanceCount++;
+						this.updateReferenceGeneProduct(adaptor, referenceGeneProduct, data, instanceEdit, accession);
 					}
 					else
 					{
-						int instanceCount = 0;
+						referenceDNASequenceLog.info("Duplicate ReferenceGeneProduct instance for identifier {} - this instance will NOT be updated.", accession);
+					}
+				}
+			}
+		}
+	}
+
+	private void processHumanData(MySQLAdaptor adaptor, Map<String, GKInstance> referenceDNASequences, Map<String, GKInstance> referenceGeneProducts, GKInstance instanceEdit, Set<String> genesOKWithENSEMBL, UniprotData data, List<String> geneList, List<GKInstance> referenceDNASequencesForThisUniprot, String accession) throws InvalidAttributeException, Exception, InvalidAttributeValueException
+	{
+		// Will need a flattened list of geneNames.
+		List<String> flattenedGeneNames = new ArrayList<String>();
+		String primaryGeneName = "";
+
+		flattenedGeneNames = data.getFlattenedGeneNames();
+		if (flattenedGeneNames != null && !flattenedGeneNames.isEmpty())
+		{
+			primaryGeneName = flattenedGeneNames.get(0);
+		}
+
+		// Report when there are multiple gene names.
+		if (data.getGenes() != null && data.getGenes().size() > 1)
+		{
+			referenceDNASequenceLog.info("Accession " + data.getAccessions().toString() + " has multiple gene names: " + geneNamesListToString(data.getGenes()));
+		}
+		// For each ENSEMBL Gene ID that is in this chunk of Data. 
+		// Note: It could happen that the same Gene ID could be repeted more than once. For example: the source XML could contain:
+		//		<dbReference id="ENST00000383605" type="Ensembl">
+		//			<property value="ENSP00000373100" type="protein sequence ID" />
+		//			<property value="ENSG00000206505" type="gene ID" />
+		//		</dbReference>
+		//		<dbReference id="ENST00000549224" type="Ensembl">
+		//			<property value="ENSP00000447990" type="protein sequence ID" />
+		//			<property value="ENSG00000206505" type="gene ID" />
+		//		</dbReference>
+		// In this case, there are two different dbReference entities that refer to the same ENSEMBL Gene ID. So that's why I have added the .stream().distinct(...)
+		// to the for-loop.
+		if (data.getEnsembleGeneIDs() != null)
+		{
+			for (String ensemblGeneID : geneList)
+			{
+				boolean modified = false;
+				// Check to see if the ENSEMBL ID (Remember: the XSL only selects for "Ensembl" gene names) is in the list of ReferenceDNASequences.
+				if (referenceDNASequences.containsKey(ensemblGeneID))
+				{
+					// If this instance already exists in the database, let's update it.
+					GKInstance referenceDNASequence = referenceDNASequences.get(ensemblGeneID);
+					referenceDNASequencesForThisUniprot.add(referenceDNASequence);
+					GKInstance speciesFromDB = (GKInstance) referenceDNASequence.getAttributeValue(ReactomeJavaConstants.species);
+					@SuppressWarnings("unchecked")
+					Set<String> speciesNamesFromDB = new HashSet<String>((List<String>) speciesFromDB.getAttributeValuesList(ReactomeJavaConstants.name));
+					// The old Perl code forces the species to be changed if the one in the database does not match the one in the file.
+					if (!speciesNamesFromDB.contains(data.getScientificName()))
+					{
+						referenceDNASequence.setAttributeValue(ReactomeJavaConstants.species, humanSpecies);
+						adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.species);
+						modified = true;
+					}
+
+					@SuppressWarnings("unchecked")
+					Set<String> geneNamesFromDB = new HashSet<String>((List<String>) referenceDNASequence.getAttributeValuesList(ReactomeJavaConstants.geneName));
+					// The old Perl code adds the geneName from the file, if it's not already in the database.
+					boolean modifiedGeneName = false;
+					if (flattenedGeneNames!=null && !flattenedGeneNames.isEmpty())
+					{
+						for (String geneName : flattenedGeneNames)
 						{
-							GKInstance referenceGeneProduct = referenceGeneProducts.get(accession);
-							if (!referenceGeneProduct.getSchemClass().isa(ReactomeJavaConstants.ReferenceIsoform))
+							if (!geneNamesFromDB.contains(geneName))
 							{
-								if (instanceCount < 1)
-								{
-									instanceCount++;
-									this.updateReferenceGeneProduct(adaptor, referenceGeneProduct, data, instanceEdit, accession);
-								}
-								else
-								{
-									referenceDNASequenceLog.info("Duplicate ReferenceGeneProduct instance for identifier {} - this instance will NOT be updated.", accession);
-								}
+								referenceDNASequence.addAttributeValue(ReactomeJavaConstants.geneName, geneName);
+								modified = true;
+								modifiedGeneName = true;
 							}
+						}
+					}
+					else
+					{
+						referenceDNASequenceLog.info("UniprotData with ENSEMBL Gene ID {} has empty/NULL flattenedGeneNames!", ensemblGeneID);
+					}
+					
+					if (modifiedGeneName)
+					{
+						adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.geneName);
+					}
+
+					// The old Perl code sets the reference database if it's not ENSEMBL_Homo_sapiens_GENE
+					if (!((String) ((GKInstance) referenceDNASequence.getAttributeValue(ReactomeJavaConstants.referenceDatabase)).getAttributeValue(ReactomeJavaConstants.name)).equals(UniprotUpdater.ENSEMBL_HOMO_SAPIENS_GENE))
+					{
+						referenceDNASequence.setAttributeValue(ReactomeJavaConstants.referenceDatabase, UniprotUpdater.ensemblHSapiensRefDB);
+						adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.referenceDatabase);
+						modified = true;
+					}
+					// if the instance was modified, attach a new InstanceEdit to the modified attribute.
+					if (modified)
+					{
+						referenceDNASequence.getAttributeValuesList(ReactomeJavaConstants.modified);
+						referenceDNASequence.addAttributeValue(ReactomeJavaConstants.modified, instanceEdit);
+						adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.modified);
+						referenceDNASequenceLog.info("Updating existing reference DNA sequence for {} with DB ID: {}", ensemblGeneID, referenceDNASequence.getDBID().toString());
+					}
+
+				}
+				// if the gene ID was NOT in the ReferenceDNASequences map, we may need to add it to the database.
+				else
+				{
+					if (geneList.size() > 1 && !genesOKWithENSEMBL.contains(ensemblGeneID))
+					{
+						referenceDNASequenceLog.info("{} is not a primary/canonical gene -- skipping creation of ReferenceDNASequence", ensemblGeneID);
+					}
+					else
+					{
+						GKInstance newRefDNASequence = this.createNewReferenceDNASequence(adaptor, instanceEdit, flattenedGeneNames, primaryGeneName, ensemblGeneID);
+						Long newDBID = adaptor.storeInstance(newRefDNASequence);
+						InstanceDisplayNameGenerator.setDisplayName(newRefDNASequence);
+						adaptor.updateInstanceAttribute(newRefDNASequence, ReactomeJavaConstants._displayName);
+						referenceDNASequenceLog.info("New ReferenceDNASequence \"" + newRefDNASequence.toString() + "\" with Gene ID " + ensemblGeneID + " has DB ID" + newDBID);
+					}
+				}
+
+				if (referenceGeneProducts.containsKey(accession))
+				{
+					int instanceCount = 0;
+					GKInstance referenceGeneProduct = referenceGeneProducts.get(accession);
+					if (!referenceGeneProduct.getSchemClass().isa(ReactomeJavaConstants.ReferenceIsoform))
+					{
+						if (instanceCount < 1)
+						{
+							instanceCount++;
+							this.updateReferenceGeneProduct(adaptor, referenceGeneProduct, data, instanceEdit, accession);
+						}
+						else
+						{
+							referenceDNASequenceLog.info("Duplicate ReferenceGeneProduct instance for identifier {} - this instance will NOT be updated.", accession);
+						}
+					}
+				}
+				else
+				{
+					// create new RefGeneProd...
+					GKInstance referenceGeneProduct = this.createNewReferenceGeneProduct(adaptor, instanceEdit, accession);
+					Long newRefGeneProductDBID = adaptor.storeInstance(referenceGeneProduct);
+					updateInstanceWithData(adaptor, referenceGeneProduct, data);
+					referenceGeneProduct.setAttributeValue(ReactomeJavaConstants.referenceGene, referenceDNASequencesForThisUniprot);
+					adaptor.updateInstanceAttribute(referenceGeneProduct, ReactomeJavaConstants.referenceGene);
+					InstanceDisplayNameGenerator.setDisplayName(referenceGeneProduct);
+					adaptor.updateInstanceAttribute(referenceGeneProduct, ReactomeJavaConstants._displayName);
+					uniprotRecordsLog.info("New UniProt: \"{}\" {} {}", referenceGeneProduct.toString(), accession, newRefGeneProductDBID);
+					// Now create new ReferenceIsoform for this ReferenceGeneProduct.
+					if (data.getIsoforms() != null)
+					{
+						for (Isoform isoform : data.getIsoforms())
+						{
+							createOrUpdateIsoform(adaptor, instanceEdit, accession, referenceGeneProduct, isoform);
 						}
 					}
 				}

@@ -58,7 +58,7 @@ public class UniprotUpdater
 	private static final String ENSEMBL_HOMO_SAPIENS_GENE = "ENSEMBL_Homo_sapiens_GENE";
 	private static final String HOMO_SAPIENS = "Homo sapiens";
 	// List of species names was taken from uniprot_xml2sql_isoform.pl:84 // TODO: move these values to a resource file.
-	private static final Set<String> speciesToUpdate = new HashSet<String>( Arrays.asList(HOMO_SAPIENS, "Mus musculus", "Rattus norvegicus",
+	private static final Set<String> speciesToUpdate = new HashSet<>( Arrays.asList(HOMO_SAPIENS, "Mus musculus", "Rattus norvegicus",
 																			"Bos taurus", "Gallus gallus", "Drosophila melanogaster",
 																			"Caenorhabditis elegans", "Saccharomyces cerevisiae", "Schizosaccharomyces pombe",
 																			"Human immunodeficiency virus type 1", "Human immunodeficiency virus type 2", "Influenza A virus") );
@@ -66,7 +66,7 @@ public class UniprotUpdater
 	private static GKInstance ensemblHSapiensRefDB;
 	private static GKInstance uniprotRefDB;
 	private static GKInstance humanSpecies;
-	private static Map<String, List<GKInstance>> speciesCache = new HashMap<String, List<GKInstance>>();
+	private static Map<String, List<GKInstance>> speciesCache = new HashMap<>();
 
 	private static String geneNamesListToString(Collection<Gene> geneNames)
 	{
@@ -472,7 +472,7 @@ public class UniprotUpdater
 		// Again, I really don't expect more than 1 to be returned, but still need to treat this as a collection.
 		@SuppressWarnings("unchecked")
 		Set<GKInstance> isoformsFromDB = (Set<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceIsoform, ReactomeJavaConstants.variantIdentifier, "=", isoformID);
-		List<GKInstance> allParents = new ArrayList<GKInstance>();
+		List<GKInstance> allParents = new ArrayList<>();
 		if (isoformsFromDB != null && !isoformsFromDB.isEmpty())
 		{
 			for (GKInstance isoformFromDB : isoformsFromDB)

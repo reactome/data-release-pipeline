@@ -2,13 +2,9 @@ package org.reactome.release.uniprotupdate;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -31,6 +27,7 @@ import org.gk.model.GKInstance;
 import org.gk.model.InstanceDisplayNameGenerator;
 import org.gk.model.ReactomeJavaConstants;
 import org.gk.persistence.MySQLAdaptor;
+import org.gk.persistence.TransactionsNotSupportedException;
 import org.gk.schema.GKSchemaAttribute;
 import org.gk.schema.InvalidAttributeException;
 import org.gk.schema.InvalidAttributeValueException;
@@ -125,7 +122,7 @@ public class UniprotUpdater
 		}
 		int startingSize = genesOKWithENSEMBL.size();
 		
-		this.checkGenesWithENSEMBL(uniprotData, totalEnsemblGeneCount, genesOKWithENSEMBL, ensemblGenesFileName);
+		ENSEMBLQueryUtil.checkGenesWithENSEMBL(uniprotData, totalEnsemblGeneCount, genesOKWithENSEMBL, ensemblGenesFileName, HOMO_SAPIENS);
 
 		Map<String, List<String>> secondaryAccessions = new HashMap<>();
 		int i = 0;
@@ -187,14 +184,7 @@ public class UniprotUpdater
 			newRefGeneProduct.setAttributeValue(ReactomeJavaConstants.referenceGene, referenceDNASequencesForThisUniprot);
 			adaptor.updateInstanceAttribute(newRefGeneProduct, ReactomeJavaConstants.referenceGene);
 			InstanceDisplayNameGenerator.generateDisplayName(newRefGeneProduct);
-			// add Isoforms if available...
-			if (data.getIsoforms() != null)
-			{
-				for (Isoform isoform : data.getIsoforms())
-				{
-					createOrUpdateIsoform(adaptor, instanceEdit, accession, newRefGeneProduct, isoform);
-				}
-			}
+			addIsoformsIfNecessary(adaptor, instanceEdit, data, accession, newRefGeneProduct);
 			uniprotRecordsLog.info("New UniProt: \"{}\" {} {}", newRefGeneProduct.toString(), accession, newRefGeneProduct.getDBID());
 		}
 		else
@@ -214,6 +204,18 @@ public class UniprotUpdater
 						referenceDNASequenceLog.info("Duplicate ReferenceGeneProduct instance for identifier {} - this instance will NOT be updated.", accession);
 					}
 				}
+			}
+		}
+	}
+
+	private void addIsoformsIfNecessary(MySQLAdaptor adaptor, GKInstance instanceEdit, UniprotData data, String accession, GKInstance newRefGeneProduct) throws InvalidAttributeException, InvalidAttributeValueException, Exception
+	{
+		// add Isoforms if available...
+		if (data.getIsoforms() != null)
+		{
+			for (Isoform isoform : data.getIsoforms())
+			{
+				createOrUpdateIsoform(adaptor, instanceEdit, accession, newRefGeneProduct, isoform);
 			}
 		}
 	}
@@ -251,66 +253,11 @@ public class UniprotUpdater
 		{
 			for (String ensemblGeneID : geneList)
 			{
-				boolean modified = false;
+				boolean speciesModified = false;
 				// Check to see if the ENSEMBL ID (Remember: the XSL only selects for "Ensembl" gene names) is in the list of ReferenceDNASequences.
 				if (referenceDNASequences.containsKey(ensemblGeneID))
 				{
-					// If this instance already exists in the database, let's update it.
-					GKInstance referenceDNASequence = referenceDNASequences.get(ensemblGeneID);
-					referenceDNASequencesForThisUniprot.add(referenceDNASequence);
-					GKInstance speciesFromDB = (GKInstance) referenceDNASequence.getAttributeValue(ReactomeJavaConstants.species);
-					@SuppressWarnings("unchecked")
-					Set<String> speciesNamesFromDB = new HashSet<>((List<String>) speciesFromDB.getAttributeValuesList(ReactomeJavaConstants.name));
-					// The old Perl code forces the species to be changed if the one in the database does not match the one in the file.
-					if (!speciesNamesFromDB.contains(data.getScientificName()))
-					{
-						referenceDNASequence.setAttributeValue(ReactomeJavaConstants.species, humanSpecies);
-						adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.species);
-						modified = true;
-					}
-
-					@SuppressWarnings("unchecked")
-					Set<String> geneNamesFromDB = new HashSet<>((List<String>) referenceDNASequence.getAttributeValuesList(ReactomeJavaConstants.geneName));
-					// The old Perl code adds the geneName from the file, if it's not already in the database.
-					boolean modifiedGeneName = false;
-					if (flattenedGeneNames!=null && !flattenedGeneNames.isEmpty())
-					{
-						for (String geneName : flattenedGeneNames)
-						{
-							if (!geneNamesFromDB.contains(geneName))
-							{
-								referenceDNASequence.addAttributeValue(ReactomeJavaConstants.geneName, geneName);
-								modified = true;
-								modifiedGeneName = true;
-							}
-						}
-					}
-					else
-					{
-						referenceDNASequenceLog.info("UniprotData with ENSEMBL Gene ID {} has empty/NULL flattenedGeneNames!", ensemblGeneID);
-					}
-					
-					if (modifiedGeneName)
-					{
-						adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.geneName);
-					}
-
-					// The old Perl code sets the reference database if it's not ENSEMBL_Homo_sapiens_GENE
-					if (!((String) ((GKInstance) referenceDNASequence.getAttributeValue(ReactomeJavaConstants.referenceDatabase)).getAttributeValue(ReactomeJavaConstants.name)).equals(UniprotUpdater.ENSEMBL_HOMO_SAPIENS_GENE))
-					{
-						referenceDNASequence.setAttributeValue(ReactomeJavaConstants.referenceDatabase, UniprotUpdater.ensemblHSapiensRefDB);
-						adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.referenceDatabase);
-						modified = true;
-					}
-					// if the instance was modified, attach a new InstanceEdit to the modified attribute.
-					if (modified)
-					{
-						referenceDNASequence.getAttributeValuesList(ReactomeJavaConstants.modified);
-						referenceDNASequence.addAttributeValue(ReactomeJavaConstants.modified, instanceEdit);
-						adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.modified);
-						referenceDNASequenceLog.info("Updating existing reference DNA sequence for {} with DB ID: {}", ensemblGeneID, referenceDNASequence.getDBID().toString());
-					}
-
+					this.processForExistingENSEMBLID(adaptor, referenceDNASequences, instanceEdit, data, referenceDNASequencesForThisUniprot, flattenedGeneNames, ensemblGeneID);
 				}
 				// if the gene ID was NOT in the ReferenceDNASequences map, we may need to add it to the database.
 				else
@@ -357,97 +304,100 @@ public class UniprotUpdater
 					InstanceDisplayNameGenerator.setDisplayName(referenceGeneProduct);
 					adaptor.updateInstanceAttribute(referenceGeneProduct, ReactomeJavaConstants._displayName);
 					uniprotRecordsLog.info("New UniProt: \"{}\" {} {}", referenceGeneProduct.toString(), accession, newRefGeneProductDBID);
-					// Now create new ReferenceIsoform for this ReferenceGeneProduct.
-					if (data.getIsoforms() != null)
-					{
-						for (Isoform isoform : data.getIsoforms())
-						{
-							createOrUpdateIsoform(adaptor, instanceEdit, accession, referenceGeneProduct, isoform);
-						}
-					}
+					addIsoformsIfNecessary(adaptor, instanceEdit, data, accession, referenceGeneProduct);
 				}
 			}
 		}
 	}
 
-	private void checkGenesWithENSEMBL(List<UniprotData> uniprotData, AtomicInteger totalEnsemblGeneCount, Set<String> genesOKWithENSEMBL, String ensemblGenesFileName) throws IOException
+	private void processForExistingENSEMBLID(MySQLAdaptor adaptor, Map<String, GKInstance> referenceDNASequences, GKInstance instanceEdit, UniprotData data, List<GKInstance> referenceDNASequencesForThisUniprot, List<String> flattenedGeneNames, String ensemblGeneID) throws InvalidAttributeException, Exception, InvalidAttributeValueException
 	{
-		final long startTimeEnsemblLookup = System.currentTimeMillis();
-		// we'll write in append mode, just in case we encounter new Gene IDs that weren't in the file originally.
-		try(FileWriter fileWriter = new FileWriter(ensemblGenesFileName, true))
-		{
-			// 8 threads (my workstation has 8 cores, parallelStream defaults to 8 threads) and we start getting told "too many requests - please wait 2 seconds". This slows
-			// everything down, so we should try to send as many requests as we can without hitting the 15/second rate limit.
-			// I've determined experimentally that no matter how many threads try to make requests, the best rate I can get is 10 requests per second.
-			// It seems that with 5 threads, I can get 10 requests/second with almost no "please wait" responses.
-			System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "5");
-			
-			List<String> geneBuffer = Collections.synchronizedList(new ArrayList<String>(1000));
-			uniprotData.parallelStream()
-						.filter(data ->  data.getEnsembleGeneIDs()!=null && data.getScientificName().equals(HOMO_SAPIENS))
-						.forEach( data -> {
-				List<String> geneList = new ArrayList<>();
-				geneList = data.getEnsembleGeneIDs().stream().distinct().collect(Collectors.toList());
-				for(String ensemblGeneID : geneList)
-				{
-					try
-					{
-						// If the gene ID is not already in the set (could happen if you're using a pre-existing gene list).
-						// We'll assume that if it a Gene ID is in the list, it's OK. This *might* not be a very good assumption for Production (unless you know the list is fresh),
-						// but for testing purposes, it will probably speed things up greatly.
-						if (!genesOKWithENSEMBL.contains(ensemblGeneID))
-						{
-							// Check if the gene is "OK" with ENSEMBL. Here, "OK" means the response matches this regexp:
-							// .* seq_region_name=\"(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|X|Y|MT)\" .*
-							if (ENSEMBLQueryUtil.checkOKWithENSEMBL(ensemblGeneID))
-							{
-								genesOKWithENSEMBL.add(ensemblGeneID);
-								// If the buffer has > 1000 genes, write to file.
-								synchronized (geneBuffer)
-								{
-									geneBuffer.add(ensemblGeneID);
-									if (geneBuffer.size() >= 1000 )
-									{
-										logger.info("Dumping genes to file: {}",ensemblGenesFileName);
-										geneBuffer.stream().forEach(gene -> {
-											try
-											{
-												fileWriter.write(gene + "\n");
-											}
-											catch (IOException e)
-											{
-												e.printStackTrace();
-											}
-										});
-										// clear the buffer.
-										geneBuffer.clear();
-									}
-								}
-							}
-							int amt = totalEnsemblGeneCount.getAndIncrement();
-							int size = genesOKWithENSEMBL.size();
-							if (amt % 1000 == 0)
-							{
-								long currentTime = System.currentTimeMillis();
-								// unlikely, but it happened at least once during testing.
-								if (currentTime == startTimeEnsemblLookup)
-								{
-									currentTime += 1;
-								}
-								logger.info("{} genes were checked with ENSEMBL, {} were \"OK\"; query rate: {} per second", amt, size,(double)size / (double)((currentTime-startTimeEnsemblLookup)/1000.0));
-							}
-						}
-					}
-					catch (URISyntaxException e)
-					{
-						e.printStackTrace();
-					}
-				}
-			});
-		}
-		long currentTimeEnsembl = System.currentTimeMillis();
-		logger.info("{} genes were checked with ENSEMBL, {} were \"OK\". Time spent: {}", totalEnsemblGeneCount.get(), genesOKWithENSEMBL.size(), Duration.ofMillis(currentTimeEnsembl - startTimeEnsemblLookup).toString());
+		boolean speciesModified;
+		// If this instance already exists in the database, let's update it.
+		GKInstance referenceDNASequence = referenceDNASequences.get(ensemblGeneID);
+		referenceDNASequencesForThisUniprot.add(referenceDNASequence);
+		GKInstance speciesFromDB = (GKInstance) referenceDNASequence.getAttributeValue(ReactomeJavaConstants.species);
+
+		@SuppressWarnings("unchecked")
+		Set<String> speciesNamesFromDB = new HashSet<>((List<String>) speciesFromDB.getAttributeValuesList(ReactomeJavaConstants.name));
+		speciesModified = this.updateSpeciesIfNecessary(adaptor, data, referenceDNASequence, speciesNamesFromDB);
+
+		@SuppressWarnings("unchecked")
+		Set<String> geneNamesFromDB = new HashSet<>((List<String>) referenceDNASequence.getAttributeValuesList(ReactomeJavaConstants.geneName));
+		boolean nameModified = this.updateGeneNameIfNecessary(adaptor, flattenedGeneNames, ensemblGeneID, referenceDNASequence, geneNamesFromDB);
+		boolean dbModified = this.setDatabaseIfNecessary(adaptor, referenceDNASequence);
+		boolean instancedWasModified = speciesModified || nameModified || dbModified;
+		this.addInstanceEditIfNecessary(adaptor, instanceEdit, ensemblGeneID, instancedWasModified, referenceDNASequence);
 	}
+
+	private void addInstanceEditIfNecessary(MySQLAdaptor adaptor, GKInstance instanceEdit, String ensemblGeneID, boolean modified, GKInstance referenceDNASequence) throws InvalidAttributeException, Exception, InvalidAttributeValueException
+	{
+		// if the instance was modified, attach a new InstanceEdit to the modified attribute.
+		if (modified)
+		{
+			referenceDNASequence.getAttributeValuesList(ReactomeJavaConstants.modified);
+			referenceDNASequence.addAttributeValue(ReactomeJavaConstants.modified, instanceEdit);
+			adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.modified);
+			referenceDNASequenceLog.info("Updating existing reference DNA sequence for {} with DB ID: {}", ensemblGeneID, referenceDNASequence.getDBID().toString());
+		}
+	}
+
+	private boolean updateSpeciesIfNecessary(MySQLAdaptor adaptor, UniprotData data, GKInstance referenceDNASequence, Set<String> speciesNamesFromDB) throws InvalidAttributeException, InvalidAttributeValueException, Exception
+	{
+		boolean modified = false;
+		// The old Perl code forces the species to be changed if the one in the database does not match the one in the file.
+		if (!speciesNamesFromDB.contains(data.getScientificName()))
+		{
+			referenceDNASequence.setAttributeValue(ReactomeJavaConstants.species, humanSpecies);
+			adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.species);
+			modified = true;
+		}
+		return modified;
+	}
+
+	private boolean setDatabaseIfNecessary(MySQLAdaptor adaptor, GKInstance referenceDNASequence) throws InvalidAttributeException, Exception, InvalidAttributeValueException
+	{
+		boolean modified = false;
+		// The old Perl code sets the reference database if it's not ENSEMBL_Homo_sapiens_GENE
+		if (!((String) ((GKInstance) referenceDNASequence.getAttributeValue(ReactomeJavaConstants.referenceDatabase)).getAttributeValue(ReactomeJavaConstants.name)).equals(UniprotUpdater.ENSEMBL_HOMO_SAPIENS_GENE))
+		{
+			referenceDNASequence.setAttributeValue(ReactomeJavaConstants.referenceDatabase, UniprotUpdater.ensemblHSapiensRefDB);
+			adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.referenceDatabase);
+			modified = true;
+		}
+		return modified;
+	}
+
+	private boolean updateGeneNameIfNecessary(MySQLAdaptor adaptor, List<String> flattenedGeneNames, String ensemblGeneID, GKInstance referenceDNASequence, Set<String> geneNamesFromDB) throws InvalidAttributeException, InvalidAttributeValueException, Exception
+	{
+		boolean modified = false;
+		// The old Perl code adds the geneName from the file, if it's not already in the database.
+		boolean modifiedGeneName = false;
+		if (flattenedGeneNames!=null && !flattenedGeneNames.isEmpty())
+		{
+			for (String geneName : flattenedGeneNames)
+			{
+				if (!geneNamesFromDB.contains(geneName))
+				{
+					referenceDNASequence.addAttributeValue(ReactomeJavaConstants.geneName, geneName);
+					modified = true;
+					modifiedGeneName = true;
+				}
+			}
+		}
+		else
+		{
+			referenceDNASequenceLog.info("UniprotData with ENSEMBL Gene ID {} has empty/NULL flattenedGeneNames!", ensemblGeneID);
+		}
+		
+		if (modifiedGeneName)
+		{
+			adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.geneName);
+		}
+		return modified;
+	}
+
+	
 
 	private void createOrUpdateIsoform(MySQLAdaptor adaptor, GKInstance instanceEdit, String accession, GKInstance referenceGeneProduct, Isoform isoform) throws InvalidAttributeException, InvalidAttributeValueException, Exception
 	{
@@ -531,165 +481,7 @@ public class UniprotUpdater
 			// The old Perl code actually prints messages every time the old data differs from the new data. Is that really necessary?
 			try
 			{
-				switch (attribute)
-				{
-					case ReactomeJavaConstants.secondaryIdentifier:
-					{
-						if (data.getAccessions() != null && data.getAccessions().size() > 0)
-						{
-							instance.setAttributeValue(ReactomeJavaConstants.secondaryIdentifier, data.getAccessions());
-							adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.secondaryIdentifier);
-						}
-						break;
-					}
-					case ReactomeJavaConstants.description:
-					{
-						if (data.getRecommendedName() != null)
-						{
-							String alternativeNames = "";
-							if (data.getAlternativeNames() != null)
-							{
-								alternativeNames = data.getAlternativeNames().stream().reduce("", (x,y) -> { return x + " " + y; } );
-							}
-							String description = data.getRecommendedName() + " " + alternativeNames;
-							instance.setAttributeValue(ReactomeJavaConstants.description, description.trim());
-							adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.description);
-						}
-						break;
-					}
-					case ReactomeJavaConstants.sequenceLength:
-					{
-						if (data.getSequenceLength() != null)
-						{
-							instance.setAttributeValue(ReactomeJavaConstants.sequenceLength, new Integer(data.getSequenceLength()));
-							adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.sequenceLength);
-						}
-						break;
-					}
-					case ReactomeJavaConstants.referenceGene:
-					{
-						break;
-					}
-					case ReactomeJavaConstants.species:
-					{
-						String speciesName = data.getScientificName();
-						try
-						{
-							List<GKInstance> dataSpeciesInst;
-							if (!speciesCache.containsKey(speciesName))
-							{
-								// Using a list here because that's what fetchInstanceByAttribute returns but I
-								// honestly don't expect more than one result.
-								// It would be *very* weird if two different Species objects existed with the
-								// same name.
-								dataSpeciesInst = new ArrayList<>((Set<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.Species, ReactomeJavaConstants.name, "=", speciesName));
-								speciesCache.put(speciesName, dataSpeciesInst);
-								logger.info("Species cache miss on \"{}\"", speciesName);
-							} else
-							{
-								dataSpeciesInst = speciesCache.get(speciesName);
-							}
-	
-							Set<Long> speciesDBIDs = new HashSet<>();
-							for (GKInstance inst : dataSpeciesInst)
-							{
-								speciesDBIDs.add(inst.getDBID());
-							}
-							GKInstance speciesInst = (GKInstance) instance.getAttributeValue(ReactomeJavaConstants.species);
-							// The list of Species that we got by looking up the name from "data" does not
-							// contain the Species DB ID on the current instance.
-							// This means we need to update the instance to use the one from the input.
-							// does it make sense in the data model for speciesInst to be null?
-							if (speciesInst != null && !speciesDBIDs.contains(speciesInst.getDBID()))
-							{
-								instance.setAttributeValue(ReactomeJavaConstants.species, dataSpeciesInst.get(0));
-								adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.species);
-							}
-						} catch (Exception e)
-						{
-							e.printStackTrace();
-						}
-						break;
-					}
-					case "checksum":
-					{
-						try
-						{
-							String oldChecksum = (String) instance.getAttributeValue("checksum");
-							if (oldChecksum != null && oldChecksum.length() > 0 && data.getSequenceChecksum().equals(oldChecksum))
-							{
-								// The old Perl code prints a warning when the checksum changes.
-								sequencesLog.info("Checksum has changed! DB ID: " + instance.getDBID() + "\tOld checksum: " + oldChecksum + "\tNew checksum:" + data.getSequenceChecksum());
-								instance.setAttributeValue("isSequenceChanged", true);
-								instance.setAttributeValue("checksum", data.getSequenceChecksum());
-								adaptor.updateInstanceAttribute(instance, "isSequenceChanged");
-								adaptor.updateInstanceAttribute(instance, "checksum");
-							} else
-							{
-								instance.setAttributeValue("isSequenceChanged", false);
-								adaptor.updateInstanceAttribute(instance, "isSequenceChanged");
-							}
-						} catch (Exception e)
-						{
-							e.printStackTrace();
-						}
-						break;
-					}
-					case ReactomeJavaConstants.name:
-					{
-	
-						if (data.getFlattenedGeneNames() != null && data.getFlattenedGeneNames().size() > 0)
-						{
-							// The first item in the flattened gene names list is the primary gene name.
-							instance.setAttributeValue(ReactomeJavaConstants.name, data.getFlattenedGeneNames().get(0));
-							adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.name);
-						}
-						break;
-					}
-					case ReactomeJavaConstants.geneName:
-					{
-						if (data.getFlattenedGeneNames() != null && data.getFlattenedGeneNames().size() > 0)
-						{
-							// It could happen that there are duplicate gene names that come from the XML file, but we don't want to insert duplicate gene names.
-							instance.setAttributeValue(ReactomeJavaConstants.geneName, data.getFlattenedGeneNames().stream().distinct().collect(Collectors.toList()));
-							adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.geneName);
-						}
-						break;
-					}
-					case ReactomeJavaConstants.comment:
-					{
-						if (!data.getFlattenedCommentsText().isEmpty())
-						{
-							instance.setAttributeValue(ReactomeJavaConstants.comment, data.getFlattenedCommentsText());
-							adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.comment);
-						}
-						break;
-					}
-					case ReactomeJavaConstants.keyword:
-					{
-						if (!data.getFlattenedKeywords().isEmpty())
-						{
-							instance.setAttributeValue(ReactomeJavaConstants.keyword, data.getFlattenedKeywords());
-							adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.keyword);
-						}
-						break;
-					}
-					case "chain":
-					{
-						if (data.getChains() != null && data.getChains().size() > 0)
-						{
-							List<String> chainStrings = new ArrayList<>();
-							for (Chain chain : data.getChains())
-							{
-								chainStrings.add(chain.toString());
-							}
-							logChainChanges(adaptor, new HashSet<>(chainStrings), instance);
-							instance.setAttributeValue("chain", chainStrings);
-							adaptor.updateInstanceAttribute(instance, "chain");
-						}
-						break;
-					}
-				}
+				updateInstanceForAttribute(adaptor, instance, data, attribute);
 			}
 			catch (InvalidAttributeException | InvalidAttributeValueException e)
 			{
@@ -700,6 +492,191 @@ public class UniprotUpdater
 				e.printStackTrace();
 			}
 		}
+	}
+
+	private void updateInstanceForAttribute(MySQLAdaptor adaptor, GKInstance instance, UniprotData data, String attribute) throws InvalidAttributeException, InvalidAttributeValueException, Exception
+	{
+		// TODO: this method, and all of the methods that were extracted from it, should probably be moved to a new class, UniprotInstanceUpdater, whose job is to update a GKInstance.
+		
+		switch (attribute)
+		{
+			case ReactomeJavaConstants.secondaryIdentifier:
+			{
+				if (data.getAccessions() != null && data.getAccessions().size() > 0)
+				{
+					instance.setAttributeValue(ReactomeJavaConstants.secondaryIdentifier, data.getAccessions());
+					adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.secondaryIdentifier);
+				}
+				break;
+			}
+			case ReactomeJavaConstants.description:
+			{
+				if (data.getRecommendedName() != null)
+				{
+					String alternativeNames = "";
+					if (data.getAlternativeNames() != null)
+					{
+						alternativeNames = data.getAlternativeNames().stream().reduce("", (x,y) -> { return x + " " + y; } );
+					}
+					String description = data.getRecommendedName() + " " + alternativeNames;
+					instance.setAttributeValue(ReactomeJavaConstants.description, description.trim());
+					adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.description);
+				}
+				break;
+			}
+			case ReactomeJavaConstants.sequenceLength:
+			{
+				if (data.getSequenceLength() != null)
+				{
+					instance.setAttributeValue(ReactomeJavaConstants.sequenceLength, new Integer(data.getSequenceLength()));
+					adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.sequenceLength);
+				}
+				break;
+			}
+			case ReactomeJavaConstants.referenceGene:
+			{
+				break;
+			}
+			case ReactomeJavaConstants.species:
+			{
+				String speciesName = data.getScientificName();
+				try
+				{
+					List<GKInstance> dataSpeciesInst = determineDataSpeciesInsts(adaptor, speciesName);
+
+					Set<Long> speciesDBIDs = new HashSet<>();
+					for (GKInstance inst : dataSpeciesInst)
+					{
+						speciesDBIDs.add(inst.getDBID());
+					}
+					GKInstance speciesInst = (GKInstance) instance.getAttributeValue(ReactomeJavaConstants.species);
+					// The list of Species that we got by looking up the name from "data" does not
+					// contain the Species DB ID on the current instance.
+					// This means we need to update the instance to use the one from the input.
+					// does it make sense in the data model for speciesInst to be null?
+					if (speciesInst != null && !speciesDBIDs.contains(speciesInst.getDBID()))
+					{
+						instance.setAttributeValue(ReactomeJavaConstants.species, dataSpeciesInst.get(0));
+						adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.species);
+					}
+				}
+				catch (Exception e)
+				{
+					e.printStackTrace();
+				}
+				break;
+			}
+			case "checksum": //TODO: add "checksum" to ReactomeJavaConstants
+			{
+				try
+				{
+					String oldChecksum = (String) instance.getAttributeValue("checksum");
+					if (oldChecksum != null && oldChecksum.length() > 0 && data.getSequenceChecksum().equals(oldChecksum))
+					{
+						updateInstanceWhenChecksumChanged(adaptor, instance, data, oldChecksum);
+					}
+					else
+					{
+						instance.setAttributeValue("isSequenceChanged", false);
+						adaptor.updateInstanceAttribute(instance, "isSequenceChanged");
+					}
+				}
+				catch (Exception e)
+				{
+					e.printStackTrace();
+				}
+				break;
+			}
+			case ReactomeJavaConstants.name:
+			{
+
+				if (data.getFlattenedGeneNames() != null && data.getFlattenedGeneNames().size() > 0)
+				{
+					// The first item in the flattened gene names list is the primary gene name.
+					instance.setAttributeValue(ReactomeJavaConstants.name, data.getFlattenedGeneNames().get(0));
+					adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.name);
+				}
+				break;
+			}
+			case ReactomeJavaConstants.geneName:
+			{
+				if (data.getFlattenedGeneNames() != null && data.getFlattenedGeneNames().size() > 0)
+				{
+					// It could happen that there are duplicate gene names that come from the XML file, but we don't want to insert duplicate gene names.
+					instance.setAttributeValue(ReactomeJavaConstants.geneName, data.getFlattenedGeneNames().stream().distinct().collect(Collectors.toList()));
+					adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.geneName);
+				}
+				break;
+			}
+			case ReactomeJavaConstants.comment:
+			{
+				if (!data.getFlattenedCommentsText().isEmpty())
+				{
+					instance.setAttributeValue(ReactomeJavaConstants.comment, data.getFlattenedCommentsText());
+					adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.comment);
+				}
+				break;
+			}
+			case ReactomeJavaConstants.keyword:
+			{
+				if (!data.getFlattenedKeywords().isEmpty())
+				{
+					instance.setAttributeValue(ReactomeJavaConstants.keyword, data.getFlattenedKeywords());
+					adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.keyword);
+				}
+				break;
+			}
+			case "chain": //TODO: Add "chain" to ReactomeJavaConstants
+			{
+				if (data.getChains() != null && data.getChains().size() > 0)
+				{
+					updateChain(adaptor, instance, data);
+				}
+				break;
+			}
+		}
+	}
+
+	private void updateChain(MySQLAdaptor adaptor, GKInstance instance, UniprotData data) throws Exception, InvalidAttributeException, InvalidAttributeValueException
+	{
+		List<String> chainStrings = new ArrayList<>();
+		for (Chain chain : data.getChains())
+		{
+			chainStrings.add(chain.toString());
+		}
+		logChainChanges(adaptor, new HashSet<>(chainStrings), instance);
+		instance.setAttributeValue("chain", chainStrings);
+		adaptor.updateInstanceAttribute(instance, "chain");
+	}
+
+	private void updateInstanceWhenChecksumChanged(MySQLAdaptor adaptor, GKInstance instance, UniprotData data, String oldChecksum) throws InvalidAttributeException, InvalidAttributeValueException, Exception
+	{
+		// The old Perl code prints a warning when the checksum changes.
+		sequencesLog.info("Checksum has changed! DB ID: " + instance.getDBID() + "\tOld checksum: " + oldChecksum + "\tNew checksum:" + data.getSequenceChecksum());
+		instance.setAttributeValue("isSequenceChanged", true); // TODO: add "isSequenceChanged" to ReactomeJavaConstants
+		instance.setAttributeValue("checksum", data.getSequenceChecksum());
+		adaptor.updateInstanceAttribute(instance, "isSequenceChanged");
+		adaptor.updateInstanceAttribute(instance, "checksum");
+	}
+
+	private List<GKInstance> determineDataSpeciesInsts(MySQLAdaptor adaptor, String speciesName) throws Exception
+	{
+		List<GKInstance> dataSpeciesInst;
+		if (!speciesCache.containsKey(speciesName))
+		{
+			// Using a list here because that's what fetchInstanceByAttribute returns but I
+			// honestly don't expect more than one result.
+			// It would be *very* weird if two different Species objects existed with the
+			// same name.
+			dataSpeciesInst = new ArrayList<>((Set<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.Species, ReactomeJavaConstants.name, "=", speciesName));
+			speciesCache.put(speciesName, dataSpeciesInst);
+			logger.info("Species cache miss on \"{}\"", speciesName);
+		}
+		else
+		{
+			dataSpeciesInst = speciesCache.get(speciesName);
+		}
+		return dataSpeciesInst;
 	}
 
 	private void logChainChanges(MySQLAdaptor adaptor, Set<String> newChains, GKInstance instance) throws Exception
@@ -838,6 +815,7 @@ public class UniprotUpdater
 		}
 	}
 
+	//TODO: Use a proper connection pooling library.
 	private Map<String, MySQLAdaptor> adaptorPool = Collections.synchronizedMap(new HashMap<String, MySQLAdaptor>());
 	private MySQLAdaptor getAdaptorForThread(MySQLAdaptor baseAdaptor, String threadIdentifier) throws SQLException
 	{
@@ -905,6 +883,7 @@ public class UniprotUpdater
 		logger.info("{} identifiers need to be checked for referrer count.", identifiersToCheck.size());
 		// TODO: this loop is slow. Multithread it somehow.
 		//for (String identifier : identifiersToCheck)
+		// Check each identifier: If it has 0 referrers, no variantIdentifier, and is not in the unreviewed Uniprot IDs list, it can be deleted, so it will be added to identifiersToDelete.
 		identifiersToCheck.parallelStream().forEach( identifier -> 
 		{
 			try
@@ -918,16 +897,7 @@ public class UniprotUpdater
 	//			{
 	//				referringAttributes = (Collection<GKSchemaAttribute>) referenceGeneProduct.getSchemClass().getReferers();
 	//			}
-				@SuppressWarnings("unchecked")
-				Collection<GKSchemaAttribute> referringAttributes = (Collection<GKSchemaAttribute>) referenceGeneProduct.getSchemClass().getReferers();
-	
-				int referrerCount = 0;
-				for (GKSchemaAttribute referringAttribute : referringAttributes)
-				{
-					@SuppressWarnings("unchecked")
-					Collection<GKInstance> referrers = (Collection<GKInstance>) referenceGeneProduct.getReferers(referringAttribute);
-					referrerCount += referrers.size();
-				}
+				int referrerCount = getReferrerCount(referenceGeneProduct);
 				if (referrerCount == 0)
 				{
 					referenceDNASequenceLog.info("ReferenceGeneProduct " + referenceGeneProduct.toString() + " has 0 referrers, no variantIdentifier, and is not in the unreviewed Uniprot IDs list, so it will be deleted.");
@@ -943,6 +913,35 @@ public class UniprotUpdater
 		this.cleanAdaptorPool();
 		// Now do the actual deletions
 		logger.info("{} ReferenceGeneProducts will be deleted.", identifiersToDelete.size());
+		int deletedCount = deleteInstances(adaptor, identifiersToDelete);
+		logger.info("{} instances have been deleted.", deletedCount);
+		logger.info("Finished deleting obsolete ReferenceGeneProducts with no referrers.");
+		// TODO: The number of items in the file will be much larger than the number of ReferenceGeneProducts (120243849 vs 115769, at the time of writing 2018-07-31).
+		// So... instead of trying to load the whole file into memory, convert the ReferenceGeneProducts into a Map (keyed by identifier) and check the
+		// map for each line read - then you don't have to store the whole file in memory, just the current line!
+		// Will probably be faster. The file has 120243849 lines and Java is slowing down when trying to load each line into a Set (TreeSet or HashSet - they both perform poorly).
+		// TODO: Idea for parallelization: instead of deleting objects in this loop, process these items in parallel and add the DB IDs of things to delete to a thread-safe list,
+		// then go through that list (serially) and delete things.
+		// TODO: Add a progress meter/counter for this loop.
+	}
+
+	private int getReferrerCount(GKInstance referenceGeneProduct) throws Exception
+	{
+		@SuppressWarnings("unchecked")
+		Collection<GKSchemaAttribute> referringAttributes = (Collection<GKSchemaAttribute>) referenceGeneProduct.getSchemClass().getReferers();
+
+		int referrerCount = 0;
+		for (GKSchemaAttribute referringAttribute : referringAttributes)
+		{
+			@SuppressWarnings("unchecked")
+			Collection<GKInstance> referrers = (Collection<GKInstance>) referenceGeneProduct.getReferers(referringAttribute);
+			referrerCount += referrers.size();
+		}
+		return referrerCount;
+	}
+
+	private int deleteInstances(MySQLAdaptor adaptor, List<GKInstance> identifiersToDelete) throws SQLException, TransactionsNotSupportedException
+	{
 		int deletedCount = 0;
 		int txnDeleteCount = 0;
 		adaptor.startTransaction();
@@ -974,14 +973,6 @@ public class UniprotUpdater
 			}
 		}
 		adaptor.commit();
-		logger.info("{} instances have been deleted.", deletedCount);
-		logger.info("Finished deleting obsolete ReferenceGeneProducts with no referrers.");
-		// TODO: The number of items in the file will be much larger than the number of ReferenceGeneProducts (120243849 vs 115769, at the time of writing 2018-07-31).
-		// So... instead of trying to load the whole file into memory, convert the ReferenceGeneProducts into a Map (keyed by identifier) and check the
-		// map for each line read - then you don't have to store the whole file in memory, just the current line!
-		// Will probably be faster. The file has 120243849 lines and Java is slowing down when trying to load each line into a Set (TreeSet or HashSet - they both perform poorly).
-		// TODO: Idea for parallelization: instead of deleting objects in this loop, process these items in parallel and add the DB IDs of things to delete to a thread-safe list,
-		// then go through that list (serially) and delete things.
-		// TODO: Add a progress meter/counter for this loop.
+		return deletedCount;
 	}
 }

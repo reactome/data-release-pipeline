@@ -13,7 +13,6 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.util.JAXBResult;
-import javax.xml.bind.util.JAXBSource;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -24,7 +23,6 @@ import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stax.StAXSource;
-import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
 import org.apache.logging.log4j.LogManager;
@@ -55,7 +53,7 @@ public class ProcessUniprotXML
 	{
 		// Starting size of ArrayList was determined by counting the number of "<entry>" lines in the input file.
 		// In fact, there were only about 530000 when I checked, but I figure it can't hurt to have a little extra room.
-		List<UniprotData> uniprotData = new ArrayList<UniprotData>(600000);
+		List<UniprotData> uniprotData = new ArrayList<>(600000);
 		
 		// Stream the XML file. StAX is faster than DOM (waaaaaaaaaay faster) or SAX.
 		XMLInputFactory xif = XMLInputFactory.newInstance();

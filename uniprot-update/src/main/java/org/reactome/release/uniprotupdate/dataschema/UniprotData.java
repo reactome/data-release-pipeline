@@ -1,12 +1,10 @@
 package org.reactome.release.uniprotupdate.dataschema;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlList;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
@@ -15,7 +13,7 @@ import javax.xml.bind.annotation.XmlType;
 public class UniprotData
 {
 
-	private List<String> flattenedGeneNames = new ArrayList<String>();
+	private List<String> flattenedGeneNames = new ArrayList<>();
 	private String primaryGeneName;
 	private List<String> accessions;
 	private List<Chain> chains;
@@ -210,7 +208,7 @@ public class UniprotData
 	
 	public List<String> getFlattenedKeywords()
 	{
-		List<String> flattenedKeywords = new ArrayList<String>();
+		List<String> flattenedKeywords = new ArrayList<>();
 		if (this.keywords!=null)
 		{
 			for (Keyword keyword : this.keywords)

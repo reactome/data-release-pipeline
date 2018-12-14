@@ -97,19 +97,19 @@ public class UniprotUpdater
 			if (UniprotUpdater.ensemblHSapiensRefDB == null)
 			{
 				@SuppressWarnings("unchecked")
-				List<GKInstance> refDBs = new ArrayList<GKInstance>((Collection<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceDatabase, ReactomeJavaConstants.name, "=", ENSEMBL_HOMO_SAPIENS_GENE));
+				List<GKInstance> refDBs = new ArrayList<>((Collection<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceDatabase, ReactomeJavaConstants.name, "=", ENSEMBL_HOMO_SAPIENS_GENE));
 				UniprotUpdater.ensemblHSapiensRefDB = refDBs.get(0);
 			}
 			if (UniprotUpdater.humanSpecies == null)
 			{
 				@SuppressWarnings("unchecked")
-				List<GKInstance> species = new ArrayList<GKInstance>((Collection<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.Species, ReactomeJavaConstants.name, "=", HOMO_SAPIENS));
+				List<GKInstance> species = new ArrayList<>((Collection<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.Species, ReactomeJavaConstants.name, "=", HOMO_SAPIENS));
 				UniprotUpdater.humanSpecies = species.get(0);
 			}
 			if (UniprotUpdater.uniprotRefDB == null)
 			{
 				@SuppressWarnings("unchecked")
-				List<GKInstance> refDBs = new ArrayList<GKInstance>((Collection<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceDatabase, ReactomeJavaConstants.name, "=", UNI_PROT));
+				List<GKInstance> refDBs = new ArrayList<>((Collection<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceDatabase, ReactomeJavaConstants.name, "=", UNI_PROT));
 				UniprotUpdater.uniprotRefDB = refDBs.get(0);
 			}
 		}
@@ -127,18 +127,18 @@ public class UniprotUpdater
 		
 		this.checkGenesWithENSEMBL(uniprotData, totalEnsemblGeneCount, genesOKWithENSEMBL, ensemblGenesFileName);
 
-		Map<String, List<String>> secondaryAccessions = new HashMap<String, List<String>>();
+		Map<String, List<String>> secondaryAccessions = new HashMap<>();
 		int i = 0;
 		long startTime = System.currentTimeMillis();
 		long totalUniprotRecords = 0;
 		for (UniprotData data : uniprotData)
 		{
-			List<String> geneList = new ArrayList<String>();
+			List<String> geneList = new ArrayList<>();
 			if (data.getEnsembleGeneIDs()!=null)
 			{
 				geneList = data.getEnsembleGeneIDs().stream().distinct().collect(Collectors.toList());
 			}
-			List<GKInstance> referenceDNASequencesForThisUniprot = new ArrayList<GKInstance>(geneList.size());
+			List<GKInstance> referenceDNASequencesForThisUniprot = new ArrayList<>(geneList.size());
 			
 			i++;
 			long currentTime = System.currentTimeMillis();
@@ -221,7 +221,7 @@ public class UniprotUpdater
 	private void processHumanData(MySQLAdaptor adaptor, Map<String, GKInstance> referenceDNASequences, Map<String, GKInstance> referenceGeneProducts, GKInstance instanceEdit, Set<String> genesOKWithENSEMBL, UniprotData data, List<String> geneList, List<GKInstance> referenceDNASequencesForThisUniprot, String accession) throws InvalidAttributeException, Exception, InvalidAttributeValueException
 	{
 		// Will need a flattened list of geneNames.
-		List<String> flattenedGeneNames = new ArrayList<String>();
+		List<String> flattenedGeneNames = new ArrayList<>();
 		String primaryGeneName = "";
 
 		flattenedGeneNames = data.getFlattenedGeneNames();
@@ -260,7 +260,7 @@ public class UniprotUpdater
 					referenceDNASequencesForThisUniprot.add(referenceDNASequence);
 					GKInstance speciesFromDB = (GKInstance) referenceDNASequence.getAttributeValue(ReactomeJavaConstants.species);
 					@SuppressWarnings("unchecked")
-					Set<String> speciesNamesFromDB = new HashSet<String>((List<String>) speciesFromDB.getAttributeValuesList(ReactomeJavaConstants.name));
+					Set<String> speciesNamesFromDB = new HashSet<>((List<String>) speciesFromDB.getAttributeValuesList(ReactomeJavaConstants.name));
 					// The old Perl code forces the species to be changed if the one in the database does not match the one in the file.
 					if (!speciesNamesFromDB.contains(data.getScientificName()))
 					{
@@ -270,7 +270,7 @@ public class UniprotUpdater
 					}
 
 					@SuppressWarnings("unchecked")
-					Set<String> geneNamesFromDB = new HashSet<String>((List<String>) referenceDNASequence.getAttributeValuesList(ReactomeJavaConstants.geneName));
+					Set<String> geneNamesFromDB = new HashSet<>((List<String>) referenceDNASequence.getAttributeValuesList(ReactomeJavaConstants.geneName));
 					// The old Perl code adds the geneName from the file, if it's not already in the database.
 					boolean modifiedGeneName = false;
 					if (flattenedGeneNames!=null && !flattenedGeneNames.isEmpty())
@@ -372,77 +372,79 @@ public class UniprotUpdater
 
 	private void checkGenesWithENSEMBL(List<UniprotData> uniprotData, AtomicInteger totalEnsemblGeneCount, Set<String> genesOKWithENSEMBL, String ensemblGenesFileName) throws IOException
 	{
-		// we'll write in append mode, just in case we encounter new Gene IDs that weren't in the file originally. 
-		FileWriter fileWriter = new FileWriter(ensemblGenesFileName, true);
-		// 8 threads (my workstation has 8 cores, parallelStream defaults to 8 threads) and we start getting told "too many requests - please wait 2 seconds". This slows
-		// everything down, so we should try to send as many requests as we can without hitting the 15/second rate limit.
-		// I've determined experimentally that no matter how many threads try to make requests, the best rate I can get is 10 requests per second.
-		// It seems that with 5 threads, I can get 10 requests/second with almost no "please wait" responses.
-		System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "5");
 		final long startTimeEnsemblLookup = System.currentTimeMillis();
-		List<String> geneBuffer = Collections.synchronizedList(new ArrayList<String>(1000));
-		uniprotData.parallelStream()
-					.filter(data ->  data.getEnsembleGeneIDs()!=null && data.getScientificName().equals(HOMO_SAPIENS))
-					.forEach( data -> {
-			List<String> geneList = new ArrayList<String>();
-			geneList = data.getEnsembleGeneIDs().stream().distinct().collect(Collectors.toList());
-			for(String ensemblGeneID : geneList)
-			{
-				try
+		// we'll write in append mode, just in case we encounter new Gene IDs that weren't in the file originally.
+		try(FileWriter fileWriter = new FileWriter(ensemblGenesFileName, true))
+		{
+			// 8 threads (my workstation has 8 cores, parallelStream defaults to 8 threads) and we start getting told "too many requests - please wait 2 seconds". This slows
+			// everything down, so we should try to send as many requests as we can without hitting the 15/second rate limit.
+			// I've determined experimentally that no matter how many threads try to make requests, the best rate I can get is 10 requests per second.
+			// It seems that with 5 threads, I can get 10 requests/second with almost no "please wait" responses.
+			System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "5");
+			
+			List<String> geneBuffer = Collections.synchronizedList(new ArrayList<String>(1000));
+			uniprotData.parallelStream()
+						.filter(data ->  data.getEnsembleGeneIDs()!=null && data.getScientificName().equals(HOMO_SAPIENS))
+						.forEach( data -> {
+				List<String> geneList = new ArrayList<>();
+				geneList = data.getEnsembleGeneIDs().stream().distinct().collect(Collectors.toList());
+				for(String ensemblGeneID : geneList)
 				{
-					// If the gene ID is not already in the set (could happen if you're using a pre-existing gene list).
-					// We'll assume that if it a Gene ID is in the list, it's OK. This *might* not be a very good assumption for Production (unless you know the list is fresh),
-					// but for testing purposes, it will probably speed things up greatly.
-					if (!genesOKWithENSEMBL.contains(ensemblGeneID))
+					try
 					{
-						// Check if the gene is "OK" with ENSEMBL. Here, "OK" means the response matches this regexp:
-						// .* seq_region_name=\"(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|X|Y|MT)\" .*
-						if (ENSEMBLQueryUtil.checkOKWithENSEMBL(ensemblGeneID))
+						// If the gene ID is not already in the set (could happen if you're using a pre-existing gene list).
+						// We'll assume that if it a Gene ID is in the list, it's OK. This *might* not be a very good assumption for Production (unless you know the list is fresh),
+						// but for testing purposes, it will probably speed things up greatly.
+						if (!genesOKWithENSEMBL.contains(ensemblGeneID))
 						{
-							genesOKWithENSEMBL.add(ensemblGeneID);
-							// If the buffer has > 1000 genes, write to file.
-							synchronized (geneBuffer)
+							// Check if the gene is "OK" with ENSEMBL. Here, "OK" means the response matches this regexp:
+							// .* seq_region_name=\"(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|X|Y|MT)\" .*
+							if (ENSEMBLQueryUtil.checkOKWithENSEMBL(ensemblGeneID))
 							{
-								geneBuffer.add(ensemblGeneID);
-								if (geneBuffer.size() >= 1000 )
+								genesOKWithENSEMBL.add(ensemblGeneID);
+								// If the buffer has > 1000 genes, write to file.
+								synchronized (geneBuffer)
 								{
-									logger.info("Dumping genes to file: {}",ensemblGenesFileName);
-									geneBuffer.stream().forEach(gene -> {
-										try
-										{
-											fileWriter.write(gene + "\n");
-										}
-										catch (IOException e)
-										{
-											e.printStackTrace();
-										}
-									});
-									// clear the buffer.
-									geneBuffer.clear();
+									geneBuffer.add(ensemblGeneID);
+									if (geneBuffer.size() >= 1000 )
+									{
+										logger.info("Dumping genes to file: {}",ensemblGenesFileName);
+										geneBuffer.stream().forEach(gene -> {
+											try
+											{
+												fileWriter.write(gene + "\n");
+											}
+											catch (IOException e)
+											{
+												e.printStackTrace();
+											}
+										});
+										// clear the buffer.
+										geneBuffer.clear();
+									}
 								}
 							}
-						}
-						int amt = totalEnsemblGeneCount.getAndIncrement();
-						int size = genesOKWithENSEMBL.size();
-						if (amt % 1000 == 0)
-						{
-							long currentTime = System.currentTimeMillis();
-							// unlikely, but it happened at least once during testing.
-							if (currentTime == startTimeEnsemblLookup)
+							int amt = totalEnsemblGeneCount.getAndIncrement();
+							int size = genesOKWithENSEMBL.size();
+							if (amt % 1000 == 0)
 							{
-								currentTime += 1;
+								long currentTime = System.currentTimeMillis();
+								// unlikely, but it happened at least once during testing.
+								if (currentTime == startTimeEnsemblLookup)
+								{
+									currentTime += 1;
+								}
+								logger.info("{} genes were checked with ENSEMBL, {} were \"OK\"; query rate: {} per second", amt, size,(double)size / (double)((currentTime-startTimeEnsemblLookup)/1000.0));
 							}
-							logger.info("{} genes were checked with ENSEMBL, {} were \"OK\"; query rate: {} per second", amt, size,(double)size / (double)((currentTime-startTimeEnsemblLookup)/1000.0));
 						}
 					}
+					catch (URISyntaxException e)
+					{
+						e.printStackTrace();
+					}
 				}
-				catch (URISyntaxException e)
-				{
-					e.printStackTrace();
-				}
-			}
-		});
-		fileWriter.close();
+			});
+		}
 		long currentTimeEnsembl = System.currentTimeMillis();
 		logger.info("{} genes were checked with ENSEMBL, {} were \"OK\". Time spent: {}", totalEnsemblGeneCount.get(), genesOKWithENSEMBL.size(), Duration.ofMillis(currentTimeEnsembl - startTimeEnsemblLookup).toString());
 	}
@@ -513,13 +515,18 @@ public class UniprotUpdater
 	private void updateInstanceWithData(MySQLAdaptor adaptor, GKInstance instance, UniprotData data, String... attributes)
 	{
 		// Set the default list if the user does not specify anything.
+		String[] attributesToUse;
 		if (attributes == null || attributes.length == 0)
 		{
-			attributes = new String[] { ReactomeJavaConstants.secondaryIdentifier, ReactomeJavaConstants.description, ReactomeJavaConstants.sequenceLength, ReactomeJavaConstants.species, "checksum", ReactomeJavaConstants.name, ReactomeJavaConstants.geneName, ReactomeJavaConstants.comment,
+			attributesToUse = new String[] { ReactomeJavaConstants.secondaryIdentifier, ReactomeJavaConstants.description, ReactomeJavaConstants.sequenceLength, ReactomeJavaConstants.species, "checksum", ReactomeJavaConstants.name, ReactomeJavaConstants.geneName, ReactomeJavaConstants.comment,
 					ReactomeJavaConstants.keyword, "chain" };
 		}
+		else
+		{
+			attributesToUse = attributes;
+		}
 		// if (attributes!=null && attributes.length > 0) {
-		for (String attribute : attributes)
+		for (String attribute : attributesToUse)
 		{
 			// The old Perl code actually prints messages every time the old data differs from the new data. Is that really necessary?
 			try
@@ -575,7 +582,7 @@ public class UniprotUpdater
 								// honestly don't expect more than one result.
 								// It would be *very* weird if two different Species objects existed with the
 								// same name.
-								dataSpeciesInst = new ArrayList<GKInstance>((Set<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.Species, ReactomeJavaConstants.name, "=", speciesName));
+								dataSpeciesInst = new ArrayList<>((Set<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.Species, ReactomeJavaConstants.name, "=", speciesName));
 								speciesCache.put(speciesName, dataSpeciesInst);
 								logger.info("Species cache miss on \"{}\"", speciesName);
 							} else
@@ -583,7 +590,7 @@ public class UniprotUpdater
 								dataSpeciesInst = speciesCache.get(speciesName);
 							}
 	
-							Set<Long> speciesDBIDs = new HashSet<Long>();
+							Set<Long> speciesDBIDs = new HashSet<>();
 							for (GKInstance inst : dataSpeciesInst)
 							{
 								speciesDBIDs.add(inst.getDBID());
@@ -671,12 +678,12 @@ public class UniprotUpdater
 					{
 						if (data.getChains() != null && data.getChains().size() > 0)
 						{
-							List<String> chainStrings = new ArrayList<String>();
+							List<String> chainStrings = new ArrayList<>();
 							for (Chain chain : data.getChains())
 							{
 								chainStrings.add(chain.toString());
 							}
-							logChainChanges(adaptor, new HashSet<String>(chainStrings), instance);
+							logChainChanges(adaptor, new HashSet<>(chainStrings), instance);
 							instance.setAttributeValue("chain", chainStrings);
 							adaptor.updateInstanceAttribute(instance, "chain");
 						}
@@ -698,7 +705,7 @@ public class UniprotUpdater
 	private void logChainChanges(MySQLAdaptor adaptor, Set<String> newChains, GKInstance instance) throws Exception
 	{
 		@SuppressWarnings("unchecked")
-		Set<String> oldChains = new HashSet<String>((List<String>) instance.getAttributeValuesList("chain"));
+		Set<String> oldChains = new HashSet<>((List<String>) instance.getAttributeValuesList("chain"));
 		boolean needsUpdate = false;
 		LocalDateTime currentDate = LocalDateTime.now();
 		// Perl code was:
@@ -798,7 +805,7 @@ public class UniprotUpdater
 				String isoformID = isoform.getIsoformID();
 
 				@SuppressWarnings("unchecked")
-				List<GKInstance> refIsoformsFromDB = new ArrayList<GKInstance>((Set<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceIsoform, ReactomeJavaConstants.variantIdentifier, "=", isoform.getIsoformID()));
+				List<GKInstance> refIsoformsFromDB = new ArrayList<>((Set<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceIsoform, ReactomeJavaConstants.variantIdentifier, "=", isoform.getIsoformID()));
 				if (isoformID.contains(accession))
 				{
 					// Update existing ReferenceIsoforms
@@ -834,16 +841,18 @@ public class UniprotUpdater
 	private Map<String, MySQLAdaptor> adaptorPool = Collections.synchronizedMap(new HashMap<String, MySQLAdaptor>());
 	private MySQLAdaptor getAdaptorForThread(MySQLAdaptor baseAdaptor, String threadIdentifier) throws SQLException
 	{
+		MySQLAdaptor adaptor;
 		if (adaptorPool.containsKey(threadIdentifier))
 		{
-			return adaptorPool.get(threadIdentifier);
+			adaptor = adaptorPool.get(threadIdentifier);
 		}
 		else
 		{
 			MySQLAdaptor adaptorForPool = new MySQLAdaptor(baseAdaptor.getDBHost(), baseAdaptor.getDBName(), baseAdaptor.getDBUser(), baseAdaptor.getDBPwd(), baseAdaptor.getDBPort());
 			adaptorPool.put(threadIdentifier, adaptorForPool);
-			return adaptorForPool;
+			adaptor = adaptorForPool;
 		}
+		return adaptor;
 	}
 	private void cleanAdaptorPool() throws Exception
 	{
@@ -860,7 +869,7 @@ public class UniprotUpdater
 		@SuppressWarnings("unchecked")
 		Collection<GKInstance> allReferenceGeneProducts = (Collection<GKInstance>) adaptor.fetchInstancesByClass(ReactomeJavaConstants.ReferenceGeneProduct);
 		logger.info("{} ReferenceGeneProducts need to be checked.", allReferenceGeneProducts.size());
-		Map<String, GKInstance> referenceGeneProductMap = new HashMap<String, GKInstance>(allReferenceGeneProducts.size());
+		Map<String, GKInstance> referenceGeneProductMap = new HashMap<>(allReferenceGeneProducts.size());
 		for (GKInstance referenceGeneProduct : allReferenceGeneProducts)
 		{
 			String identifier = (String) referenceGeneProduct.getAttributeValue(ReactomeJavaConstants.identifier);
@@ -870,8 +879,8 @@ public class UniprotUpdater
 			}
 		}
 		logger.info("{} ReferenceGeneProducts in map.", referenceGeneProductMap.size());
-		Set<String> identifiersInFileAndDB = new HashSet<String>();
-		List<GKInstance> identifiersToDelete = new ArrayList<GKInstance>();
+		Set<String> identifiersInFileAndDB = new HashSet<>();
+		List<GKInstance> identifiersToDelete = new ArrayList<>();
 		//Collection<GKSchemaAttribute> referringAttributes = null;
 		logger.info("Loading file: {}", pathToUnreviewedUniprotIDsFile);
 		FileInputStream fis = new FileInputStream(pathToUnreviewedUniprotIDsFile);

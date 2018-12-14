@@ -1,7 +1,6 @@
 package org.reactome.release.uniprotupdate.dataschema;
 
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlType(name="chain")
@@ -79,12 +78,9 @@ public class Chain
 		
 		if (chainAsString.equals(""))
 		{
-			return super.toString();
+			chainAsString = super.toString();
 		}
-		else
-		{
-			return chainAsString;
-		}
+		return chainAsString;
 	}
 	
 }

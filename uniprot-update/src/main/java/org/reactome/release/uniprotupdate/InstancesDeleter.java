@@ -23,9 +23,15 @@ import org.gk.persistence.MySQLAdaptor;
 import org.gk.persistence.TransactionsNotSupportedException;
 import org.gk.schema.GKSchemaAttribute;
 
-public class InstancesDeleter
+/**
+ * This class is to be used to delete Uniprot instances.
+ * @author sshorser
+ *
+ */
+class InstancesDeleter
 {
 	private Map<String, MySQLAdaptor> adaptorPool = Collections.synchronizedMap(new HashMap<String, MySQLAdaptor>());
+	
 	private MySQLAdaptor getAdaptorForThread(MySQLAdaptor baseAdaptor, String threadIdentifier) throws SQLException
 	{
 		MySQLAdaptor adaptor;
@@ -41,6 +47,7 @@ public class InstancesDeleter
 		}
 		return adaptor;
 	}
+	
 	private void cleanAdaptorPool() throws Exception
 	{
 		for (String k : adaptorPool.keySet())
@@ -51,13 +58,14 @@ public class InstancesDeleter
 	}
 	private static final Logger referenceDNASequenceLog = LogManager.getLogger("referenceDNASequenceLog");
 	private static final Logger logger = LogManager.getLogger();
+	
 	/**
 	 * Delete obsolete instances. An instance is considered "obsolete" if it has no referrers.
 	 * @param adaptor - the adaptor to use.
 	 * @param pathToUnreviewedUniprotIDsFile - path to the "Unreviewed UniprotIDs file" - if a Uniprot identifier is not found in this file, the instance associated with the identifier is a potential candidate for deletion (depending on referrer counts)
 	 * @throws Exception
 	 */
-	public void deleteObsoleteInstances(MySQLAdaptor adaptor, String pathToUnreviewedUniprotIDsFile) throws Exception
+	void deleteObsoleteInstances(MySQLAdaptor adaptor, String pathToUnreviewedUniprotIDsFile) throws Exception
 	{
 		logger.info("Preparing to delete obsolete instances...");
 		@SuppressWarnings("unchecked")

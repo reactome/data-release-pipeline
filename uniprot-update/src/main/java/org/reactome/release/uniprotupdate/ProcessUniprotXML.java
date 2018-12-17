@@ -34,7 +34,7 @@ import org.reactome.release.uniprotupdate.dataschema.UniprotData;
  * @author sshorser
  *
  */
-public class ProcessUniprotXML
+class ProcessUniprotXML
 {
 	private static final Logger logger = LogManager.getLogger();
 	private static final String ENTRY_ELEMENT_NAME = "entry";

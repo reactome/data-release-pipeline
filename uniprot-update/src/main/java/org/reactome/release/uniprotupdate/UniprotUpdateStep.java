@@ -57,7 +57,8 @@ public class UniprotUpdateStep extends ReleaseStep
 		updater.updateUniprotInstances(adaptor, uniprotData, referenceDNASequences, referenceGeneProducts, referenceIsoforms, instanceEdit);
 		// commit changes so far - deletion will be multithreaded, so each adaptor will need its own transaction.
 		adaptor.commit();
-		updater.deleteObsoleteInstances(adaptor, pathToUnreviewedUniprotIDsFile);
+		InstancesDeleter deleter = new InstancesDeleter();
+		deleter.deleteObsoleteInstances(adaptor, pathToUnreviewedUniprotIDsFile);
 		if (testMode)
 		{
 			logger.info("Test mode is set - Rolling back transaction...");

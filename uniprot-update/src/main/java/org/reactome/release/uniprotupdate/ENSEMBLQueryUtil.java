@@ -29,15 +29,16 @@ import org.reactome.util.ensembl.EnsemblServiceResponseProcessor.EnsemblServiceR
 
 class ENSEMBLQueryUtil
 {
+	private static final String ENSEMBL_LOOKUP_URI_PREFIX = "https://rest.ensembl.org/lookup/id/";
 	private static final Logger logger = LogManager.getLogger();
-	
+	private static final Pattern validSeqRegionPatter = Pattern.compile(".* seq_region_name=\"(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|X|Y|MT)\" .*", Pattern.MULTILINE);
 	public static boolean checkOKWithENSEMBL(String ensemblGeneID) throws URISyntaxException
 	{
 		boolean isOK = false;
 		// need to query a URL of the form:
 		// https://rest.ensembl.org/lookup/id/ENSG00000204518?content-type=text/xml
 		// See the old Perl version of this: EnsEMBLUtils.pm, sub on_EnsEMBL_primary_assembly
-		URI uri = new URI("https://rest.ensembl.org/lookup/id/" + ensemblGeneID);
+		URI uri = new URI(ENSEMBLQueryUtil.ENSEMBL_LOOKUP_URI_PREFIX + ensemblGeneID);
 		URIBuilder builder = new URIBuilder();
 		builder.setHost(uri.getHost()).setPath(uri.getPath()).setScheme(uri.getScheme()).addParameter("content-type", "text/xml");
 		try
@@ -48,8 +49,7 @@ class ENSEMBLQueryUtil
 			{
 				queryResponse = queryResponse.replaceAll("\n", "");
 				// According to the old Perl code, seq_region_name must match any of these: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y MT
-				Pattern validSeqRegionPatter = Pattern.compile(".* seq_region_name=\"(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|X|Y|MT)\" .*", Pattern.MULTILINE);
-				Matcher m = validSeqRegionPatter.matcher(queryResponse);
+				Matcher m = ENSEMBLQueryUtil.validSeqRegionPatter.matcher(queryResponse);
 				if (m.matches())
 				{
 					isOK = true;

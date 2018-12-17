@@ -72,6 +72,15 @@ public class UniprotUpdateStep extends ReleaseStep
 		logger.info("Done.");
 	}
 
+	/**
+	 * Gets a map of instances, keyed by identifier.
+	 * @param adaptor - the database adaptor to use.
+	 * @param reactomeClassName - the Reactome "type" to which the instances will be constrained.
+	 * @param refDBName - the name of the reference database to which the instances will be constrained.
+	 * @return
+	 * @throws Exception
+	 * @throws InvalidAttributeException
+	 */
 	private Map<String, GKInstance> getIdentifierMappedCollectionOfType(MySQLAdaptor adaptor, String reactomeClassName, String refDBName) throws Exception, InvalidAttributeException
 	{
 		@SuppressWarnings("unchecked")
@@ -92,9 +101,9 @@ public class UniprotUpdateStep extends ReleaseStep
 				}
 				else
 				{
-						tmpAdaptor = new MySQLAdaptor( ((MySQLAdaptor)instance.getDbAdaptor()).getDBHost(), ((MySQLAdaptor)instance.getDbAdaptor()).getDBName(), ((MySQLAdaptor)instance.getDbAdaptor()).getDBUser(), ((MySQLAdaptor)instance.getDbAdaptor()).getDBPwd() ,((MySQLAdaptor)instance.getDbAdaptor()).getDBPort());
-						adaptorPool.put(Thread.currentThread().getName(), tmpAdaptor);
-						instance.setDbAdaptor(tmpAdaptor);
+					tmpAdaptor = new MySQLAdaptor( ((MySQLAdaptor)instance.getDbAdaptor()).getDBHost(), ((MySQLAdaptor)instance.getDbAdaptor()).getDBName(), ((MySQLAdaptor)instance.getDbAdaptor()).getDBUser(), ((MySQLAdaptor)instance.getDbAdaptor()).getDBPwd() ,((MySQLAdaptor)instance.getDbAdaptor()).getDBPort());
+					adaptorPool.put(Thread.currentThread().getName(), tmpAdaptor);
+					instance.setDbAdaptor(tmpAdaptor);
 				}
 				String identifier;
 				try

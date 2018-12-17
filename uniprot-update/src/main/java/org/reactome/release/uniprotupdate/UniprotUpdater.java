@@ -131,13 +131,6 @@ public class UniprotUpdater
 		long totalUniprotRecords = 0;
 		for (UniprotData data : uniprotData)
 		{
-			List<String> geneList = new ArrayList<>();
-			if (data.getEnsembleGeneIDs()!=null)
-			{
-				geneList = data.getEnsembleGeneIDs().stream().distinct().collect(Collectors.toList());
-			}
-			List<GKInstance> referenceDNASequencesForThisUniprot = new ArrayList<>(geneList.size());
-			
 			i++;
 			long currentTime = System.currentTimeMillis();
 			if ( TimeUnit.MILLISECONDS.toSeconds(currentTime - startTime) > 30 )
@@ -151,6 +144,13 @@ public class UniprotUpdater
 			// first, let's make sure this piece of data is for a species that we can update via Uniprot Update.
 			if (speciesToUpdate.contains(data.getScientificName()))
 			{
+				List<String> geneList = new ArrayList<>();
+				if (data.getEnsembleGeneIDs()!=null)
+				{
+					geneList = data.getEnsembleGeneIDs().stream().distinct().collect(Collectors.toList());
+				}
+//				List<GKInstance> referenceDNASequencesForThisUniprot = new ArrayList<>(geneList.size());
+				
 				// Update secondary accessions
 				String accession = data.getAccessions().get(0);
 				if (secondaryAccessions.containsKey(accession))
@@ -165,24 +165,34 @@ public class UniprotUpdater
 				// for human data, we may need to update a ReferenceDNASequence.
 				if (data.getScientificName().equals(HOMO_SAPIENS))
 				{
-					this.processHumanData(adaptor, referenceDNASequences, referenceGeneProducts, instanceEdit, genesOKWithENSEMBL, data, geneList, referenceDNASequencesForThisUniprot, accession);
+					this.processHumanData(adaptor, referenceDNASequences, referenceGeneProducts, instanceEdit, genesOKWithENSEMBL, data, geneList, /* referenceDNASequencesForThisUniprot, */ accession);
 				}
 				else // Not human, but still need to process it...
 				{
-					this.processNonHumanData(adaptor, referenceGeneProducts, instanceEdit, data, referenceDNASequencesForThisUniprot, accession);
+					this.processNonHumanData(adaptor, referenceGeneProducts, instanceEdit, data, accession);
 				}
 			}
 		}
 	}
 
-	private void processNonHumanData(MySQLAdaptor adaptor, Map<String, GKInstance> referenceGeneProducts, GKInstance instanceEdit, UniprotData data, List<GKInstance> referenceDNASequencesForThisUniprot, String accession) throws InvalidAttributeException, InvalidAttributeValueException, Exception
-	{
+	/**
+	 * Process data elements whose species is not human.
+	 * @param adaptor - the database adaptor to use
+	 * @param referenceGeneProducts - a reference list of ReferenceGeneProducts
+	 * @param instanceEdit - the InstanceEdit that any changes will be associated with.
+	 * @param data - a Data element. This is an object that is produced by reading the Uniprot XML file.
+	 * @param accession - The Uniprot accession.
+	 * @throws InvalidAttributeException
+	 * @throws InvalidAttributeValueException
+	 * @throws Exception
+	 */
+	private void processNonHumanData(MySQLAdaptor adaptor, Map<String, GKInstance> referenceGeneProducts, GKInstance instanceEdit, UniprotData data, /* List<GKInstance> referenceDNASequencesForThisUniprot, */ String accession) throws InvalidAttributeException, InvalidAttributeValueException, Exception	{
 		if (!referenceGeneProducts.containsKey(accession))
 		{
 			GKInstance newRefGeneProduct = this.createNewReferenceGeneProduct(adaptor, instanceEdit, accession);
 			adaptor.storeInstance(newRefGeneProduct);
 			this.updateInstanceWithData(adaptor, newRefGeneProduct, data);
-			newRefGeneProduct.setAttributeValue(ReactomeJavaConstants.referenceGene, referenceDNASequencesForThisUniprot);
+//			newRefGeneProduct.setAttributeValue(ReactomeJavaConstants.referenceGene, referenceDNASequencesForThisUniprot);
 			adaptor.updateInstanceAttribute(newRefGeneProduct, ReactomeJavaConstants.referenceGene);
 			InstanceDisplayNameGenerator.generateDisplayName(newRefGeneProduct);
 			addIsoformsIfNecessary(adaptor, instanceEdit, data, accession, newRefGeneProduct);
@@ -209,6 +219,17 @@ public class UniprotUpdater
 		}
 	}
 
+	/**
+	 * Will check to see if a UniprotData object has any isoforms, and if so it will create new ones or update existing ones in the database.
+	 * @param adaptor - The MySQLAdaptor to use
+	 * @param instanceEdit - The InstanceEdit that any database changes will be associated with.
+	 * @param data - The UniprotData object.
+	 * @param accession - The Uniprot accession.
+	 * @param newRefGeneProduct - This method usually gets called when a new ReferenceGeneProduct has been created. That RGP should be passed in here.
+	 * @throws InvalidAttributeException
+	 * @throws InvalidAttributeValueException
+	 * @throws Exception
+	 */
 	private void addIsoformsIfNecessary(MySQLAdaptor adaptor, GKInstance instanceEdit, UniprotData data, String accession, GKInstance newRefGeneProduct) throws InvalidAttributeException, InvalidAttributeValueException, Exception
 	{
 		// add Isoforms if available...
@@ -221,16 +242,31 @@ public class UniprotUpdater
 		}
 	}
 
-	private void processHumanData(MySQLAdaptor adaptor, Map<String, GKInstance> referenceDNASequences, Map<String, GKInstance> referenceGeneProducts, GKInstance instanceEdit, Set<String> genesOKWithENSEMBL, UniprotData data, List<String> geneList, List<GKInstance> referenceDNASequencesForThisUniprot, String accession) throws InvalidAttributeException, Exception, InvalidAttributeValueException
+	/**
+	 * Process UniprotData object whose species is Human.
+	 * @param adaptor - the database adaptor to use.
+	 * @param referenceDNASequences - a map of ReferenceDNASequences, keyed by ENSEMBL Gene IDs
+	 * @param referenceGeneProducts - a list of ReferenceGeneProducts, keyed by accession.
+	 * @param instanceEdit - the InstanceEdit that any changes will be associated with.
+	 * @param genesOKWithENSEMBL - A set of Genes that are considered "OK" in ENSEMBL.
+	 * @param data - the UniprotData object to process.
+	 * @param geneList - a list of ENSEMBL Gene IDs for this UniprotData object.
+	 * @param accession - The accession
+	 * @throws InvalidAttributeException
+	 * @throws Exception
+	 * @throws InvalidAttributeValueException
+	 */
+	private void processHumanData(MySQLAdaptor adaptor, Map<String, GKInstance> referenceDNASequences, Map<String, GKInstance> referenceGeneProducts, GKInstance instanceEdit, Set<String> genesOKWithENSEMBL, UniprotData data, List<String> geneList, /* List<GKInstance> referenceDNASequencesForThisUniprot, */ String accession) throws InvalidAttributeException, Exception, InvalidAttributeValueException
 	{
+		List<GKInstance> referenceDNASequencesForThisUniprot = new ArrayList<>();
 		// Will need a flattened list of geneNames.
-		List<String> flattenedGeneNames = new ArrayList<>();
+		List<String> geneNames = new ArrayList<>();
 		String primaryGeneName = "";
 
-		flattenedGeneNames = data.getFlattenedGeneNames();
-		if (flattenedGeneNames != null && !flattenedGeneNames.isEmpty())
+		geneNames = data.getFlattenedGeneNames();
+		if (geneNames != null && !geneNames.isEmpty())
 		{
-			primaryGeneName = flattenedGeneNames.get(0);
+			primaryGeneName = geneNames.get(0);
 		}
 
 		// Report when there are multiple gene names.
@@ -258,7 +294,7 @@ public class UniprotUpdater
 				// Check to see if the ENSEMBL ID (Remember: the XSL only selects for "Ensembl" gene names) is in the list of ReferenceDNASequences.
 				if (referenceDNASequences.containsKey(ensemblGeneID))
 				{
-					this.processForExistingENSEMBLID(adaptor, referenceDNASequences, instanceEdit, data, referenceDNASequencesForThisUniprot, flattenedGeneNames, ensemblGeneID);
+					this.processForExistingENSEMBLID(adaptor, referenceDNASequences, instanceEdit, data, referenceDNASequencesForThisUniprot, geneNames, ensemblGeneID);
 				}
 				// if the gene ID was NOT in the ReferenceDNASequences map, we may need to add it to the database.
 				else
@@ -269,7 +305,7 @@ public class UniprotUpdater
 					}
 					else
 					{
-						GKInstance newRefDNASequence = this.createNewReferenceDNASequence(adaptor, instanceEdit, flattenedGeneNames, primaryGeneName, ensemblGeneID);
+						GKInstance newRefDNASequence = this.createNewReferenceDNASequence(adaptor, instanceEdit, geneNames, primaryGeneName, ensemblGeneID);
 						Long newDBID = adaptor.storeInstance(newRefDNASequence);
 						InstanceDisplayNameGenerator.setDisplayName(newRefDNASequence);
 						adaptor.updateInstanceAttribute(newRefDNASequence, ReactomeJavaConstants._displayName);
@@ -311,26 +347,42 @@ public class UniprotUpdater
 		}
 	}
 
-	private void processForExistingENSEMBLID(MySQLAdaptor adaptor, Map<String, GKInstance> referenceDNASequences, GKInstance instanceEdit, UniprotData data, List<GKInstance> referenceDNASequencesForThisUniprot, List<String> flattenedGeneNames, String ensemblGeneID) throws InvalidAttributeException, Exception, InvalidAttributeValueException
+	/**
+	 * Process a UniprotData object for existing ENSEMBL IDs
+	 * @param adaptor - the database adaptor to use
+	 * @param referenceDNASequences - A map of ReferenceDNASequences, keyed by ENSEMBL Gene ID
+	 * @param instanceEdit - the InstanceEdit that any changes will be associated with.
+	 * @param data - the UniprotData object.
+	 * @param referenceDNASequencesForThisUniprot - a list of ReferenceDNASequences for the current Uniprot accession. NOTE: This list may be modified (appended to) by this function!!
+	 * @param geneNames - A list of gene names for this UniprotData object.
+	 * @param ensemblGeneID - The ENSEMBL Gene ID to check for
+	 * @throws InvalidAttributeException
+	 * @throws Exception
+	 * @throws InvalidAttributeValueException
+	 */
+	private void processForExistingENSEMBLID(MySQLAdaptor adaptor, Map<String, GKInstance> referenceDNASequences, GKInstance instanceEdit, UniprotData data, List<GKInstance> referenceDNASequencesForThisUniprot, List<String> geneNames, String ensemblGeneID) throws InvalidAttributeException, Exception, InvalidAttributeValueException
 	{
-		boolean speciesModified;
 		// If this instance already exists in the database, let's update it.
 		GKInstance referenceDNASequence = referenceDNASequences.get(ensemblGeneID);
 		referenceDNASequencesForThisUniprot.add(referenceDNASequence);
-		GKInstance speciesFromDB = (GKInstance) referenceDNASequence.getAttributeValue(ReactomeJavaConstants.species);
-
-		@SuppressWarnings("unchecked")
-		Set<String> speciesNamesFromDB = new HashSet<>((List<String>) speciesFromDB.getAttributeValuesList(ReactomeJavaConstants.name));
-		speciesModified = this.updateSpeciesIfNecessary(adaptor, data, referenceDNASequence, speciesNamesFromDB);
-
-		@SuppressWarnings("unchecked")
-		Set<String> geneNamesFromDB = new HashSet<>((List<String>) referenceDNASequence.getAttributeValuesList(ReactomeJavaConstants.geneName));
-		boolean nameModified = this.updateGeneNameIfNecessary(adaptor, flattenedGeneNames, ensemblGeneID, referenceDNASequence, geneNamesFromDB);
+		boolean speciesModified = this.updateSpeciesIfNecessary(adaptor, data, referenceDNASequence, UniprotUpdater.humanSpecies);
+		boolean nameModified = this.updateGeneNameIfNecessary(adaptor, geneNames, ensemblGeneID, referenceDNASequence);
 		boolean dbModified = this.setDatabaseIfNecessary(adaptor, referenceDNASequence);
 		boolean instancedWasModified = speciesModified || nameModified || dbModified;
 		this.addInstanceEditIfNecessary(adaptor, instanceEdit, ensemblGeneID, instancedWasModified, referenceDNASequence);
 	}
 
+	/**
+	 * Adds an instance edit to an object in the "modified" attribute, if necessary.
+	 * @param adaptor - the database adaptor to use
+	 * @param instanceEdit - the InstaceEdit to used
+	 * @param ensemblGeneID - the ENSEMBL Gene ID (used only for logging)
+	 * @param modified - a flag to indicate if the instances was modified or not.
+	 * @param referenceDNASequence - The instance that will get the InstanceEdit, as "modified", if <code>modified==true</code>
+	 * @throws InvalidAttributeException
+	 * @throws Exception
+	 * @throws InvalidAttributeValueException
+	 */
 	private void addInstanceEditIfNecessary(MySQLAdaptor adaptor, GKInstance instanceEdit, String ensemblGeneID, boolean modified, GKInstance referenceDNASequence) throws InvalidAttributeException, Exception, InvalidAttributeValueException
 	{
 		// if the instance was modified, attach a new InstanceEdit to the modified attribute.
@@ -343,19 +395,46 @@ public class UniprotUpdater
 		}
 	}
 
-	private boolean updateSpeciesIfNecessary(MySQLAdaptor adaptor, UniprotData data, GKInstance referenceDNASequence, Set<String> speciesNamesFromDB) throws InvalidAttributeException, InvalidAttributeValueException, Exception
+	/**
+	 * Updates the species of a ReferenceDNASequence, if necessary. An update is deemed necessary if the species name from the database does not match (contain) the scientific species name in the UniprotData object.
+	 * In that case, the "species" attribute will be set to <code>newSpecies</code>, and <b>true</b> will be returned to indicate that an update occurred.
+	 * 
+	 * @param adaptor - the adaptor to use.
+	 * @param data - the UniprotData object.
+	 * @param referenceDNASequence - the ReferenceDNASequence to possibly update.
+	 * @param newSpecies - the new species to update to.
+	 * @return <b>true</b> if the species was updated.
+	 * @throws InvalidAttributeException
+	 * @throws InvalidAttributeValueException
+	 * @throws Exception
+	 */
+	private boolean updateSpeciesIfNecessary(MySQLAdaptor adaptor, UniprotData data, GKInstance referenceDNASequence, GKInstance newSpecies) throws InvalidAttributeException, InvalidAttributeValueException, Exception
 	{
+		GKInstance speciesFromDB = (GKInstance) referenceDNASequence.getAttributeValue(ReactomeJavaConstants.species);
+
+		@SuppressWarnings("unchecked")
+		Set<String> speciesNamesFromDB = new HashSet<>((List<String>) speciesFromDB.getAttributeValuesList(ReactomeJavaConstants.name));
+
 		boolean modified = false;
 		// The old Perl code forces the species to be changed if the one in the database does not match the one in the file.
 		if (!speciesNamesFromDB.contains(data.getScientificName()))
 		{
-			referenceDNASequence.setAttributeValue(ReactomeJavaConstants.species, humanSpecies);
+			referenceDNASequence.setAttributeValue(ReactomeJavaConstants.species, newSpecies);
 			adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.species);
 			modified = true;
 		}
 		return modified;
 	}
 
+	/**
+	 * Sets the ReferenceDatabase of a ReferenceDNASequence, if necessary. In this case, it is always checking for ENSEMBL_Homo_sapiens_GENE, and setting to that if it's not present.
+	 * @param adaptor - the database adaptor
+	 * @param referenceDNASequence - the ReferenceDNASequence to update, if necessary.
+	 * @return <b>true</b> if the ReferenceDNASequence was updated.
+	 * @throws InvalidAttributeException
+	 * @throws Exception
+	 * @throws InvalidAttributeValueException
+	 */
 	private boolean setDatabaseIfNecessary(MySQLAdaptor adaptor, GKInstance referenceDNASequence) throws InvalidAttributeException, Exception, InvalidAttributeValueException
 	{
 		boolean modified = false;
@@ -369,14 +448,28 @@ public class UniprotUpdater
 		return modified;
 	}
 
-	private boolean updateGeneNameIfNecessary(MySQLAdaptor adaptor, List<String> flattenedGeneNames, String ensemblGeneID, GKInstance referenceDNASequence, Set<String> geneNamesFromDB) throws InvalidAttributeException, InvalidAttributeValueException, Exception
+	/**
+	 * Add a gene name(s) to a ReferenceDNASequence, if it's not already on that RefDNASeq.
+	 * @param adaptor - the adaptor to use.
+	 * @param geneNames - a list of gene names
+	 * @param ensemblGeneID - the ENSMEBL Gene ID
+	 * @param referenceDNASequence - The ReferenceDNASequence that might be updated
+	 * @return <b>true</b> if the instance was updated.
+	 * @throws InvalidAttributeException
+	 * @throws InvalidAttributeValueException
+	 * @throws Exception
+	 */
+	private boolean updateGeneNameIfNecessary(MySQLAdaptor adaptor, List<String> geneNames, String ensemblGeneID, GKInstance referenceDNASequence) throws InvalidAttributeException, InvalidAttributeValueException, Exception
 	{
+		@SuppressWarnings("unchecked")
+		Set<String> geneNamesFromDB = new HashSet<>(referenceDNASequence.getAttributeValuesList(ReactomeJavaConstants.geneName));
+		
 		boolean modified = false;
 		// The old Perl code adds the geneName from the file, if it's not already in the database.
 		boolean modifiedGeneName = false;
-		if (flattenedGeneNames!=null && !flattenedGeneNames.isEmpty())
+		if (geneNames!=null && !geneNames.isEmpty())
 		{
-			for (String geneName : flattenedGeneNames)
+			for (String geneName : geneNames)
 			{
 				if (!geneNamesFromDB.contains(geneName))
 				{
@@ -398,8 +491,18 @@ public class UniprotUpdater
 		return modified;
 	}
 
-	
-
+	/**
+	 * Creates a new Isoform for a ReferenceGeneProduct, or updates an existing one. If the Isoform's ID contains the Uniprot accession, then a new isoform needs to be created.
+	 * Otherwise, there is a mismatch and an existing isoform will get updated.
+	 * @param adaptor - the adaptor to use.
+	 * @param instanceEdit - the InstanceEdit that will be associated with any changes.
+	 * @param accession - the Uniprot accession.
+	 * @param referenceGeneProduct - the ReferenceGeneProduct.
+	 * @param isoform - The Isoform to create and add to the RGP. If there is already an Isoform, it may be updated with information in this object.
+	 * @throws InvalidAttributeException
+	 * @throws InvalidAttributeValueException
+	 * @throws Exception
+	 */
 	private void createOrUpdateIsoform(MySQLAdaptor adaptor, GKInstance instanceEdit, String accession, GKInstance referenceGeneProduct, Isoform isoform) throws InvalidAttributeException, InvalidAttributeValueException, Exception
 	{
 		String isoformID = isoform.getIsoformID();
@@ -418,9 +521,17 @@ public class UniprotUpdater
 		}
 	}
 
+	/**
+	 * Updates an existing Isoform where there was a mismatch between the Isoform ID and the Uniprot accession.
+	 * The update will set the isoformParent on the Isoform to refer to all Isoforms whose variantIdentifier == isoformID and ReferenceGeneProducts whose identifer == UniprotAccession 
+	 * @param adaptor - the database adaptor.
+	 * @param isoformID - the Isoform ID
+	 * @param accession - the Uniprot Accession.
+	 * @throws Exception
+	 */
 	private void updateMismatchedIsoform(MySQLAdaptor adaptor, String isoformID, String accession) throws Exception
 	{
-		// Again, I really don't expect more than 1 to be returned, but still need to treat this as a collection.
+		// Again, we really shouldn't expect more than 1 to be returned, but we still *need* to treat this as a collection, because that's what the API returns.
 		@SuppressWarnings("unchecked")
 		Set<GKInstance> isoformsFromDB = (Set<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceIsoform, ReactomeJavaConstants.variantIdentifier, "=", isoformID);
 		List<GKInstance> allParents = new ArrayList<>();
@@ -495,6 +606,16 @@ public class UniprotUpdater
 		}
 	}
 
+	/**
+	 * Update an instance for some attribute.
+	 * @param adaptor - the database adaptor to use
+	 * @param instance - some Instance
+	 * @param data - A UniprotData object, from which the updates will be made.
+	 * @param attribute - can be one of: ReactomeJavaConstants.secondaryIdentifier, ReactomeJavaConstants.description, ReactomeJavaConstants.sequenceLength, ReactomeJavaConstants.species, "checksum", ReactomeJavaConstants.name, ReactomeJavaConstants.geneName, ReactomeJavaConstants.comment, ReactomeJavaConstants.keyword, "chain" 
+	 * @throws InvalidAttributeException
+	 * @throws InvalidAttributeValueException
+	 * @throws Exception
+	 */
 	private void updateInstanceForAttribute(MySQLAdaptor adaptor, GKInstance instance, UniprotData data, String attribute) throws InvalidAttributeException, InvalidAttributeValueException, Exception
 	{
 		// TODO: this method, and all of the methods that were extracted from it, should probably be moved to a new class, UniprotInstanceUpdater, whose job is to update a GKInstance.
@@ -572,9 +693,10 @@ public class UniprotUpdater
 				try
 				{
 					String oldChecksum = (String) instance.getAttributeValue("checksum");
-					if (oldChecksum != null && oldChecksum.length() > 0 && data.getSequenceChecksum().equals(oldChecksum))
+					String newChecksum = data.getSequenceChecksum();
+					if (oldChecksum != null && oldChecksum.length() > 0 && newChecksum.equals(oldChecksum))
 					{
-						updateInstanceWhenChecksumChanged(adaptor, instance, data, oldChecksum);
+						updateInstanceChecksum(adaptor, instance, newChecksum, oldChecksum);
 					}
 					else
 					{
@@ -638,6 +760,15 @@ public class UniprotUpdater
 		}
 	}
 
+	/**
+	 * Updates the "chain" attribute on an instance.
+	 * @param adaptor - the database adaptor to use.
+	 * @param instance - the instance to update.
+	 * @param data - the UniprotData object on which to base the chain update. 
+	 * @throws Exception
+	 * @throws InvalidAttributeException
+	 * @throws InvalidAttributeValueException
+	 */
 	private void updateChain(MySQLAdaptor adaptor, GKInstance instance, UniprotData data) throws Exception, InvalidAttributeException, InvalidAttributeValueException
 	{
 		List<String> chainStrings = new ArrayList<>();
@@ -650,16 +781,33 @@ public class UniprotUpdater
 		adaptor.updateInstanceAttribute(instance, "chain");
 	}
 
-	private void updateInstanceWhenChecksumChanged(MySQLAdaptor adaptor, GKInstance instance, UniprotData data, String oldChecksum) throws InvalidAttributeException, InvalidAttributeValueException, Exception
+	/**
+	 * Updates an Instance's checksum.
+	 * @param adaptor - the database adaptor to use.
+	 * @param instance - the instance to update.
+	 * @param data - the UniprotData object which contains the new checksum.
+	 * @param oldChecksum - the old checksum.
+	 * @throws InvalidAttributeException
+	 * @throws InvalidAttributeValueException
+	 * @throws Exception
+	 */
+	private void updateInstanceChecksum(MySQLAdaptor adaptor, GKInstance instance, String newChecksum, String oldChecksum) throws InvalidAttributeException, InvalidAttributeValueException, Exception
 	{
 		// The old Perl code prints a warning when the checksum changes.
-		sequencesLog.info("Checksum has changed! DB ID: " + instance.getDBID() + "\tOld checksum: " + oldChecksum + "\tNew checksum:" + data.getSequenceChecksum());
+		sequencesLog.info("Checksum has changed! DB ID: " + instance.getDBID() + "\tOld checksum: " + oldChecksum + "\tNew checksum:" + newChecksum);
 		instance.setAttributeValue("isSequenceChanged", true); // TODO: add "isSequenceChanged" to ReactomeJavaConstants
-		instance.setAttributeValue("checksum", data.getSequenceChecksum());
+		instance.setAttributeValue("checksum", newChecksum);
 		adaptor.updateInstanceAttribute(instance, "isSequenceChanged");
 		adaptor.updateInstanceAttribute(instance, "checksum");
 	}
 
+	/**
+	 * Produces a list of Species Instances whose name matches a name given as an argument. Also maintains an internal cache of species, keyed by name. Use this method when you want cached species.
+	 * @param adaptor - the database adaptor.
+	 * @param speciesName - the species name to look up in the cache.
+	 * @return A list of Species Instances whose name matches <code>speciesName</code>. It will probably only have 1 item in it.
+	 * @throws Exception
+	 */
 	private List<GKInstance> determineDataSpeciesInsts(MySQLAdaptor adaptor, String speciesName) throws Exception
 	{
 		List<GKInstance> dataSpeciesInst;
@@ -680,6 +828,13 @@ public class UniprotUpdater
 		return dataSpeciesInst;
 	}
 
+	/**
+	 * Updates the "_chainChangeLog" attribute for an Instance in the database.
+	 * @param adaptor - the database adatptor to use.
+	 * @param newChains - A set of new chains to log.
+	 * @param instance - The Instance that the chains are associated with.
+	 * @throws Exception
+	 */
 	private void logChainChanges(MySQLAdaptor adaptor, Set<String> newChains, GKInstance instance) throws Exception
 	{
 		@SuppressWarnings("unchecked")
@@ -725,6 +880,15 @@ public class UniprotUpdater
 		}
 	}
 
+	/**
+	 * Creates a new ReferenceGeneProduct. NOTE: this method does not *persist* the new instance.
+	 * @param adaptor - The database adaptor to use.
+	 * @param instanceEdit - the InstanceEdit to associate with the new RGP
+	 * @param accession - the Uniprot Accession for the new RGP.
+	 * @return A newly created ReferenceGeneProduct, whose identifier is <code>accession</code>
+	 * @throws InvalidAttributeException
+	 * @throws InvalidAttributeValueException
+	 */
 	private GKInstance createNewReferenceGeneProduct(MySQLAdaptor adaptor, GKInstance instanceEdit, String accession) throws InvalidAttributeException, InvalidAttributeValueException
 	{
 		GKInstance referenceGeneProduct = new GKInstance(adaptor.getSchema().getClassByName(ReactomeJavaConstants.ReferenceGeneProduct));
@@ -736,13 +900,24 @@ public class UniprotUpdater
 		return referenceGeneProduct;
 	}
 
-	private GKInstance createNewReferenceDNASequence(MySQLAdaptor adaptor, GKInstance instanceEdit, List<String> flattenedGeneNames, String primaryGeneName, String ensemblGeneID) throws InvalidAttributeException, InvalidAttributeValueException
+	/**
+	 * Creates a new ReferenceDNASequence. NOTE: this method does not *persist* the new instance.
+	 * @param adaptor - the database adaptor to use.
+	 * @param instanceEdit - the InstanceEdit to associate the created object with.
+	 * @param geneNames - Gene names for this ReferencDNASequence.
+	 * @param primaryGeneName - the Primary gene name.
+	 * @param ensemblGeneID - the ENSEMBL Gene ID.
+	 * @return a newly created ReferenceDNASequence.
+	 * @throws InvalidAttributeException
+	 * @throws InvalidAttributeValueException
+	 */
+	private GKInstance createNewReferenceDNASequence(MySQLAdaptor adaptor, GKInstance instanceEdit, List<String> geneNames, String primaryGeneName, String ensemblGeneID) throws InvalidAttributeException, InvalidAttributeValueException
 	{
 		GKInstance newRefDNASequence = new GKInstance(adaptor.getSchema().getClassByName(ReactomeJavaConstants.ReferenceDNASequence));
 		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.identifier, ensemblGeneID);
 		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.species, humanSpecies);
 		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.referenceDatabase, UniprotUpdater.ensemblHSapiensRefDB);
-		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.geneName, flattenedGeneNames);
+		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.geneName, geneNames);
 		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.created, instanceEdit);
 		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.modified, null);
 		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.name, primaryGeneName);
@@ -750,6 +925,18 @@ public class UniprotUpdater
 		return newRefDNASequence;
 	}
 
+	/**
+	 * Creates a new ReferenceIsoform AND persists it in the database.
+	 * @param adaptor - the database adaptor to use.
+	 * @param instanceEdit - the InstanceEdit to use when creating the new instance.
+	 * @param accession - the Uniprot accession. 
+	 * @param referenceGeneProduct - The ReferenceGeneProduct that will b used for the "isoformParent" attribute.
+	 * @param isoformID - the Isoform ID.
+	 * @return the DBID of the new Isoform.
+	 * @throws InvalidAttributeException
+	 * @throws InvalidAttributeValueException
+	 * @throws Exception
+	 */
 	private Long createNewReferenceIsoform(MySQLAdaptor adaptor, GKInstance instanceEdit, String accession, GKInstance referenceGeneProduct, String isoformID) throws InvalidAttributeException, InvalidAttributeValueException, Exception
 	{
 		Long dbID;
@@ -767,6 +954,16 @@ public class UniprotUpdater
 		return dbID;
 	}
 
+	/**
+	 * Updates a ReferenceGeneProduct: updates the attributes of the ReferenceGeneProduct based on the contents of a UniprotData object.
+	 * Also updates or creates Isoforms for the ReferenceGeneProduct.
+	 * @param adaptor - the database adatptor to use.
+	 * @param referenceGeneProduct - the ReferenceGeneProduct.
+	 * @param data - the UniprotData object.
+	 * @param instanceEdit - an InstanceEdit object to use when modyfing/creating objects.
+	 * @param accession - the Uniprot accession.
+	 * @throws Exception
+	 */
 	private void updateReferenceGeneProduct(MySQLAdaptor adaptor, GKInstance referenceGeneProduct, UniprotData data, GKInstance instanceEdit, String accession) throws Exception
 	{
 		// TODO: add code to check for duplicates.
@@ -774,6 +971,20 @@ public class UniprotUpdater
 		updateOrCreateIsoforms(adaptor, referenceGeneProduct, data.getIsoforms(), instanceEdit, accession, data);
 	}
 
+	/**
+	 * Creates or updates Isoforms for a ReferenceGeneProduct.
+	 * If an Isoform's ID (from the XML data file) contains the Uniprot accession, this method will try to get ReferenceIsoforms whose variantIdentifier matches the Isoform's ID.
+	 * When an ReferenceIsoform from the database has a variantIdentifier equal to the IsoformID from the XML file, the ReferenceIsoform from the database
+	 * gets updated with the content of the UniprotData object. When no ReferenceIsoforms can be found in the database, a new one is created.
+	 * If the Uniprot Accession does not contain the Isoform ID as a substring it is considered a mismatch.
+	 * @param adaptor - the database adaptor to use.
+	 * @param referenceGeneProduct - The ReferenceGeneProduct
+	 * @param isoforms - A list of Isoforms.
+	 * @param instanceEdit - the InstanceEdit to use for any database persistence.
+	 * @param accession - the Uniprot accession.
+	 * @param data - the UniprotData object.
+	 * @throws Exception
+	 */
 	private void updateOrCreateIsoforms(MySQLAdaptor adaptor, GKInstance referenceGeneProduct, List<Isoform> isoforms, GKInstance instanceEdit, String accession, UniprotData data) throws Exception
 	{
 		if (isoforms != null)
@@ -783,7 +994,7 @@ public class UniprotUpdater
 				String isoformID = isoform.getIsoformID();
 
 				@SuppressWarnings("unchecked")
-				List<GKInstance> refIsoformsFromDB = new ArrayList<>((Set<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceIsoform, ReactomeJavaConstants.variantIdentifier, "=", isoform.getIsoformID()));
+				List<GKInstance> refIsoformsFromDB = new ArrayList<>(adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceIsoform, ReactomeJavaConstants.variantIdentifier, "=", isoform.getIsoformID()));
 				if (isoformID.contains(accession))
 				{
 					// Update existing ReferenceIsoforms
@@ -842,6 +1053,12 @@ public class UniprotUpdater
 		this.adaptorPool.clear();
 	}
 	
+	/**
+	 * Delete obsolete instances. An instance is considered "obsolete" if it has no referrers.
+	 * @param adaptor - the adaptor to use.
+	 * @param pathToUnreviewedUniprotIDsFile - path to the "Unreviewed UniprotIDs file" - if a Uniprot identifier is not found in this file, the instance associated with the identifier is a potential candidate for deletion (depending on referrer counts)
+	 * @throws Exception
+	 */
 	public void deleteObsoleteInstances(MySQLAdaptor adaptor, String pathToUnreviewedUniprotIDsFile) throws Exception
 	{
 		logger.info("Preparing to delete obsolete instances...");
@@ -883,6 +1100,13 @@ public class UniprotUpdater
 		// TODO: Add a progress meter/counter for this loop.
 	}
 
+	/**
+	 * Finds identifiers to delete. An instance will be added to the list of "Instances to delete" if it has 0 referrers.
+	 * @param adaptor - the adaptor to use.
+	 * @param referenceGeneProductMap - a Map of ReferenceGeneProducts, keyed by identifier.
+	 * @param identifiersToCheck - a list of identifiers to check
+	 * @return a list of Instances that can be deleted.
+	 */
 	private List<GKInstance> findIdentifiersToDelete(MySQLAdaptor adaptor, Map<String, GKInstance> referenceGeneProductMap, List<String> identifiersToCheck)
 	{
 		List<GKInstance> identifiersToDelete = new ArrayList<>();
@@ -918,6 +1142,13 @@ public class UniprotUpdater
 		return identifiersToDelete;
 	}
 
+	/**
+	 * Finds identifiers that are in the "Unreviewed Uniprot IDs" file AND and in the database.
+	 * @param pathToUnreviewedUniprotIDsFile - the path to the file.
+	 * @param referenceGeneProductMap - the Map of ReferenceGeneProducts, keyed by identifier.
+	 * @return
+	 * @throws FileNotFoundException
+	 */
 	private Set<String> findIdentifiersInFileAndDB(String pathToUnreviewedUniprotIDsFile, Map<String, GKInstance> referenceGeneProductMap) throws FileNotFoundException
 	{
 		Set<String> identifiersInFileAndDB = new HashSet<>();
@@ -938,6 +1169,12 @@ public class UniprotUpdater
 		return identifiersInFileAndDB;
 	}
 
+	/**
+	 * Gets the number of referrers an instance has.
+	 * @param referenceGeneProduct - the ReferenceGeneProduct to check.
+	 * @return The number of instances that refer to the given object.
+	 * @throws Exception
+	 */
 	private int getReferrerCount(GKInstance referenceGeneProduct) throws Exception
 	{
 		@SuppressWarnings("unchecked")
@@ -953,6 +1190,14 @@ public class UniprotUpdater
 		return referrerCount;
 	}
 
+	/**
+	 * Deletes instances.
+	 * @param adaptor - the database adaptor to use.
+	 * @param identifiersToDelete - the list of identifiers that should be deleted.
+	 * @return the number of items that were deleted.
+	 * @throws SQLException
+	 * @throws TransactionsNotSupportedException
+	 */
 	private int deleteInstances(MySQLAdaptor adaptor, List<GKInstance> identifiersToDelete) throws SQLException, TransactionsNotSupportedException
 	{
 		int deletedCount = 0;

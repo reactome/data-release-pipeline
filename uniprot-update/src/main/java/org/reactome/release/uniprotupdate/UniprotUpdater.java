@@ -2,6 +2,7 @@ package org.reactome.release.uniprotupdate;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.SQLException;
@@ -857,23 +858,8 @@ public class UniprotUpdater
 			}
 		}
 		logger.info("{} ReferenceGeneProducts in map.", referenceGeneProductMap.size());
-		Set<String> identifiersInFileAndDB = new HashSet<>();
-		List<GKInstance> identifiersToDelete = new ArrayList<>();
-		//Collection<GKSchemaAttribute> referringAttributes = null;
-		logger.info("Loading file: {}", pathToUnreviewedUniprotIDsFile);
-		FileInputStream fis = new FileInputStream(pathToUnreviewedUniprotIDsFile);
-		BufferedInputStream bis = new BufferedInputStream(fis);
-		try (Scanner scanner = new Scanner(bis))
-		{
-			while (scanner.hasNextLine())
-			{
-				String identifierFromFile = scanner.nextLine().trim();
-				if (referenceGeneProductMap.containsKey(identifierFromFile))
-				{
-					identifiersInFileAndDB.add(identifierFromFile);
-				}
-			}
-		}
+		
+		Set<String> identifiersInFileAndDB = findIdentifiersInFileAndDB(pathToUnreviewedUniprotIDsFile, referenceGeneProductMap);
 		logger.info("{} identifiers that are in the database AND in the unreviewed Uniprot identifier file.", identifiersInFileAndDB.size());
 		// Now that we know which identifiers *are* in the list of unreviewed Uniprot identifiers, 
 		// we need to look at all ReferenceGeneProducts *not* in that list. Might need to delete some of them.
@@ -881,6 +867,25 @@ public class UniprotUpdater
 														.filter(identifier -> !identifiersInFileAndDB.contains(identifier))
 														.collect(Collectors.toList());
 		logger.info("{} identifiers need to be checked for referrer count.", identifiersToCheck.size());
+		List<GKInstance> identifiersToDelete = findIdentifiersToDelete(adaptor, referenceGeneProductMap, identifiersToCheck);
+		this.cleanAdaptorPool();
+		// Now do the actual deletions
+		logger.info("{} ReferenceGeneProducts will be deleted.", identifiersToDelete.size());
+		int deletedCount = deleteInstances(adaptor, identifiersToDelete);
+		logger.info("{} instances have been deleted.", deletedCount);
+		logger.info("Finished deleting obsolete ReferenceGeneProducts with no referrers.");
+		// TODO: The number of items in the file will be much larger than the number of ReferenceGeneProducts (120243849 vs 115769, at the time of writing 2018-07-31).
+		// So... instead of trying to load the whole file into memory, convert the ReferenceGeneProducts into a Map (keyed by identifier) and check the
+		// map for each line read - then you don't have to store the whole file in memory, just the current line!
+		// Will probably be faster. The file has 120243849 lines and Java is slowing down when trying to load each line into a Set (TreeSet or HashSet - they both perform poorly).
+		// TODO: Idea for parallelization: instead of deleting objects in this loop, process these items in parallel and add the DB IDs of things to delete to a thread-safe list,
+		// then go through that list (serially) and delete things.
+		// TODO: Add a progress meter/counter for this loop.
+	}
+
+	private List<GKInstance> findIdentifiersToDelete(MySQLAdaptor adaptor, Map<String, GKInstance> referenceGeneProductMap, List<String> identifiersToCheck)
+	{
+		List<GKInstance> identifiersToDelete = new ArrayList<>();
 		// TODO: this loop is slow. Multithread it somehow.
 		//for (String identifier : identifiersToCheck)
 		// Check each identifier: If it has 0 referrers, no variantIdentifier, and is not in the unreviewed Uniprot IDs list, it can be deleted, so it will be added to identifiersToDelete.
@@ -910,19 +915,27 @@ public class UniprotUpdater
 				e.printStackTrace();
 			}
 		});
-		this.cleanAdaptorPool();
-		// Now do the actual deletions
-		logger.info("{} ReferenceGeneProducts will be deleted.", identifiersToDelete.size());
-		int deletedCount = deleteInstances(adaptor, identifiersToDelete);
-		logger.info("{} instances have been deleted.", deletedCount);
-		logger.info("Finished deleting obsolete ReferenceGeneProducts with no referrers.");
-		// TODO: The number of items in the file will be much larger than the number of ReferenceGeneProducts (120243849 vs 115769, at the time of writing 2018-07-31).
-		// So... instead of trying to load the whole file into memory, convert the ReferenceGeneProducts into a Map (keyed by identifier) and check the
-		// map for each line read - then you don't have to store the whole file in memory, just the current line!
-		// Will probably be faster. The file has 120243849 lines and Java is slowing down when trying to load each line into a Set (TreeSet or HashSet - they both perform poorly).
-		// TODO: Idea for parallelization: instead of deleting objects in this loop, process these items in parallel and add the DB IDs of things to delete to a thread-safe list,
-		// then go through that list (serially) and delete things.
-		// TODO: Add a progress meter/counter for this loop.
+		return identifiersToDelete;
+	}
+
+	private Set<String> findIdentifiersInFileAndDB(String pathToUnreviewedUniprotIDsFile, Map<String, GKInstance> referenceGeneProductMap) throws FileNotFoundException
+	{
+		Set<String> identifiersInFileAndDB = new HashSet<>();
+		logger.info("Loading file: {}", pathToUnreviewedUniprotIDsFile);
+		FileInputStream fis = new FileInputStream(pathToUnreviewedUniprotIDsFile);
+		BufferedInputStream bis = new BufferedInputStream(fis);
+		try (Scanner scanner = new Scanner(bis))
+		{
+			while (scanner.hasNextLine())
+			{
+				String identifierFromFile = scanner.nextLine().trim();
+				if (referenceGeneProductMap.containsKey(identifierFromFile))
+				{
+					identifiersInFileAndDB.add(identifierFromFile);
+				}
+			}
+		}
+		return identifiersInFileAndDB;
 	}
 
 	private int getReferrerCount(GKInstance referenceGeneProduct) throws Exception
@@ -934,7 +947,7 @@ public class UniprotUpdater
 		for (GKSchemaAttribute referringAttribute : referringAttributes)
 		{
 			@SuppressWarnings("unchecked")
-			Collection<GKInstance> referrers = (Collection<GKInstance>) referenceGeneProduct.getReferers(referringAttribute);
+			Collection<GKInstance> referrers = referenceGeneProduct.getReferers(referringAttribute);
 			referrerCount += referrers.size();
 		}
 		return referrerCount;

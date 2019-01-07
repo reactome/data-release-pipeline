@@ -133,8 +133,6 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 	private static int compareInstances(GKInstance inst1, GKInstance inst2, StringBuilder sb, int diffCount, int recursionDepth, int maxRecursionDepth, Predicate<? super SchemaAttribute> customAttributeNameFilter, boolean checkReferrers)
 	{
 		int count = diffCount;
-		SchemaClass class1 = inst1.getSchemClass();
-		SchemaClass class2 = inst2.getSchemClass();
 		
 		if (inst1 != null && inst2 != null)
 		{

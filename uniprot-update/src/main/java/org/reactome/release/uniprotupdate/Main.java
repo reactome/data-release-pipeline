@@ -15,12 +15,7 @@ public class Main
 
 	public static void main(String[] args) throws FileNotFoundException, IOException
 	{
-		String fileName = "uniprot-update.properties";
-		
-		if (args.length > 0)
-		{
-			fileName = args[0];
-		}
+		String fileName = args.length > 0 ? args[0] : "uniprot-update.properties";
 		
 		Properties props = new Properties();
 		props.load(new FileInputStream(fileName));

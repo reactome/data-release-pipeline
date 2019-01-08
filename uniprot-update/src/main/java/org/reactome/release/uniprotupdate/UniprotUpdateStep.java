@@ -1,13 +1,5 @@
 package org.reactome.release.uniprotupdate;
 
-import java.sql.SQLException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.gk.model.GKInstance;
@@ -17,6 +9,9 @@ import org.gk.schema.InvalidAttributeException;
 import org.reactome.release.common.ReleaseStep;
 import org.reactome.release.common.database.InstanceEditUtils;
 import org.reactome.release.uniprotupdate.dataschema.UniprotData;
+
+import java.sql.SQLException;
+import java.util.*;
 
 /**
  * 
@@ -39,26 +34,27 @@ public class UniprotUpdateStep extends ReleaseStep
 		String personID = props.getProperty("person.id"); 
 		
 		this.loadTestModeFromProperties(props);
-		boolean debugXML = Boolean.valueOf( props.getProperty("debugXML", "false") );
-				
-		List<UniprotData> uniprotData = ProcessUniprotXML.getDataFromUniprotFile(pathToUniprotFile, debugXML);
-		UniprotUpdater updater = new UniprotUpdater();
-		String creatorName = this.getClass().getName();
-		GKInstance instanceEdit = InstanceEditUtils.createInstanceEdit(adaptor, Long.valueOf(personID), creatorName );
-		
-		Map<String, GKInstance> referenceIsoforms = getIdentifierMappedCollectionOfType(adaptor, ReactomeJavaConstants.ReferenceIsoform, "UniProt");
-		logger.info("{} ReferenceIsoforms mapped by Identifier.", referenceIsoforms.size());
-		Map<String, GKInstance> referenceGeneProducts = getIdentifierMappedCollectionOfType(adaptor, ReactomeJavaConstants.ReferenceGeneProduct, "UniProt");
-		logger.info("{} ReferenceGeneProducts mapped by Identifier.", referenceGeneProducts.size());
-		Map<String, GKInstance> referenceDNASequences = getIdentifierMappedCollectionOfType(adaptor, ReactomeJavaConstants.ReferenceDNASequence, null);
-		logger.info("{} ReferenceDNASequences mapped by Identifier.", referenceDNASequences.size());
+
 		adaptor.executeQuery("SAVEPOINT " + SAVEPOINT_NAME , null);
 		adaptor.startTransaction();
-		updater.updateUniprotInstances(adaptor, uniprotData, referenceDNASequences, referenceGeneProducts, referenceIsoforms, instanceEdit);
+
+		String creatorName = this.getClass().getName();
+		GKInstance instanceEdit = InstanceEditUtils.createInstanceEdit(adaptor, Long.valueOf(personID), creatorName);
+		UniprotUpdater updater = new UniprotUpdater();
+		List<UniprotData> uniprotData = ProcessUniprotXML.getDataFromUniprotFile(pathToUniprotFile, debugXML(props));
+		updater.updateUniprotInstances(
+			adaptor,
+			uniprotData,
+			getReferenceDNASequences(adaptor),
+			getReferenceGeneProducts(adaptor),
+			getReferenceIsoforms(adaptor),
+			instanceEdit
+		);
 		// commit changes so far - deletion will be multithreaded, so each adaptor will need its own transaction.
 		adaptor.commit();
 		InstancesDeleter deleter = new InstancesDeleter();
 		deleter.deleteObsoleteInstances(adaptor, pathToUnreviewedUniprotIDsFile);
+
 		if (testMode)
 		{
 			logger.info("Test mode is set - Rolling back transaction...");
@@ -71,6 +67,21 @@ public class UniprotUpdateStep extends ReleaseStep
 			adaptor.commit();
 		}
 		logger.info("Done.");
+	}
+
+	private Map<String, GKInstance> getReferenceDNASequences(MySQLAdaptor adaptor)
+			throws Exception, InvalidAttributeException {
+		return getIdentifierMappedCollectionOfType(adaptor, ReactomeJavaConstants.ReferenceDNASequence, null);
+	}
+
+	private Map<String, GKInstance> getReferenceGeneProducts(MySQLAdaptor adaptor)
+			throws Exception, InvalidAttributeException {
+		return getIdentifierMappedCollectionOfType(adaptor, ReactomeJavaConstants.ReferenceGeneProduct, "UniProt");
+	}
+
+	private Map<String, GKInstance> getReferenceIsoforms(MySQLAdaptor adaptor)
+			throws Exception, InvalidAttributeException {
+		return getIdentifierMappedCollectionOfType(adaptor, ReactomeJavaConstants.ReferenceIsoform, "UniProt");
 	}
 
 	/**
@@ -147,8 +158,13 @@ public class UniprotUpdateStep extends ReleaseStep
 		{
 			adaptorPool.get(k).cleanUp();
 		}
+
+		logger.info("{}s {} mapped by Identifier.", reactomeClassName, instanceMap.size());
 		
 		return instanceMap;
 	}
 
+	private boolean debugXML(Properties props) {
+		return Boolean.valueOf(props.getProperty("debugXML", "false"));
+	}
 }

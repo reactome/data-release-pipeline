@@ -1,11 +1,5 @@
 package org.reactome.release.uniprotupdate;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.gk.model.GKInstance;
 import org.gk.model.InstanceDisplayNameGenerator;
 import org.gk.model.ReactomeJavaConstants;
@@ -13,6 +7,8 @@ import org.gk.persistence.MySQLAdaptor;
 import org.gk.schema.InvalidAttributeException;
 import org.gk.schema.InvalidAttributeValueException;
 import org.reactome.release.uniprotupdate.dataschema.UniprotData;
+
+import java.util.*;
 
 class HumanDataProcessor extends AbstractDataProcessor
 {
@@ -144,7 +140,9 @@ class HumanDataProcessor extends AbstractDataProcessor
 		// If this instance already exists in the database, let's update it.
 		GKInstance referenceDNASequence = referenceDNASequences.get(ensemblGeneID);
 		referenceDNASequencesForThisUniprot.add(referenceDNASequence);
-		boolean speciesModified = this.updateSpeciesIfNecessary(data, referenceDNASequence, UniprotUpdater.humanSpecies);
+		boolean speciesModified =
+				this.updateSpeciesIfNecessary(data, referenceDNASequence,
+						InstanceFetcher.getInstanceFetcher(this.adaptor).getHumanSpecies());
 		boolean nameModified = this.updateGeneNameIfNecessary(geneNames, ensemblGeneID, referenceDNASequence);
 		boolean dbModified = this.setDatabaseIfNecessary(referenceDNASequence);
 		boolean instancedWasModified = speciesModified || nameModified || dbModified;
@@ -193,9 +191,10 @@ class HumanDataProcessor extends AbstractDataProcessor
 	{
 		boolean modified = false;
 		// The old Perl code sets the reference database if it's not ENSEMBL_Homo_sapiens_GENE
-		if (!((String) ((GKInstance) referenceDNASequence.getAttributeValue(ReactomeJavaConstants.referenceDatabase)).getAttributeValue(ReactomeJavaConstants.name)).equals(UniprotUpdater.ENSEMBL_HOMO_SAPIENS_GENE))
+		if (!((String) ((GKInstance) referenceDNASequence.getAttributeValue(ReactomeJavaConstants.referenceDatabase)).getAttributeValue(ReactomeJavaConstants.name)).equals(UniprotConstants.ENSEMBL_HOMO_SAPIENS_GENE))
 		{
-			referenceDNASequence.setAttributeValue(ReactomeJavaConstants.referenceDatabase, UniprotUpdater.ensemblHSapiensRefDB);
+			InstanceFetcher instanceFetcher = InstanceFetcher.getInstanceFetcher(this.adaptor);
+			referenceDNASequence.setAttributeValue(ReactomeJavaConstants.referenceDatabase, instanceFetcher.getEnsemblHSapiensRefDB());
 			adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.referenceDatabase);
 			modified = true;
 		}

@@ -1,13 +1,13 @@
 package org.reactome.release.uniprotupdate;
 
-import java.util.List;
-
 import org.gk.model.GKInstance;
 import org.gk.model.InstanceDisplayNameGenerator;
 import org.gk.model.ReactomeJavaConstants;
 import org.gk.persistence.MySQLAdaptor;
 import org.gk.schema.InvalidAttributeException;
 import org.gk.schema.InvalidAttributeValueException;
+
+import java.util.List;
 
 /**
  * This class creates Instances.
@@ -42,7 +42,8 @@ public class InstanceCreator
 		GKInstance referenceGeneProduct = new GKInstance(this.adaptor.getSchema().getClassByName(ReactomeJavaConstants.ReferenceGeneProduct));
 		referenceGeneProduct.setAttributeValue(ReactomeJavaConstants.created, this.creationInstanceEdit);
 		referenceGeneProduct.setAttributeValue(ReactomeJavaConstants.modified, this.creationInstanceEdit);
-		referenceGeneProduct.setAttributeValue(ReactomeJavaConstants.referenceDatabase, UniprotUpdater.uniprotRefDB);
+		referenceGeneProduct.setAttributeValue(ReactomeJavaConstants.referenceDatabase,
+				InstanceFetcher.getInstanceFetcher(this.adaptor).getUniprotRefDB());
 		referenceGeneProduct.setAttributeValue(ReactomeJavaConstants.identifier, accession);
 		referenceGeneProduct.setDbAdaptor(this.adaptor);
 		return referenceGeneProduct;
@@ -61,8 +62,10 @@ public class InstanceCreator
 	{
 		GKInstance newRefDNASequence = new GKInstance(this.adaptor.getSchema().getClassByName(ReactomeJavaConstants.ReferenceDNASequence));
 		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.identifier, ensemblGeneID);
-		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.species, UniprotUpdater.humanSpecies);
-		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.referenceDatabase, UniprotUpdater.ensemblHSapiensRefDB);
+		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.species,
+				InstanceFetcher.getInstanceFetcher(this.adaptor).getHumanSpecies());
+		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.referenceDatabase,
+				InstanceFetcher.getInstanceFetcher(this.adaptor).getEnsemblHSapiensRefDB());
 		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.geneName, geneNames);
 		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.created, this.creationInstanceEdit);
 		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.modified, null);
@@ -87,7 +90,8 @@ public class InstanceCreator
 		GKInstance referenceIsoform = new GKInstance(this.adaptor.getSchema().getClassByName(ReactomeJavaConstants.ReferenceIsoform));
 		referenceIsoform.setAttributeValue(ReactomeJavaConstants.created, this.creationInstanceEdit);
 		referenceIsoform.setAttributeValue(ReactomeJavaConstants.identifier, accession);
-		referenceIsoform.setAttributeValue(ReactomeJavaConstants.referenceDatabase, UniprotUpdater.uniprotRefDB);
+		referenceIsoform.setAttributeValue(ReactomeJavaConstants.referenceDatabase,
+				InstanceFetcher.getInstanceFetcher(this.adaptor).getUniprotRefDB());
 		referenceIsoform.setAttributeValue(ReactomeJavaConstants.isoformParent, referenceGeneProduct);
 		referenceIsoform.setAttributeValue(ReactomeJavaConstants.variantIdentifier, isoformID);
 		referenceIsoform.setDbAdaptor(this.adaptor);

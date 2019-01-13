@@ -93,30 +93,27 @@ public class UniprotUpdateStep extends ReleaseStep
 	 * @throws Exception
 	 * @throws InvalidAttributeException
 	 */
-	private Map<String, GKInstance> getIdentifierMappedCollectionOfType(MySQLAdaptor adaptor, String reactomeClassName, String refDBName) throws Exception, InvalidAttributeException
+	private Map<String, GKInstance> getIdentifierMappedCollectionOfType(MySQLAdaptor adaptor, String reactomeClassName, String refDBName)
+		throws Exception, InvalidAttributeException
 	{
 		@SuppressWarnings("unchecked")
 		Collection<GKInstance> instances = (Collection<GKInstance>)adaptor.fetchInstancesByClass(reactomeClassName);
-		Map<String, GKInstance> instanceMap = Collections.synchronizedMap(new HashMap<String, GKInstance>(instances.size()));
+		Map<String, GKInstance> instanceMap = Collections.synchronizedMap(new HashMap<>(instances.size()));
 		//for (GKInstance instance : instances)
-		Map<String, MySQLAdaptor> adaptorPool = Collections.synchronizedMap(new HashMap<String, MySQLAdaptor>());
+		Map<String, MySQLAdaptor> adaptorPool = Collections.synchronizedMap(new HashMap<>());
 		
 		instances.parallelStream().forEach( instance -> 
 		{
 			try
 			{
-				MySQLAdaptor tmpAdaptor;
-				if (adaptorPool.containsKey(Thread.currentThread().getName()))
+				MySQLAdaptor tmpAdaptor = adaptorPool.get(Thread.currentThread().getName());;
+				if (tmpAdaptor == null)
 				{
-					tmpAdaptor = adaptorPool.get(Thread.currentThread().getName());
-					instance.setDbAdaptor(tmpAdaptor);
-				}
-				else
-				{
-					tmpAdaptor = new MySQLAdaptor( ((MySQLAdaptor)instance.getDbAdaptor()).getDBHost(), ((MySQLAdaptor)instance.getDbAdaptor()).getDBName(), ((MySQLAdaptor)instance.getDbAdaptor()).getDBUser(), ((MySQLAdaptor)instance.getDbAdaptor()).getDBPwd() ,((MySQLAdaptor)instance.getDbAdaptor()).getDBPort());
+					tmpAdaptor = cloneInstanceDBAdaptor(instance);
 					adaptorPool.put(Thread.currentThread().getName(), tmpAdaptor);
-					instance.setDbAdaptor(tmpAdaptor);
 				}
+				instance.setDbAdaptor(tmpAdaptor);
+
 				String identifier;
 				try
 				{
@@ -126,16 +123,7 @@ public class UniprotUpdateStep extends ReleaseStep
 						// fast-load the attributes now so accessing them later will be faster.
 						// tmpAdaptor.fastLoadInstanceAttributeValues(instance);
 						// Specify a ReferenceDatabase name that the instances should be constrained by.
-						if (refDBName!=null)
-						{
-							GKInstance refDB = (GKInstance) instance.getAttributeValue(ReactomeJavaConstants.referenceDatabase);
-							if (refDB != null && refDBName.equals(refDB.getAttributeValue(ReactomeJavaConstants.name)))
-							{
-								instanceMap.put(identifier, instance);
-							}
-						}
-						else
-						{
+						if (instanceHasAllowedRefDB(instance, refDBName)) {
 							instanceMap.put(identifier, instance);
 						}
 					}
@@ -166,5 +154,30 @@ public class UniprotUpdateStep extends ReleaseStep
 
 	private boolean debugXML(Properties props) {
 		return Boolean.valueOf(props.getProperty("debugXML", "false"));
+	}
+
+	private MySQLAdaptor cloneInstanceDBAdaptor(GKInstance instance) throws SQLException {
+		MySQLAdaptor instanceAdaptor = (MySQLAdaptor) instance.getDbAdaptor();
+
+		return new MySQLAdaptor(
+			instanceAdaptor.getDBHost(),
+			instanceAdaptor.getDBName(),
+			instanceAdaptor.getDBUser(),
+			instanceAdaptor.getDBPwd(),
+			instanceAdaptor.getDBPort()
+		);
+	}
+
+	private boolean instanceHasAllowedRefDB(GKInstance instance, String refDBName)
+		throws Exception, InvalidAttributeException {
+
+		// No constraint if no reference database name is specified
+		if (refDBName == null) {
+			return true;
+		}
+
+		GKInstance refDB = (GKInstance) instance.getAttributeValue(ReactomeJavaConstants.referenceDatabase);
+		return (refDB != null && refDBName.equals(refDB.getAttributeValue(ReactomeJavaConstants.name)));
+
 	}
 }

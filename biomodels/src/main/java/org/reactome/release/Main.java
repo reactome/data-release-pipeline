@@ -89,8 +89,7 @@ public class Main {
         try {
             pathways.addAll(dba.fetchInstancesByClass(ReactomeJavaConstants.Pathway));
         } catch (Exception e) {
-            logger.error("Unable to fetch pathways from database", e);
-            System.exit(1);
+            logAndThrow("Unable to fetch pathways from database", e);
         }
 
         return pathways;
@@ -116,8 +115,7 @@ public class Main {
                         fetchBiomodelsReferenceDatabase(dba, instanceEdit));
                 InstanceDisplayNameGenerator.setDisplayName(biomodelsDatabaseIdentifier);
             } catch (Exception e) {
-                logger.error("Unable to create BioModels database identifier for " + biomodelsId, e);
-                System.exit(1);
+                logAndThrow("Unable to create BioModels database identifier for " + biomodelsId, e);
             }
 
             biomodelsDatabaseIdentifiers.add(biomodelsDatabaseIdentifier);
@@ -147,8 +145,7 @@ public class Main {
                 "BioModels"
             ).toArray()[0];
         } catch (Exception e) {
-            logger.error("Unable to retrieve BioModels reference database", e);
-            System.exit(1);
+            logAndThrow("Unable to retrieve BioModels reference database", e);
         }
 
         if (biomodelsReferenceDatabase == null) {
@@ -203,9 +200,8 @@ public class Main {
         try {
             defaultPerson = dba.fetchInstance(defaultPersonId);
         } catch (Exception e) {
-            logger.error("Could not fetch Person entity with ID " + defaultPersonId +
+            logAndThrow("Could not fetch Person entity with ID " + defaultPersonId +
                 ". Please check that a Person entity exists in the database with this ID", e);
-            System.exit(1);
         }
 
         GKInstance newIE = null;
@@ -214,16 +210,14 @@ public class Main {
             newIE.addAttributeValue(ReactomeJavaConstants.dateTime, GKApplicationUtilities.getDateTime());
             newIE.addAttributeValue(ReactomeJavaConstants.note, note);
         } catch (InvalidAttributeException | InvalidAttributeValueException e) {
-            logger.error("Unable to create instance edit", e);
-            System.exit(1);
+            logAndThrow("Unable to create instance edit", e);
         }
         InstanceDisplayNameGenerator.setDisplayName(newIE);
 
         try {
             dba.storeInstance(newIE);
         } catch (Exception e) {
-            logger.error("Unable to store new instance edit", e);
-            System.exit(1);
+            logAndThrow("Unable to store new instance edit", e);
         }
         logger.info("Successfully created new instance edit with db id " + newIE.getDBID() + " for person id " +
             defaultPersonId);
@@ -242,5 +236,10 @@ public class Main {
         instanceEdit.addAttributeValue(ReactomeJavaConstants.author, person);
 
         return instanceEdit;
+    }
+
+    private static void logAndThrow(String errorMessage, Throwable e) {
+        logger.error(errorMessage, e);
+        throw new RuntimeException(errorMessage, e);
     }
 }

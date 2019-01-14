@@ -19,6 +19,10 @@ public class ModelsTSVParser {
     public static Map<String, List<String>> parse(String tsvFile) {
         Map<String, List<String>> pathwayToBiomodelsIds = new HashMap<>();
 
+        if (tsvFile == null || tsvFile.isEmpty()) {
+            return pathwayToBiomodelsIds;
+        }
+
         try(BufferedReader br = new BufferedReader(new FileReader(tsvFile))) {
             String line;
             while ((line = br.readLine()) != null) {

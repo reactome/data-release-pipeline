@@ -1,5 +1,8 @@
 package org.reactome.release;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -9,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 
 public class ModelsTSVParser {
+    private static final Logger logger = LogManager.getLogger();
+
     private ModelsTSVParser() { }
 
     public static Map<String, List<String>> parse(String tsvFile) {
@@ -34,7 +39,7 @@ public class ModelsTSVParser {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("Problem encountered processing tsvFile " + tsvFile, e);
         }
 
         return pathwayToBiomodelsIds;

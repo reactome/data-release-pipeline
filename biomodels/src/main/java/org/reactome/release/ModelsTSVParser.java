@@ -21,6 +21,10 @@ public class ModelsTSVParser {
                 String biomodelsId = fields[0];
                 String pathwayStableId = fields[1];
 
+                if (!matchBioModelsPattern(biomodelsId) || !matchStableIdPattern(pathwayStableId)) {
+                    continue;
+                }
+
                 if (pathwayToBiomodelsIds.get(pathwayStableId) == null) {
                     List<String> biomodelsIds = new ArrayList<>();
                     biomodelsIds.add(biomodelsId);
@@ -34,5 +38,13 @@ public class ModelsTSVParser {
         }
 
         return pathwayToBiomodelsIds;
+    }
+
+    private static boolean matchBioModelsPattern(String bioModelsId) {
+        return bioModelsId != null && !bioModelsId.startsWith("BIOMD");
+    }
+
+    private static boolean matchStableIdPattern(String pathwayStableId) {
+        return pathwayStableId != null || pathwayStableId.matches("R-\\w{3}-\\d+");
     }
 }

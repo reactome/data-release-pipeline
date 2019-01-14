@@ -186,7 +186,9 @@ public class Main {
         String stableIdentifier = "";
 
         try {
-            stableIdentifier = (String) instance.getAttributeValue(ReactomeJavaConstants.stableIdentifier);
+            GKInstance stableIdentifierInstance =
+                    (GKInstance) instance.getAttributeValue(ReactomeJavaConstants.stableIdentifier);
+            stableIdentifier = (String) stableIdentifierInstance.getAttributeValue(ReactomeJavaConstants.identifier);
         } catch (Exception e) {
             e.printStackTrace();
         }

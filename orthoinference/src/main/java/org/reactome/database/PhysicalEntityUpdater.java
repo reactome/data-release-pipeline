@@ -8,7 +8,8 @@ import org.gk.persistence.MySQLAdaptor;
 import org.gk.schema.*;
 
 public class PhysicalEntityUpdater {
-	private static final List<String> subunitAttributes = new ArrayList<>(Arrays.asList("hasMember", "hasCandidate", "hasComponent", "repeatedUnit"));
+	private static final List<String> subunitAttributeNames = new ArrayList<>(Arrays.asList("hasMember", "hasCandidate", "hasComponent", "repeatedUnit"));
+	public static int highestRecursionCount = 0;
 	public static void main(String[] args) throws Exception {
 
 		String pathToConfig = "src/main/resources/config.properties";
@@ -26,7 +27,6 @@ public class PhysicalEntityUpdater {
 		Map<String,Map<String,Map<String,Integer>>> referralsMap = new HashMap<>();
 		
 		// Iterate through each PE
-		int orphanCount = 0;
 		List<GKInstance> orphanPhysicalEntitys = new ArrayList<>();
 		for (GKInstance physicalEntityInst : physicalEntityInstances) {
 			// Referrals need to be checked on a per-attribute basis. We get the total number of referrals
@@ -39,7 +39,6 @@ public class PhysicalEntityUpdater {
 				referralCount += instanceReferralsByAttribute.size();
 				if (instanceReferralsByAttribute.size() > 0) {
 					referralAttributes.add(gkSA.getName());
-
 				}
 			}
 			
@@ -47,7 +46,6 @@ public class PhysicalEntityUpdater {
 			// this means the instance is an orphan -- not connected to any Pathway or Reaction, and
 			// generated from a failed inference attempt -- and can be removed.
 			if (referralCount == 1 && referralAttributes.contains("inferredTo")) {
-				orphanCount++;
 				orphanPhysicalEntitys.add(physicalEntityInst);
 			}
 		}
@@ -57,28 +55,32 @@ public class PhysicalEntityUpdater {
 			if (schemClass.isa("EntitySet") || schemClass.isa("Complex") ||  schemClass.isa("Polymer")) {
 				recurseChildInstancesAndDelete(orphanEntityInst, 0);
 				System.out.println("Deleting parent instance " + orphanEntityInst.getDBID());
+				//TODO: Delete instance
 			} else {
-//				System.out.println("Not an EntitySet, Complex or Polymer -- Only Referral is an 'inferredTo' -- Deleting");
+				//TODO: Delete instance
 				System.out.println("Deleting parent instance " + orphanEntityInst.getDBID());
 			}
+			System.out.println();
 		}
 	}
 
 	private static void recurseChildInstancesAndDelete(GKInstance orphanEntityInst, int recursionCount) throws Exception {
 
-		System.out.println(orphanEntityInst);
-		Set<String> validSubunitAttributesForInstance = new HashSet<>(Arrays.asList("inferredTo"));
+			System.out.println(orphanEntityInst + " -- " + recursionCount);
+		Set<String> validAttributesForInstance = new HashSet<>(Arrays.asList("inferredTo"));
 		Set<GKInstance> childInstances = new HashSet<>();
 
 		// This finds all valid attributes that contain child instances for the instance.
 		// This could be hasMember/hasCandidate (EntitySet), hasComponent (Complex), or repeatedUnit (Polymer).
-		for (String  subunitAttribute : subunitAttributes) {
+		for (String  subunitAttribute : subunitAttributeNames) {
 			if (orphanEntityInst.getSchemClass().isValidAttribute(subunitAttribute)) {
-				validSubunitAttributesForInstance.add(subunitAttribute);
+				validAttributesForInstance.add(subunitAttribute);
 				childInstances.addAll(orphanEntityInst.getAttributeValuesList(subunitAttribute));
 			}
 		}
 
+		// Iterate through all possible referrers for the child instance. Any attributes that have a referrer
+		// are added to a Set, and the returned instances of that attribute are added to a Map
 		for (GKInstance childInst : childInstances) {
 			System.out.println("\t" + childInst);
 			Set<String> attributesContainingReferrals = new HashSet<>();
@@ -92,16 +94,17 @@ public class PhysicalEntityUpdater {
 					}
 			}
 
-			// Now we have a Map of the childs referrals (referralInstancesByAttribute), as well as a Set of the instance types that contained referrals (attributesContainingReferrals).
+			// Now we have a Map of the child's referrals (referralInstancesByAttribute), as well as a Set of the instance types that contained referrals (attributesContainingReferrals).
 			// If the validAttributesForInstance Set is equal to attributesContainingReferrals Set, that means this Instance 'might' be an orphan.
 			// If not, the Instance is not an orphan and will not be removed.
 
-			if (attributesContainingReferrals.equals(validSubunitAttributesForInstance)) {
+			if (attributesContainingReferrals.equals(validAttributesForInstance) && referralInstancesByAttribute.get("inferredTo").size() == 1) {
+				// We don't need to look at  the single 'inferredTo' instance
 				attributesContainingReferrals.remove("inferredTo");
-
 				boolean childHasAdditionalReferrals = false;
 				for (String childReferralAttribute : attributesContainingReferrals) {
-					//TODO: Logic here needs a review
+					//TODO: Empty 'if' block, but inverting it gives problems -- two 'if' statements?
+					//TODO: Check that CandidateSet instances are handled properly, due to the fact they can have 'hasMember' and 'hasCandidate' attributes
 					if (referralInstancesByAttribute.get(childReferralAttribute).size() == 1 && referralInstancesByAttribute.get(childReferralAttribute).contains(orphanEntityInst)) {
 
 					} else {
@@ -110,64 +113,70 @@ public class PhysicalEntityUpdater {
 						// This means that it could have a single 'hasMember' referral that points to the orphanEntityInst, while still
 						// having additional referrals in the 'hasCandidate' attribute that would prevent deletion, or vice versa.
 						childHasAdditionalReferrals = true;
-						System.out.println("Child instance has additional child referrals -- aborting deletion attempt of instance");
 					}
 				}
+
+				// If the child instance only has the 'inferredTo' and single 'hasMember/hasCandidate/hasComponent/repeatedUnit' referrals,
+				// that means it can be deleted. Before it is deleted though, the same process needs to be undertaken for its children
+				// if it's an EntitySet, Complex or Polymer.
 				if (!childHasAdditionalReferrals) {
-					// The childInst passes all 'referral' checks (and can be deleted) -- now we need to check its children
-					for (String subunitAttribute : subunitAttributes) {
+					Set<String> validAttributesForSubunitInstance = new HashSet<>(Arrays.asList("inferredTo"));
+					Set<GKInstance> subunitInstances = new HashSet<>();
+					//TODO: This is repeat code from above
+					for (String subunitAttribute : subunitAttributeNames) {
 						if (childInst.getSchemClass().isValidAttribute(subunitAttribute)) {
-							for (GKInstance subunitInst : (Collection<GKInstance>) childInst.getAttributeValuesList(subunitAttribute)) {
+							validAttributesForSubunitInstance.add(subunitAttribute);
+							subunitInstances.addAll(childInst.getAttributeValuesList(subunitAttribute));
+						}
+					}
+					//TODO: This is repeat code from above
+					for (GKInstance subunitInst : subunitInstances) {
+						System.out.println("\t\t" + subunitInst);
+						Set<String> subunitAttributesContainingReferrals = new HashSet<>();
+						Map<String, Set<GKInstance>> subunitReferralInstancesByAttribute = new HashMap<>();
+						for (Object subunitReferralAttributeObj : subunitInst.getSchemClass().getReferers()) {
+							GKSchemaAttribute subunitReferralAttribute = (GKSchemaAttribute) subunitReferralAttributeObj;
+							Collection<GKInstance> subunitInstReferrals = subunitInst.getReferers(subunitReferralAttribute);
+							if (subunitInstReferrals.size() > 0) {
+								subunitAttributesContainingReferrals.add(subunitReferralAttribute.getName());
+								subunitReferralInstancesByAttribute.put(subunitReferralAttribute.getName(), (Set<GKInstance>) subunitInstReferrals);
+							}
+						}
+						//TODO: This is repeat code from above
+						if (subunitAttributesContainingReferrals.equals(validAttributesForSubunitInstance) && subunitReferralInstancesByAttribute.get("inferredTo").size() == 1) {
+							subunitAttributesContainingReferrals.remove("inferredTo");
+							boolean subunitHasAdditionalReferrals = false;
+							for (String subunitReferralAttribute : subunitAttributesContainingReferrals) {
+								if (subunitReferralInstancesByAttribute.get(subunitReferralAttribute).size() == 1 && subunitReferralInstancesByAttribute.get(subunitReferralAttribute).contains(childInst)) {
+
+								} else {
+									subunitHasAdditionalReferrals = true;
+								}
+							}
+
+							if (!subunitHasAdditionalReferrals) {
+								// The subunit instance is deletable. If it an EntitySet/Complex/Polymer, it will be recursively put through
+								// this method until everything is broken down into its PhysicalEntity parts, to see if we will be creating any
+								// more orphans be deleting this function.
 								SchemaClass subunitSchemClass = subunitInst.getSchemClass();
 								if (subunitSchemClass.isa("EntitySet") || subunitSchemClass.isa("Complex") ||  subunitSchemClass.isa("Polymer")) {
 									// The child Instance has children of its own. We want to make sure we're not creating orphans as we're removing orphans, so we repeat the process.
 									recursionCount++;
 									recurseChildInstancesAndDelete(subunitInst, recursionCount);
 								} else {
-									System.out.println("\t\t" + subunitInst);
-									// This subunit instance doesn't have children, but needs to be checked for referrals. If it's only referrals are
-									// 'inferredTo' and its (soon to be deleted) parent, it can also be deleted.
-									Set<String> validChildSubunitAttributesForInstance = new HashSet<>(Arrays.asList("inferredTo", subunitAttribute));
-									Set<String> subunitAttributesContainingReferrals = new HashSet<>();
-									Map<String,Set<GKInstance>> subunitReferralInstancesByAttribute = new HashMap<>();
-									for (Object subunitReferralAttributeObj : subunitInst.getSchemClass().getReferers()) {
-										GKSchemaAttribute subunitReferralAttribute = (GKSchemaAttribute) subunitReferralAttributeObj;
-										Collection<GKInstance> subunitInstReferrals = subunitInst.getReferers(subunitReferralAttribute);
-										if (subunitInstReferrals.size() > 0) {
-											subunitAttributesContainingReferrals.add(subunitReferralAttribute.getName());
-											subunitReferralInstancesByAttribute.put(subunitReferralAttribute.getName(), (Set<GKInstance>) subunitInstReferrals);
-										}
-									}
-
-									if (subunitAttributesContainingReferrals.equals(validChildSubunitAttributesForInstance)) {
-										subunitAttributesContainingReferrals.remove("inferredTo");
-										boolean subunitHasAdditionalReferrals = false;
-										for (String subunitReferralAttribute : subunitAttributesContainingReferrals) {
-											if (subunitReferralInstancesByAttribute.get(subunitReferralAttribute).size() == 1 && subunitReferralInstancesByAttribute.get(subunitReferralAttribute).contains(childInst)) {
-
-											} else {
-												subunitHasAdditionalReferrals = true;
-											}
-										}
-										if (!subunitHasAdditionalReferrals) {
-											// TODO: Delete instance
-											System.out.println("\t\tDeleting subunit instance " + subunitInst.getDBID());
-										} else {
-											System.out.println("\t\t " + subunitInst.getDBID() + " has additional referrals -- aborting deletion attempt of subunit instance");
-										}
-									} else {
-										System.out.println("\t\t " + subunitInst.getDBID() + " has additional referrals -- aborting deletion attempt of subunit instance");
-									}
+									System.out.println("\t\tDeleting subunit instance " + subunitInst.getDBID());
+									//TODO: Delete instance
 								}
+							} else {
+								System.out.println("\t\t " + subunitInst.getDBID() + " has additional referrals -- aborting deletion attempt of subunit instance");
 							}
+						} else {
+							System.out.println("\t\t " + subunitInst.getDBID() + " has additional referrals -- aborting deletion attempt of subunit instance");
 						}
 					}
-					//TODO: Delete instance
-					System.out.println("\tDeleting child instance " + childInst.getDBID());
 				} else {
 					System.out.println("\t " + childInst.getDBID() + " has additional referrals -- aborting deletion attempt of child instance");
 				}
-
 			} else {
 				System.out.println("\t " + childInst.getDBID() + " has additional referrals -- aborting deletion attempt of child instance");
 			}

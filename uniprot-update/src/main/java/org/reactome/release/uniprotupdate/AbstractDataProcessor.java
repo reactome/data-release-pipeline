@@ -293,7 +293,7 @@ public abstract class AbstractDataProcessor
 	/**
 	 * Updates an Instance's checksum.
 	 * @param instance - the instance to update.
-	 * @param data - the UniprotData object which contains the new checksum.
+	 * @param newChecksum - the new checksum.
 	 * @param oldChecksum - the old checksum.
 	 * @throws InvalidAttributeException
 	 * @throws InvalidAttributeValueException

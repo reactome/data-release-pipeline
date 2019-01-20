@@ -4,11 +4,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,6 +25,8 @@ import org.apache.logging.log4j.Logger;
 import org.reactome.release.uniprotupdate.dataschema.UniprotData;
 import org.reactome.util.ensembl.EnsemblServiceResponseProcessor;
 import org.reactome.util.ensembl.EnsemblServiceResponseProcessor.EnsemblServiceResult;
+
+import static org.reactome.release.uniprotupdate.UniprotConstants.HOMO_SAPIENS;
 
 class ENSEMBLQueryUtil
 {
@@ -73,7 +74,7 @@ class ENSEMBLQueryUtil
 		}
 		return isOK;
 	}
-	
+
 	public static String queryENSEMBLForGeneID(HttpGet get) throws URISyntaxException, IOException
 	{
 		EnsemblServiceResponseProcessor responseProcessor = new EnsemblServiceResponseProcessor();
@@ -125,8 +126,19 @@ class ENSEMBLQueryUtil
 		return null;
 	}
 
-	public static void checkGenesWithENSEMBL(List<UniprotData> uniprotData, AtomicInteger totalEnsemblGeneCount, Set<String> genesOKWithENSEMBL, String ensemblGenesFileName, String speciesName) throws IOException
+	public static Set<String> checkGenesWithENSEMBL(List<UniprotData> uniprotData, String speciesName) throws IOException
 	{
+		AtomicInteger totalEnsemblGeneCount = new AtomicInteger(0);
+		Set<String> genesOKWithENSEMBL = Collections.synchronizedSet(new HashSet<>());
+
+		String ensemblGenesFileName = "ensemblGeneIDs.list";
+		// If the file already exists, load it into memory, into genesOKWithENSEMBL
+		if (Files.exists(Paths.get(ensemblGenesFileName)))
+		{
+			Files.readAllLines(Paths.get(ensemblGenesFileName)).parallelStream().forEach(line -> genesOKWithENSEMBL.add(line));
+		}
+//		int startingSize = genesOKWithENSEMBL.size();
+
 		final long startTimeEnsemblLookup = System.currentTimeMillis();
 		// we'll write in append mode, just in case we encounter new Gene IDs that weren't in the file originally.
 		try(FileWriter fileWriter = new FileWriter(ensemblGenesFileName, true))
@@ -136,13 +148,12 @@ class ENSEMBLQueryUtil
 			// I've determined experimentally that no matter how many threads try to make requests, the best rate I can get is 10 requests per second.
 			// It seems that with 5 threads, I can get 10 requests/second with almost no "please wait" responses.
 			System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "5");
-			
-			List<String> geneBuffer = Collections.synchronizedList(new ArrayList<String>(1000));
+
+			List<String> geneBuffer = Collections.synchronizedList(new ArrayList<>(1000));
 			uniprotData.parallelStream()
 						.filter(data ->  data.getEnsembleGeneIDs()!=null && data.getScientificName().equals(speciesName))
 						.forEach( data -> {
-				List<String> geneList = new ArrayList<>();
-				geneList = data.getEnsembleGeneIDs().stream().distinct().collect(Collectors.toList());
+				List<String> geneList = data.getEnsembleGeneIDs().stream().distinct().collect(Collectors.toList());
 				for(String ensemblGeneID : geneList)
 				{
 					try
@@ -202,5 +213,6 @@ class ENSEMBLQueryUtil
 		}
 		long currentTimeEnsembl = System.currentTimeMillis();
 		logger.info("{} genes were checked with ENSEMBL, {} were \"OK\". Time spent: {}", totalEnsemblGeneCount.get(), genesOKWithENSEMBL.size(), Duration.ofMillis(currentTimeEnsembl - startTimeEnsemblLookup).toString());
+		return genesOKWithENSEMBL;
 	}
 }

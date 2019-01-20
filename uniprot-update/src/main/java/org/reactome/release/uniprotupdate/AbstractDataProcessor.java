@@ -247,6 +247,7 @@ public abstract class AbstractDataProcessor
 	 * It will probably only have 1 item in it.
 	 * @throws Exception
 	 */
+	@SuppressWarnings("unchecked")
 	private List<GKInstance> determineDataSpeciesInsts(String speciesName) throws Exception
 	{
 		List<GKInstance> dataSpeciesInst;

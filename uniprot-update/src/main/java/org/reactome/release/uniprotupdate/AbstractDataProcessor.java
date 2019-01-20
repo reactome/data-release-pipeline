@@ -24,16 +24,21 @@ import org.reactome.release.uniprotupdate.dataschema.Isoform;
 import org.reactome.release.uniprotupdate.dataschema.Name;
 import org.reactome.release.uniprotupdate.dataschema.UniprotData;
 
-abstract class AbstractDataProcessor
+public abstract class AbstractDataProcessor
 { 
-	MySQLAdaptor adaptor;
-	GKInstance instanceEdit;
+	protected MySQLAdaptor adaptor;
+	protected GKInstance instanceEdit;
 	static final String CHAIN_CHANGE_LOG = "_chainChangeLog";
 	static Map<String, List<GKInstance>> speciesCache = new HashMap<>();
 	static final Logger logger = LogManager.getLogger();
 	static final Logger uniprotRecordsLog = LogManager.getLogger("uniprotRecordsLog");
 	static final Logger sequencesLog = LogManager.getLogger("sequencesLog");
 	static final Logger referenceDNASequenceLog = LogManager.getLogger("referenceDNASequenceLog");
+
+	public AbstractDataProcessor(MySQLAdaptor adaptor, GKInstance instanceEdit) {
+		this.adaptor = adaptor;
+		this.instanceEdit = instanceEdit;
+	}
 
 	/**
 	 * This function will update attributes on an instance, based on the content of a UniprotData object.

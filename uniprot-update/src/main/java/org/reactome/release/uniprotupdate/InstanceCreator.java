@@ -18,7 +18,7 @@ public class InstanceCreator
 {
 	private MySQLAdaptor adaptor;
 	private GKInstance creationInstanceEdit;
-	
+
 	/**
 	 * Constructs a new InstanceCreator.
 	 * @param dbAdaptor - the datbase adaptor that will be used by this object to create instances.
@@ -29,7 +29,7 @@ public class InstanceCreator
 		this.adaptor = dbAdaptor;
 		this.creationInstanceEdit = instance;
 	}
-	
+
 	/**
 	 * Creates a new ReferenceGeneProduct. NOTE: this method does not *persist* the new instance.
 	 * @param accession - the Uniprot Accession for the new RGP.
@@ -37,13 +37,18 @@ public class InstanceCreator
 	 * @throws InvalidAttributeException
 	 * @throws InvalidAttributeValueException
 	 */
-	GKInstance createNewReferenceGeneProduct(String accession) throws InvalidAttributeException, InvalidAttributeValueException
+	GKInstance createNewReferenceGeneProduct(String accession)
+		throws InvalidAttributeException, InvalidAttributeValueException
 	{
-		GKInstance referenceGeneProduct = new GKInstance(this.adaptor.getSchema().getClassByName(ReactomeJavaConstants.ReferenceGeneProduct));
+		GKInstance referenceGeneProduct = new GKInstance(
+			this.adaptor.getSchema().getClassByName(ReactomeJavaConstants.ReferenceGeneProduct)
+		);
 		referenceGeneProduct.setAttributeValue(ReactomeJavaConstants.created, this.creationInstanceEdit);
 		referenceGeneProduct.setAttributeValue(ReactomeJavaConstants.modified, this.creationInstanceEdit);
-		referenceGeneProduct.setAttributeValue(ReactomeJavaConstants.referenceDatabase,
-				InstanceFetcher.getInstanceFetcher(this.adaptor).getUniprotRefDB());
+		referenceGeneProduct.setAttributeValue(
+			ReactomeJavaConstants.referenceDatabase,
+			InstanceFetcher.getInstanceFetcher(this.adaptor).getUniprotRefDB()
+		);
 		referenceGeneProduct.setAttributeValue(ReactomeJavaConstants.identifier, accession);
 		referenceGeneProduct.setDbAdaptor(this.adaptor);
 		return referenceGeneProduct;
@@ -58,9 +63,12 @@ public class InstanceCreator
 	 * @throws InvalidAttributeException
 	 * @throws InvalidAttributeValueException
 	 */
-	GKInstance createNewReferenceDNASequence(List<String> geneNames, String primaryGeneName, String ensemblGeneID) throws InvalidAttributeException, InvalidAttributeValueException
+	GKInstance createNewReferenceDNASequence(List<String> geneNames, String primaryGeneName, String ensemblGeneID)
+		throws InvalidAttributeException, InvalidAttributeValueException
 	{
-		GKInstance newRefDNASequence = new GKInstance(this.adaptor.getSchema().getClassByName(ReactomeJavaConstants.ReferenceDNASequence));
+		GKInstance newRefDNASequence = new GKInstance(
+			this.adaptor.getSchema().getClassByName(ReactomeJavaConstants.ReferenceDNASequence)
+		);
 		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.identifier, ensemblGeneID);
 		newRefDNASequence.setAttributeValue(ReactomeJavaConstants.species,
 				InstanceFetcher.getInstanceFetcher(this.adaptor).getHumanSpecies());
@@ -76,7 +84,7 @@ public class InstanceCreator
 
 	/**
 	 * Creates a new ReferenceIsoform AND persists it in the database.
-	 * @param accession - the Uniprot accession. 
+	 * @param accession - the Uniprot accession.
 	 * @param referenceGeneProduct - The ReferenceGeneProduct that will b used for the "isoformParent" attribute.
 	 * @param isoformID - the Isoform ID.
 	 * @return the DBID of the new Isoform.
@@ -84,9 +92,10 @@ public class InstanceCreator
 	 * @throws InvalidAttributeValueException
 	 * @throws Exception
 	 */
-	Long createNewReferenceIsoform(String accession, GKInstance referenceGeneProduct, String isoformID) throws InvalidAttributeException, InvalidAttributeValueException, Exception
+	long createNewReferenceIsoform(String accession, GKInstance referenceGeneProduct, String isoformID)
+		throws InvalidAttributeException, InvalidAttributeValueException, Exception
 	{
-		Long dbID;
+		long dbID;
 		GKInstance referenceIsoform = new GKInstance(this.adaptor.getSchema().getClassByName(ReactomeJavaConstants.ReferenceIsoform));
 		referenceIsoform.setAttributeValue(ReactomeJavaConstants.created, this.creationInstanceEdit);
 		referenceIsoform.setAttributeValue(ReactomeJavaConstants.identifier, accession);

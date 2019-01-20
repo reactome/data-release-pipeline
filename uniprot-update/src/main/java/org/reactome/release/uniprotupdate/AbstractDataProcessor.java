@@ -242,9 +242,11 @@ public abstract class AbstractDataProcessor
 
 
 	/**
-	 * Produces a list of Species Instances whose name matches a name given as an argument. Also maintains an internal cache of species, keyed by name. Use this method when you want cached species.
+	 * Produces a list of Species Instances whose name matches a name given as an argument.
+	 * Also maintains an internal cache of species, keyed by name. Use this method when you want cached species.
 	 * @param speciesName - the species name to look up in the cache.
-	 * @return A list of Species Instances whose name matches <code>speciesName</code>. It will probably only have 1 item in it.
+	 * @return A list of Species Instances whose name matches <code>speciesName</code>.
+	 * It will probably only have 1 item in it.
 	 * @throws Exception
 	 */
 	private List<GKInstance> determineDataSpeciesInsts(String speciesName) throws Exception
@@ -272,7 +274,7 @@ public abstract class AbstractDataProcessor
 	/**
 	 * Updates the "chain" attribute on an instance.
 	 * @param instance - the instance to update.
-	 * @param data - the UniprotData object on which to base the chain update. 
+	 * @param data - the UniprotData object on which to base the chain update.
 	 * @throws Exception
 	 * @throws InvalidAttributeException
 	 * @throws InvalidAttributeValueException
@@ -380,7 +382,7 @@ public abstract class AbstractDataProcessor
 		updateInstanceWithData(referenceGeneProduct, data);
 		updateOrCreateIsoforms(referenceGeneProduct, data.getIsoforms(), accession, data);
 	}
-	
+
 	static String geneNamesListToString(Collection<Gene> geneNames)
 	{
 		StringBuilder sb = new StringBuilder();

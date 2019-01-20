@@ -35,19 +35,8 @@ public class UniprotUpdater
 	 */
 	void updateUniprotInstances(MySQLAdaptor adaptor, List<UniprotData> uniprotData, Map<String, GKInstance> referenceDNASequences, Map<String, GKInstance> referenceGeneProducts, Map<String, GKInstance> referenceIsoforms, GKInstance instanceEdit) throws Exception
 	{
-		AtomicInteger totalEnsemblGeneCount = new AtomicInteger(0);
-		Set<String> genesOKWithENSEMBL = Collections.synchronizedSet(new HashSet<String>());
+		Set<String> genesOKWithENSEMBL = ENSEMBLQueryUtil.checkGenesWithENSEMBL(uniprotData, HOMO_SAPIENS);
 		
-		String ensemblGenesFileName = "ensemblGeneIDs.list";
-		// If the file already exists, load it into memory, into genesOKWithENSEMBL
-		if (Files.exists(Paths.get(ensemblGenesFileName)))
-		{
-			Files.readAllLines(Paths.get(ensemblGenesFileName)).parallelStream().forEach(line -> genesOKWithENSEMBL.add(line));
-		}
-//		int startingSize = genesOKWithENSEMBL.size();
-		
-		ENSEMBLQueryUtil.checkGenesWithENSEMBL(uniprotData, totalEnsemblGeneCount, genesOKWithENSEMBL, ensemblGenesFileName, HOMO_SAPIENS);
-
 		Map<String, List<String>> secondaryAccessions = new HashMap<>();
 		int i = 0;
 		long startTime = System.currentTimeMillis();
@@ -67,13 +56,6 @@ public class UniprotUpdater
 			// first, let's make sure this piece of data is for a species that we can update via Uniprot Update.
 			if (SPECIES_TO_UPDATE.contains(data.getScientificName()))
 			{
-				List<String> geneList = new ArrayList<>();
-				if (data.getEnsembleGeneIDs()!=null)
-				{
-					geneList = data.getEnsembleGeneIDs().stream().distinct().collect(Collectors.toList());
-				}
-//				List<GKInstance> referenceDNASequencesForThisUniprot = new ArrayList<>(geneList.size());
-				
 				// Update secondary accessions
 				String accession = data.getAccessions().get(0);
 				if (secondaryAccessions.containsKey(accession))
@@ -89,7 +71,8 @@ public class UniprotUpdater
 				if (data.getScientificName().equals(HOMO_SAPIENS))
 				{
 					HumanDataProcessor processor = new HumanDataProcessor(adaptor, instanceEdit);
-					processor.processHumanData(referenceDNASequences, referenceGeneProducts, genesOKWithENSEMBL, data, geneList, /* referenceDNASequencesForThisUniprot, */ accession);
+					List<String> geneList = getGeneList(data);
+					processor.processHumanData(referenceDNASequences, referenceGeneProducts, genesOKWithENSEMBL, data, geneList, accession);
 				}
 				else // Not human, but still need to process it...
 				{
@@ -97,6 +80,12 @@ public class UniprotUpdater
 					processor.processNonHumanData(referenceGeneProducts, data, accession);
 				}
 			}
+	private List<String> getGeneList(UniprotData data)
+	{
+		List<String> geneList = new ArrayList<>();
+		if (data.getEnsembleGeneIDs()!=null) {
+			geneList = data.getEnsembleGeneIDs().stream().distinct().collect(Collectors.toList());
 		}
+		return geneList;
 	}
 }

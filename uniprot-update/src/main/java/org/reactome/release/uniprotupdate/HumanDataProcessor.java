@@ -47,7 +47,7 @@ public class HumanDataProcessor extends AbstractDataProcessor
 		{
 			referenceDNASequenceLog.info("Accession " + data.getAccessions().toString() + " has multiple gene names: " + geneNamesListToString(data.getGenes()));
 		}
-		// For each ENSEMBL Gene ID that is in this chunk of Data. 
+		// For each ENSEMBL Gene ID that is in this chunk of Data.
 		// Note: It could happen that the same Gene ID could be repeted more than once. For example: the source XML could contain:
 		//		<dbReference id="ENST00000383605" type="Ensembl">
 		//			<property value="ENSP00000373100" type="protein sequence ID" />
@@ -121,7 +121,7 @@ public class HumanDataProcessor extends AbstractDataProcessor
 			}
 		}
 	}
-	
+
 	/**
 	 * Process a UniprotData object for existing ENSEMBL IDs
 	 * @param referenceDNASequences - A map of ReferenceDNASequences, keyed by ENSEMBL Gene ID
@@ -150,7 +150,7 @@ public class HumanDataProcessor extends AbstractDataProcessor
 	/**
 	 * Updates the species of a ReferenceDNASequence, if necessary. An update is deemed necessary if the species name from the database does not match (contain) the scientific species name in the UniprotData object.
 	 * In that case, the "species" attribute will be set to <code>newSpecies</code>, and <b>true</b> will be returned to indicate that an update occurred.
-	 * 
+	 *
 	 * @param data - the UniprotData object.
 	 * @param referenceDNASequence - the ReferenceDNASequence to possibly update.
 	 * @param newSpecies - the new species to update to.
@@ -213,7 +213,7 @@ public class HumanDataProcessor extends AbstractDataProcessor
 	{
 		@SuppressWarnings("unchecked")
 		Set<String> geneNamesFromDB = new HashSet<>(referenceDNASequence.getAttributeValuesList(ReactomeJavaConstants.geneName));
-		
+
 		boolean modified = false;
 		// The old Perl code adds the geneName from the file, if it's not already in the database.
 		boolean modifiedGeneName = false;
@@ -233,7 +233,7 @@ public class HumanDataProcessor extends AbstractDataProcessor
 		{
 			referenceDNASequenceLog.info("UniprotData with ENSEMBL Gene ID {} has empty/NULL flattenedGeneNames!", ensemblGeneID);
 		}
-		
+
 		if (modifiedGeneName)
 		{
 			adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.geneName);
@@ -241,7 +241,7 @@ public class HumanDataProcessor extends AbstractDataProcessor
 		return modified;
 	}
 
-	
+
 	/**
 	 * Adds an instance edit to an object in the "modified" attribute, if necessary.
 	 * @param ensemblGeneID - the ENSEMBL Gene ID (used only for logging)

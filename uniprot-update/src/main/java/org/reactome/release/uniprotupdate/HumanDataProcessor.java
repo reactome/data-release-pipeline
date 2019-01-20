@@ -10,15 +10,13 @@ import org.reactome.release.uniprotupdate.dataschema.UniprotData;
 
 import java.util.*;
 
-class HumanDataProcessor extends AbstractDataProcessor
+public class HumanDataProcessor extends AbstractDataProcessor
 {
-
-	HumanDataProcessor(MySQLAdaptor dbAdaptor, GKInstance instance)
+	public HumanDataProcessor(MySQLAdaptor adaptor, GKInstance instanceEdit)
 	{
-		this.adaptor = dbAdaptor;
-		this.instanceEdit = instance;
+		super(adaptor, instanceEdit);
 	}
-	
+
 	/**
 	 * Process UniprotData object whose species is Human.
 	 * @param referenceDNASequences - a map of ReferenceDNASequences, keyed by ENSEMBL Gene IDs

@@ -12,14 +12,12 @@ import org.reactome.release.uniprotupdate.dataschema.UniprotData;
 
 public class NonHumanDataProcessor extends AbstractDataProcessor
 {
-	
-	
-	NonHumanDataProcessor(MySQLAdaptor dbAdaptor, GKInstance instanceEdit)
+
+	public NonHumanDataProcessor(MySQLAdaptor adaptor, GKInstance instanceEdit)
 	{
-		this.adaptor = dbAdaptor;
-		this.instanceEdit = instanceEdit;
+		super(adaptor, instanceEdit);
 	}
-	
+
 	/**
 	 * Process data elements whose species is not human.
 	 * @param referenceGeneProducts - a reference list of ReferenceGeneProducts

@@ -59,35 +59,14 @@ public abstract class AbstractDataProcessor
 	protected void updateInstanceWithData(GKInstance instance, UniprotData data, String... attributes)
 	{
 		// Set the default list if the user does not specify anything.
-		String[] attributesToUse;
-		if (attributes == null || attributes.length == 0)
-		{
-			attributesToUse = new String[] { ReactomeJavaConstants.secondaryIdentifier, ReactomeJavaConstants.description, ReactomeJavaConstants.sequenceLength, ReactomeJavaConstants.species, "checksum", ReactomeJavaConstants.name, ReactomeJavaConstants.geneName, ReactomeJavaConstants.comment,
-					ReactomeJavaConstants.keyword, "chain" };
-		}
-		else
-		{
-			attributesToUse = attributes;
-		}
-		// if (attributes!=null && attributes.length > 0) {
-		for (String attribute : attributesToUse)
-		{
-			// The old Perl code actually prints messages every time the old data differs from the new data. Is that really necessary?
-			try
-			{
-				updateInstanceForAttribute(instance, data, attribute);
-			}
-			catch (InvalidAttributeException | InvalidAttributeValueException e)
-			{
-				e.printStackTrace();
-			}
-			catch (Exception e)
-			{
-				e.printStackTrace();
-			}
+		String[] attributesToUse = hasValues(attributes) ? attributes : getDefaultAttributes();
+		for (String attribute : attributesToUse) {
+			// The old Perl code actually prints messages every time the old data differs from the new data.
+			// Is that really necessary?
+			updateInstanceForAttribute(instance, data, attribute);
 		}
 	}
-	
+
 	/**
 	 * Update an instance for some attribute.
 	 * @param adaptor - the database adaptor to use
@@ -240,8 +219,24 @@ public abstract class AbstractDataProcessor
 				break;
 			}
 		}
+	private boolean hasValues(String ...stringArray) {
+		return stringArray != null && stringArray.length > 0;
 	}
 
+	private String[] getDefaultAttributes() {
+		return new String[] {
+			ReactomeJavaConstants.secondaryIdentifier,
+			ReactomeJavaConstants.description,
+			ReactomeJavaConstants.sequenceLength,
+			ReactomeJavaConstants.species,
+			"checksum",
+			ReactomeJavaConstants.name,
+			ReactomeJavaConstants.geneName,
+			ReactomeJavaConstants.comment,
+			ReactomeJavaConstants.keyword,
+			"chain"
+		};
+	}
 
 	/**
 	 * Produces a list of Species Instances whose name matches a name given as an argument.

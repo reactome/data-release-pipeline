@@ -292,8 +292,10 @@ abstract class AbstractDataProcessor
 	private void updateInstanceChecksum(GKInstance instance, String newChecksum, String oldChecksum) throws InvalidAttributeException, InvalidAttributeValueException, Exception
 	{
 		// The old Perl code prints a warning when the checksum changes.
-		sequencesLog.info("Checksum has changed! DB ID: " + instance.getDBID() + "\tOld checksum: " + oldChecksum + "\tNew checksum:" + newChecksum);
-		instance.setAttributeValue("isSequenceChanged", true); // TODO: add "isSequenceChanged" to ReactomeJavaConstants
+		sequencesLog.info(
+			"Checksum has changed! DB ID: {} \tOld checksum: {} \tNew checksum: {}",
+			instance.getDBID(), oldChecksum, newChecksum
+		);
 		instance.setAttributeValue("checksum", newChecksum);
 		adaptor.updateInstanceAttribute(instance, "isSequenceChanged");
 		adaptor.updateInstanceAttribute(instance, "checksum");
@@ -471,7 +473,10 @@ abstract class AbstractDataProcessor
 				else
 				{
 					// log a message about mismatches...
-					referenceDNASequenceLog.info("Isoform ID " + isoformID + " does not match with Accession " + accession);
+					referenceDNASequenceLog.info(
+						"Isoform ID {} does not match with Accession {}",
+						isoformID, accession
+					);
 					// Update mismatched Isoforms
 					updateMismatchedIsoform(isoformID, accession);
 				}
@@ -508,8 +513,12 @@ abstract class AbstractDataProcessor
 				{
 					allParents.addAll(referenceGeneProducts);
 				}
-				// print a message. This was copied from the Perl implementation, but I do not think it is very clear. Need a better message!
-				referenceDNASequenceLog.info("Mismatched parent: " + isoformID + " (" + isoformFromDB.getDBID() + ")\t" + accession);
+				// print a message. This was copied from the Perl implementation, but I do not think it is very clear.
+				// TODO: Need a better message!
+				referenceDNASequenceLog.info(
+					"Mismatched parent: {} ({})\t{}",
+					isoformID, isoformFromDB.getDBID(), accession
+				);
 				// Now correct isoformParent
 				isoformFromDB.setAttributeValue(ReactomeJavaConstants.isoformParent, allParents);
 				adaptor.updateInstanceAttribute(isoformFromDB, ReactomeJavaConstants.isoformParent);

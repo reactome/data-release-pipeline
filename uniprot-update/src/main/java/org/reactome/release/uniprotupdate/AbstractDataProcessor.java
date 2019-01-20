@@ -489,7 +489,7 @@ public abstract class AbstractDataProcessor
 					{
 						for (GKInstance refIsoformFromDB : refIsoformsFromDB)
 						{
-							if (((String) refIsoformFromDB.getAttributeValue(ReactomeJavaConstants.variantIdentifier)).equals(isoformID))
+							if ((refIsoformFromDB.getAttributeValue(ReactomeJavaConstants.variantIdentifier)).equals(isoformID))
 							{
 								refIsoformFromDB.setAttributeValue(ReactomeJavaConstants.isoformParent, referenceGeneProduct);
 								adaptor.updateInstanceAttribute(refIsoformFromDB, ReactomeJavaConstants.isoformParent);

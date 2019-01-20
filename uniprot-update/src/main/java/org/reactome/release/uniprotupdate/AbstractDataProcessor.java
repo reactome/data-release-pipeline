@@ -69,10 +69,11 @@ public abstract class AbstractDataProcessor
 
 	/**
 	 * Update an instance for some attribute.
-	 * @param adaptor - the database adaptor to use
 	 * @param instance - some Instance
 	 * @param data - A UniprotData object, from which the updates will be made.
-	 * @param attribute - can be one of: ReactomeJavaConstants.secondaryIdentifier, ReactomeJavaConstants.description, ReactomeJavaConstants.sequenceLength, ReactomeJavaConstants.species, "checksum", ReactomeJavaConstants.name, ReactomeJavaConstants.geneName, ReactomeJavaConstants.comment, ReactomeJavaConstants.keyword, "chain" 
+	 * @param attribute -
+	 * can be one of the following in the ReactomeJavaConstants class (except where quoted as a literal):
+	 * secondaryIdentifier, description, sequenceLength, species, "checksum", name, geneName, comment, keyword, "chain"
 	 * @throws InvalidAttributeException
 	 * @throws InvalidAttributeValueException
 	 * @throws Exception

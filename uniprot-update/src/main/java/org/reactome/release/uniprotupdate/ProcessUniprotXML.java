@@ -8,7 +8,6 @@ import java.util.List;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
-import javax.xml.bind.PropertyException;
 import javax.xml.bind.util.JAXBResult;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
@@ -55,7 +54,7 @@ class ProcessUniprotXML
 		throws JAXBException, XMLStreamException, TransformerConfigurationException, FileNotFoundException
 	{
 		List<UniprotData> uniprotData = new ArrayList<>(EXPECTED_ENTRY_MAX_SIZE);
-		
+
 		// Stream the XML file. StAX is faster than DOM (waaaaaaaaaay faster) or SAX.
 		XMLInputFactory xif = XMLInputFactory.newInstance();
 		XMLStreamReader xsr = xif.createXMLStreamReader(new FileReader(pathToFile));
@@ -121,7 +120,7 @@ class ProcessUniprotXML
 	{
 		try
 		{
-			JAXBContext marshallerContext = JAXBContext.newInstance(org.reactome.release.uniprotupdate.dataschema.UniprotData.class);
+			JAXBContext marshallerContext = JAXBContext.newInstance(UniprotData.class);
 			Marshaller marshaller = marshallerContext.createMarshaller();
 			marshaller.setProperty("jaxb.formatted.output", true);
 			marshaller.setProperty("jaxb.fragment", true);

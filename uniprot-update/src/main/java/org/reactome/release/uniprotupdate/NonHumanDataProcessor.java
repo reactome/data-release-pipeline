@@ -46,21 +46,10 @@ public class NonHumanDataProcessor extends AbstractDataProcessor
 		}
 		else
 		{
-			int instanceCount = 0;
+			GKInstance referenceGeneProduct = referenceGeneProducts.get(accession);
+			if (!referenceGeneProduct.getSchemClass().isa(ReactomeJavaConstants.ReferenceIsoform))
 			{
-				GKInstance referenceGeneProduct = referenceGeneProducts.get(accession);
-				if (!referenceGeneProduct.getSchemClass().isa(ReactomeJavaConstants.ReferenceIsoform))
-				{
-					if (instanceCount < 1)
-					{
-						instanceCount++;
-						this.updateReferenceGeneProduct(referenceGeneProduct, data, accession);
-					}
-					else
-					{
-						referenceDNASequenceLog.info("Duplicate ReferenceGeneProduct instance for identifier {} - this instance will NOT be updated.", accession);
-					}
-				}
+				this.updateReferenceGeneProduct(referenceGeneProduct, data, accession);
 			}
 		}
 	}

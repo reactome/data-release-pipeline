@@ -308,6 +308,9 @@ public abstract class AbstractDataProcessor
 			"Checksum has changed! DB ID: {} \tOld checksum: {} \tNew checksum: {}",
 			instance.getDBID(), oldChecksum, newChecksum
 		);
+
+		// TODO: add "isSequenceChanged" to ReactomeJavaConstants
+		instance.setAttributeValue("isSequenceChanged", true);
 		instance.setAttributeValue("checksum", newChecksum);
 		adaptor.updateInstanceAttribute(instance, "isSequenceChanged");
 		adaptor.updateInstanceAttribute(instance, "checksum");

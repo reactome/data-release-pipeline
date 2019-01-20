@@ -24,6 +24,8 @@ import static org.reactome.release.uniprotupdate.UniprotConstants.SPECIES_TO_UPD
 public class UniprotUpdater
 {
 	private static final Logger logger = LogManager.getLogger();
+	private static final int SECONDS_UNTIL_WRITING_TO_LOG = 30;
+	private long recordsProcessed = 0;
 
 	/**
 	 * Updates UniProt instances.
@@ -36,21 +38,14 @@ public class UniprotUpdater
 	void updateUniprotInstances(MySQLAdaptor adaptor, List<UniprotData> uniprotData, Map<String, GKInstance> referenceDNASequences, Map<String, GKInstance> referenceGeneProducts, Map<String, GKInstance> referenceIsoforms, GKInstance instanceEdit) throws Exception
 	{
 		Set<String> genesOKWithENSEMBL = ENSEMBLQueryUtil.checkGenesWithENSEMBL(uniprotData, HOMO_SAPIENS);
-		
+
 		Map<String, List<String>> secondaryAccessions = new HashMap<>();
-		int i = 0;
 		long startTime = System.currentTimeMillis();
-		long totalUniprotRecords = 0;
 		for (UniprotData data : uniprotData)
 		{
-			i++;
-			long currentTime = System.currentTimeMillis();
-			if ( TimeUnit.MILLISECONDS.toSeconds(currentTime - startTime) > 30 )
-			{
-				totalUniprotRecords += i;
-				logger.info("{} uniprot records processed ", totalUniprotRecords);
-				startTime = currentTime;
-				i = 0;
+			if (secondsElapsedSince(startTime) > SECONDS_UNTIL_WRITING_TO_LOG) {
+				logger.info("{} uniprot records processed ", recordsProcessed);
+				startTime = System.currentTimeMillis();
 			}
 			// Should each pass through this loop be a single transaction? This might work well if this loop is run in parallel...
 			// first, let's make sure this piece of data is for a species that we can update via Uniprot Update.
@@ -80,6 +75,15 @@ public class UniprotUpdater
 					processor.processNonHumanData(referenceGeneProducts, data, accession);
 				}
 			}
+			recordsProcessed += 1;
+		}
+	}
+
+	private long secondsElapsedSince(long timePoint)
+	{
+		return (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - timePoint));
+	}
+
 	private List<String> getGeneList(UniprotData data)
 	{
 		List<String> geneList = new ArrayList<>();

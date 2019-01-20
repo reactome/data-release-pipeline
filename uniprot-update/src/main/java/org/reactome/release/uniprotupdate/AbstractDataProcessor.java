@@ -39,13 +39,15 @@ abstract class AbstractDataProcessor
 	 * This function will update attributes on an instance, based on the content of a UniprotData object.
 	 * @param instance - The instance to try updating.
 	 * @param data - The UniprotData object that may contain new data for the instance.
-	 * @param attributes - A list of attributes to update. If you do not pass a list, the default list (everything!) will be attempted:
+	 * @param attributes - A list of attributes to update.
+	 * If you do not pass a list, the default list (everything!) will be attempted:
 	 * <ul>
-	 * <li>secondaryIdentifier</li><li>description</li><li>sequenceLength</li><li>species</li><li>checksum</li><li>name</li><li>geneName</li>
-	 * <li>comment</li><li>keyword</li><li>chain</li>
+	 *     <li>secondaryIdentifier</li><li>description</li><li>sequenceLength</li>
+	 *     <li>species</li><li>checksum</li><li>name</li><li>geneName</li>
+	 *     <li>comment</li><li>keyword</li><li>chain</li>
 	 * </ul>
-	 * If you pass in your own list of attributes, <b>make sure they are valid</b> for <code>instance</code>! This function does <em>not</em> check attribute
-	 * validity.
+	 * If you pass in your own list of attributes, <b>make sure they are valid</b> for <code>instance</code>!
+	 * This function does <em>not</em> check attribute validity.
 	 */
 	protected void updateInstanceWithData(GKInstance instance, UniprotData data, String... attributes)
 	{
@@ -249,7 +251,9 @@ abstract class AbstractDataProcessor
 			// honestly don't expect more than one result.
 			// It would be *very* weird if two different Species objects existed with the
 			// same name.
-			dataSpeciesInst = new ArrayList<>((Set<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.Species, ReactomeJavaConstants.name, "=", speciesName));
+			dataSpeciesInst = new ArrayList<>((Set<GKInstance>) adaptor.fetchInstanceByAttribute(
+				ReactomeJavaConstants.Species, ReactomeJavaConstants.name, "=", speciesName
+			));
 			speciesCache.put(speciesName, dataSpeciesInst);
 			logger.info("Species cache miss on \"{}\"", speciesName);
 		}
@@ -268,7 +272,8 @@ abstract class AbstractDataProcessor
 	 * @throws InvalidAttributeException
 	 * @throws InvalidAttributeValueException
 	 */
-	private void updateChain(GKInstance instance, UniprotData data) throws Exception, InvalidAttributeException, InvalidAttributeValueException
+	private void updateChain(GKInstance instance, UniprotData data)
+		throws Exception, InvalidAttributeException, InvalidAttributeValueException
 	{
 		List<String> chainStrings = new ArrayList<>();
 		for (Chain chain : data.getChains())
@@ -289,7 +294,8 @@ abstract class AbstractDataProcessor
 	 * @throws InvalidAttributeValueException
 	 * @throws Exception
 	 */
-	private void updateInstanceChecksum(GKInstance instance, String newChecksum, String oldChecksum) throws InvalidAttributeException, InvalidAttributeValueException, Exception
+	private void updateInstanceChecksum(GKInstance instance, String newChecksum, String oldChecksum)
+		throws InvalidAttributeException, InvalidAttributeValueException, Exception
 	{
 		// The old Perl code prints a warning when the checksum changes.
 		sequencesLog.info(
@@ -315,7 +321,8 @@ abstract class AbstractDataProcessor
 		// Perl code was:
 		// my $t = localtime;
 		// my $date = $t->day . ' ' . $t->fullmonth . ' ' . $t->mday . ' ' . $t->year;
-		// See "Patterns for Formatting and Parsing" on this page: https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html
+		// See "Patterns for Formatting and Parsing" on this page:
+		// https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE LLLL dd yyyy");
 		String dateString = formatter.toFormat().format(currentDate);
 
@@ -329,7 +336,8 @@ abstract class AbstractDataProcessor
 		{
 			if (!newChains.contains(oldChain))
 			{
-				logEntry = (logEntry.trim().equals("") ? "" : logEntry + " ; ") + oldChain + " for " + instance.getDBID().longValue() + " removed on " + dateString;
+				logEntry = (logEntry.trim().equals("") ? "" : logEntry + " ; ") +
+					oldChain + " for " + instance.getDBID() + " removed on " + dateString;
 				needsUpdate = true;
 			}
 		}
@@ -338,7 +346,8 @@ abstract class AbstractDataProcessor
 		{
 			if (!oldChains.contains(newChain))
 			{
-				logEntry = (logEntry.trim().equals("") ? "" : logEntry + " ; ") + newChain + " for " + instance.getDBID().longValue() + " added on " + dateString;
+				logEntry = (logEntry.trim().equals("") ? "" : logEntry + " ; ") +
+					newChain + " for " + instance.getDBID() + " added on " + dateString;
 				needsUpdate = true;
 			}
 		}
@@ -351,14 +360,16 @@ abstract class AbstractDataProcessor
 		}
 	}
 	/**
-	 * Updates a ReferenceGeneProduct: updates the attributes of the ReferenceGeneProduct based on the contents of a UniprotData object.
+	 * Updates a ReferenceGeneProduct: updates the attributes of the ReferenceGeneProduct based
+	 * on the contents of a UniprotData object.
 	 * Also updates or creates Isoforms for the ReferenceGeneProduct.
 	 * @param referenceGeneProduct - the ReferenceGeneProduct.
 	 * @param data - the UniprotData object.
 	 * @param accession - the Uniprot accession.
 	 * @throws Exception
 	 */
-	void updateReferenceGeneProduct(GKInstance referenceGeneProduct, UniprotData data, String accession) throws Exception
+	void updateReferenceGeneProduct(GKInstance referenceGeneProduct, UniprotData data, String accession)
+		throws Exception
 	{
 		// TODO: add code to check for duplicates.
 		updateInstanceWithData(referenceGeneProduct, data);
@@ -378,15 +389,18 @@ abstract class AbstractDataProcessor
 		return sb.toString();
 	}
 	/**
-	 * Will check to see if a UniprotData object has any isoforms, and if so it will create new ones or update existing ones in the database.
+	 * Will check to see if a UniprotData object has any isoforms, and if so it will create
+	 * new ones or update existing ones in the database.
 	 * @param data - The UniprotData object.
 	 * @param accession - The Uniprot accession.
-	 * @param newRefGeneProduct - This method usually gets called when a new ReferenceGeneProduct has been created. That RGP should be passed in here.
+	 * @param newRefGeneProduct - This method usually gets called when a new ReferenceGeneProduct has been created.
+	 * That RGP should be passed in here.
 	 * @throws InvalidAttributeException
 	 * @throws InvalidAttributeValueException
 	 * @throws Exception
 	 */
-	void addIsoformsIfNecessary(UniprotData data, String accession, GKInstance newRefGeneProduct) throws InvalidAttributeException, InvalidAttributeValueException, Exception
+	void addIsoformsIfNecessary(UniprotData data, String accession, GKInstance newRefGeneProduct)
+		throws InvalidAttributeException, InvalidAttributeValueException, Exception
 	{
 		// add Isoforms if available...
 		if (data.getIsoforms() != null)
@@ -396,19 +410,22 @@ abstract class AbstractDataProcessor
 				createOrUpdateIsoform(accession, newRefGeneProduct, isoform);
 			}
 		}
-	}	
+	}
 
 	/**
-	 * Creates a new Isoform for a ReferenceGeneProduct, or updates an existing one. If the Isoform's ID contains the Uniprot accession, then a new isoform needs to be created.
+	 * Creates a new Isoform for a ReferenceGeneProduct, or updates an existing one.
+	 * If the Isoform's ID contains the Uniprot accession, then a new isoform needs to be created.
 	 * Otherwise, there is a mismatch and an existing isoform will get updated.
 	 * @param accession - the Uniprot accession.
 	 * @param referenceGeneProduct - the ReferenceGeneProduct.
-	 * @param isoform - The Isoform to create and add to the RGP. If there is already an Isoform, it may be updated with information in this object.
+	 * @param isoform - The Isoform to create and add to the RGP.
+	 * If there is already an Isoform, it may be updated with information in this object.
 	 * @throws InvalidAttributeException
 	 * @throws InvalidAttributeValueException
 	 * @throws Exception
 	 */
-	void createOrUpdateIsoform(String accession, GKInstance referenceGeneProduct, Isoform isoform) throws InvalidAttributeException, InvalidAttributeValueException, Exception
+	void createOrUpdateIsoform(String accession, GKInstance referenceGeneProduct, Isoform isoform)
+		throws InvalidAttributeException, InvalidAttributeValueException, Exception
 	{
 		String isoformID = isoform.getIsoformID();
 		// Check to see if isoformID == accession - it should happen!
@@ -428,9 +445,15 @@ abstract class AbstractDataProcessor
 	}
 	/**
 	 * Creates or updates Isoforms for a ReferenceGeneProduct.
-	 * If an Isoform's ID (from the XML data file) contains the Uniprot accession, this method will try to get ReferenceIsoforms whose variantIdentifier matches the Isoform's ID.
-	 * When an ReferenceIsoform from the database has a variantIdentifier equal to the IsoformID from the XML file, the ReferenceIsoform from the database
-	 * gets updated with the content of the UniprotData object. When no ReferenceIsoforms can be found in the database, a new one is created.
+	 *
+	 * If an Isoform's ID (from the XML data file) contains the Uniprot accession, this method will try to get
+	 * ReferenceIsoforms whose variantIdentifier matches the Isoform's ID.
+	 *
+	 * When an ReferenceIsoform from the database has a variantIdentifier equal to the IsoformID from the XML file,
+	 * the ReferenceIsoform from the database gets updated with the content of the UniprotData object.
+	 *
+	 * When no ReferenceIsoforms can be found in the database, a new one is created.
+	 *
 	 * If the Uniprot Accession does not contain the Isoform ID as a substring it is considered a mismatch.
 	 * @param referenceGeneProduct - The ReferenceGeneProduct
 	 * @param isoforms - A list of Isoforms.
@@ -438,7 +461,8 @@ abstract class AbstractDataProcessor
 	 * @param data - the UniprotData object.
 	 * @throws Exception
 	 */
-	void updateOrCreateIsoforms(GKInstance referenceGeneProduct, List<Isoform> isoforms, String accession, UniprotData data) throws Exception
+	void updateOrCreateIsoforms(GKInstance referenceGeneProduct, List<Isoform> isoforms, String accession, UniprotData data)
+		throws Exception
 	{
 		if (isoforms != null)
 		{
@@ -447,7 +471,12 @@ abstract class AbstractDataProcessor
 				String isoformID = isoform.getIsoformID();
 
 				@SuppressWarnings("unchecked")
-				List<GKInstance> refIsoformsFromDB = new ArrayList<>(adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceIsoform, ReactomeJavaConstants.variantIdentifier, "=", isoform.getIsoformID()));
+				List<GKInstance> refIsoformsFromDB = new ArrayList<>(adaptor.fetchInstanceByAttribute(
+					ReactomeJavaConstants.ReferenceIsoform,
+					ReactomeJavaConstants.variantIdentifier,
+					"=",
+					isoform.getIsoformID()
+				));
 				if (isoformID.contains(accession))
 				{
 					// Update existing ReferenceIsoforms
@@ -485,30 +514,38 @@ abstract class AbstractDataProcessor
 	}
 	/**
 	 * Updates an existing Isoform where there was a mismatch between the Isoform ID and the Uniprot accession.
-	 * The update will set the isoformParent on the Isoform to refer to all Isoforms whose variantIdentifier == isoformID and ReferenceGeneProducts whose identifer == UniprotAccession 
+	 * The update will set the isoformParent on the Isoform to refer to
+	 * all Isoforms whose variantIdentifier == isoformID and ReferenceGeneProducts whose identifer == UniprotAccession
 	 * @param isoformID - the Isoform ID
 	 * @param accession - the Uniprot Accession.
 	 * @throws Exception
 	 */
 	void updateMismatchedIsoform(String isoformID, String accession) throws Exception
 	{
-		// Again, we really shouldn't expect more than 1 to be returned, but we still *need* to treat this as a collection, because that's what the API returns.
+		// Again, we really shouldn't expect more than 1 to be returned,
+		// but we still *need* to treat this as a collection, because that's what the API returns.
 		@SuppressWarnings("unchecked")
-		Set<GKInstance> isoformsFromDB = (Set<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceIsoform, ReactomeJavaConstants.variantIdentifier, "=", isoformID);
+		Set<GKInstance> isoformsFromDB = (Set<GKInstance>) adaptor.fetchInstanceByAttribute(
+			ReactomeJavaConstants.ReferenceIsoform, ReactomeJavaConstants.variantIdentifier, "=", isoformID
+		);
 		List<GKInstance> allParents = new ArrayList<>();
 		if (isoformsFromDB != null && !isoformsFromDB.isEmpty())
 		{
 			for (GKInstance isoformFromDB : isoformsFromDB)
 			{
 				// Get the current values for "isoformParent" for the isoform.
-				GKInstance isoformParents = (GKInstance) isoformFromDB.getAttributeValue(ReactomeJavaConstants.isoformParent);
+				GKInstance isoformParents =
+					(GKInstance) isoformFromDB.getAttributeValue(ReactomeJavaConstants.isoformParent);
 				if (isoformParents != null /* && !isoformParents.isEmpty() */)
 				{
 					allParents.add(isoformParents);
 				}
-				// Get the ReferenceGeneProduct(s) by accession (probably should only return 1, but who knows? I don't think anything enforces RGPs to have unique accessions).
+				// Get the ReferenceGeneProduct(s) by accession (probably should only return 1, but who knows?
+				// I don't think anything enforces RGPs to have unique accessions).
 				@SuppressWarnings("unchecked")
-				Set<GKInstance> referenceGeneProducts = (Set<GKInstance>) adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceGeneProduct, ReactomeJavaConstants.identifier, "=", accession);
+				Set<GKInstance> referenceGeneProducts = (Set<GKInstance>) adaptor.fetchInstanceByAttribute(
+					ReactomeJavaConstants.ReferenceGeneProduct, ReactomeJavaConstants.identifier, "=", accession
+				);
 				if (referenceGeneProducts != null && !referenceGeneProducts.isEmpty())
 				{
 					allParents.addAll(referenceGeneProducts);

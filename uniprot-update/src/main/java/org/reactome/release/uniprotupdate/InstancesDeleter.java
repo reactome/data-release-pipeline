@@ -30,8 +30,8 @@ import org.gk.schema.GKSchemaAttribute;
  */
 class InstancesDeleter
 {
-	private Map<String, MySQLAdaptor> adaptorPool = Collections.synchronizedMap(new HashMap<String, MySQLAdaptor>());
-	
+	private Map<String, MySQLAdaptor> adaptorPool = Collections.synchronizedMap(new HashMap<>());
+
 	private MySQLAdaptor getAdaptorForThread(MySQLAdaptor baseAdaptor, String threadIdentifier) throws SQLException
 	{
 		MySQLAdaptor adaptor;
@@ -41,13 +41,19 @@ class InstancesDeleter
 		}
 		else
 		{
-			MySQLAdaptor adaptorForPool = new MySQLAdaptor(baseAdaptor.getDBHost(), baseAdaptor.getDBName(), baseAdaptor.getDBUser(), baseAdaptor.getDBPwd(), baseAdaptor.getDBPort());
+			MySQLAdaptor adaptorForPool = new MySQLAdaptor(
+				baseAdaptor.getDBHost(),
+				baseAdaptor.getDBName(),
+				baseAdaptor.getDBUser(),
+				baseAdaptor.getDBPwd(),
+				baseAdaptor.getDBPort()
+			);
 			adaptorPool.put(threadIdentifier, adaptorForPool);
 			adaptor = adaptorForPool;
 		}
 		return adaptor;
 	}
-	
+
 	private void cleanAdaptorPool() throws Exception
 	{
 		for (String k : adaptorPool.keySet())
@@ -58,7 +64,7 @@ class InstancesDeleter
 	}
 	private static final Logger referenceDNASequenceLog = LogManager.getLogger("referenceDNASequenceLog");
 	private static final Logger logger = LogManager.getLogger();
-	
+
 	/**
 	 * Delete obsolete instances. An instance is considered "obsolete" if it has no referrers.
 	 * @param adaptor - the adaptor to use.
@@ -81,10 +87,10 @@ class InstancesDeleter
 			}
 		}
 		logger.info("{} ReferenceGeneProducts in map.", referenceGeneProductMap.size());
-		
+
 		Set<String> identifiersInFileAndDB = findIdentifiersInFileAndDB(pathToUnreviewedUniprotIDsFile, referenceGeneProductMap);
 		logger.info("{} identifiers that are in the database AND in the unreviewed Uniprot identifier file.", identifiersInFileAndDB.size());
-		// Now that we know which identifiers *are* in the list of unreviewed Uniprot identifiers, 
+		// Now that we know which identifiers *are* in the list of unreviewed Uniprot identifiers,
 		// we need to look at all ReferenceGeneProducts *not* in that list. Might need to delete some of them.
 		List<String> identifiersToCheck = referenceGeneProductMap.keySet().parallelStream()
 														.filter(identifier -> !identifiersInFileAndDB.contains(identifier))
@@ -119,7 +125,7 @@ class InstancesDeleter
 		// TODO: this loop is slow. Multithread it somehow.
 		//for (String identifier : identifiersToCheck)
 		// Check each identifier: If it has 0 referrers, no variantIdentifier, and is not in the unreviewed Uniprot IDs list, it can be deleted, so it will be added to identifiersToDelete.
-		identifiersToCheck.parallelStream().forEach( identifier -> 
+		identifiersToCheck.parallelStream().forEach( identifier ->
 		{
 			try
 			{
@@ -135,7 +141,10 @@ class InstancesDeleter
 				int referrerCount = getReferrerCount(referenceGeneProduct);
 				if (referrerCount == 0)
 				{
-					referenceDNASequenceLog.info("ReferenceGeneProduct " + referenceGeneProduct.toString() + " has 0 referrers, no variantIdentifier, and is not in the unreviewed Uniprot IDs list, so it will be deleted.");
+					referenceDNASequenceLog.info(
+						"ReferenceGeneProduct " + referenceGeneProduct.toString() + " has 0 referrers, no variantIdentifier, " +
+						"and is not in the unreviewed Uniprot IDs list, so it will be deleted."
+					);
 					identifiersToDelete.add(referenceGeneProduct);
 				}
 				referenceGeneProduct.setDbAdaptor(adaptor);

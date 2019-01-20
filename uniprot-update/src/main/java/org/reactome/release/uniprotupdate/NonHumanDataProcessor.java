@@ -27,7 +27,8 @@ public class NonHumanDataProcessor extends AbstractDataProcessor
 	 * @throws InvalidAttributeValueException
 	 * @throws Exception
 	 */
-	void processNonHumanData(Map<String, GKInstance> referenceGeneProducts, UniprotData data, /* List<GKInstance> referenceDNASequencesForThisUniprot, */ String accession) throws InvalidAttributeException, InvalidAttributeValueException, Exception
+	void processNonHumanData(Map<String, GKInstance> referenceGeneProducts, UniprotData data, String accession)
+		throws InvalidAttributeException, InvalidAttributeValueException, Exception
 	{
 		if (!referenceGeneProducts.containsKey(accession))
 		{
@@ -38,7 +39,10 @@ public class NonHumanDataProcessor extends AbstractDataProcessor
 			adaptor.updateInstanceAttribute(newRefGeneProduct, ReactomeJavaConstants.referenceGene);
 			InstanceDisplayNameGenerator.generateDisplayName(newRefGeneProduct);
 			addIsoformsIfNecessary(data, accession, newRefGeneProduct);
-			uniprotRecordsLog.info("New UniProt: \"{}\" {} {}", newRefGeneProduct.toString(), accession, newRefGeneProduct.getDBID());
+			uniprotRecordsLog.info(
+				"New UniProt: \"{}\" {} {}",
+				newRefGeneProduct.toString(), accession, newRefGeneProduct.getDBID()
+			);
 		}
 		else
 		{

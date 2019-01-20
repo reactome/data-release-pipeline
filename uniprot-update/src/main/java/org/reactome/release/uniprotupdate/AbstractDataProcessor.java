@@ -25,15 +25,17 @@ import org.reactome.release.uniprotupdate.dataschema.Name;
 import org.reactome.release.uniprotupdate.dataschema.UniprotData;
 
 public abstract class AbstractDataProcessor
-{ 
+{
 	protected MySQLAdaptor adaptor;
 	protected GKInstance instanceEdit;
-	static final String CHAIN_CHANGE_LOG = "_chainChangeLog";
-	static Map<String, List<GKInstance>> speciesCache = new HashMap<>();
-	static final Logger logger = LogManager.getLogger();
-	static final Logger uniprotRecordsLog = LogManager.getLogger("uniprotRecordsLog");
-	static final Logger sequencesLog = LogManager.getLogger("sequencesLog");
-	static final Logger referenceDNASequenceLog = LogManager.getLogger("referenceDNASequenceLog");
+
+	private static final String CHAIN_CHANGE_LOG = "_chainChangeLog";
+	private static Map<String, List<GKInstance>> speciesCache = new HashMap<>();
+
+	private static final Logger logger = LogManager.getLogger();
+	private static final Logger sequencesLog = LogManager.getLogger("sequencesLog");
+	protected static final Logger uniprotRecordsLog = LogManager.getLogger("uniprotRecordsLog");
+	protected static final Logger referenceDNASequenceLog = LogManager.getLogger("referenceDNASequenceLog");
 
 	public AbstractDataProcessor(MySQLAdaptor adaptor, GKInstance instanceEdit) {
 		this.adaptor = adaptor;

@@ -78,148 +78,131 @@ public abstract class AbstractDataProcessor
 	 * @throws InvalidAttributeValueException
 	 * @throws Exception
 	 */
-	protected void updateInstanceForAttribute(GKInstance instance, UniprotData data, String attribute) throws InvalidAttributeException, InvalidAttributeValueException, Exception
+	protected void updateInstanceForAttribute(GKInstance instance, UniprotData data, String attribute)
 	{
-		// TODO: this method, and all of the methods that were extracted from it, should probably be moved to a new class, UniprotInstanceUpdater, whose job is to update a GKInstance.
-		
-		switch (attribute)
-		{
-			case ReactomeJavaConstants.secondaryIdentifier:
-			{
-				if (data.getAccessions() != null && data.getAccessions().size() > 0)
-				{
-					instance.setAttributeValue(ReactomeJavaConstants.secondaryIdentifier, data.getAccessions());
-					adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.secondaryIdentifier);
-				}
-				break;
-			}
-			case ReactomeJavaConstants.description:
-			{
-				if (data.getRecommendedName() != null)
-				{
-					String alternativeNames = "";
-					if (data.getAlternativeNames() != null)
-					{
-						alternativeNames = data.getAlternativeNames().stream().reduce("", (x,y) -> { return x + " " + y; } );
+		// TODO: this method, and all of the methods that were extracted from it,
+		//  should probably be moved to a new class, UniprotInstanceUpdater, whose job is to update a GKInstance.
+		try {
+			switch (attribute) {
+				case ReactomeJavaConstants.secondaryIdentifier: {
+					if (data.getAccessions() != null && data.getAccessions().size() > 0) {
+						instance.setAttributeValue(ReactomeJavaConstants.secondaryIdentifier, data.getAccessions());
+						adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.secondaryIdentifier);
 					}
-					String description = data.getRecommendedName() + " " + alternativeNames;
-					instance.setAttributeValue(ReactomeJavaConstants.description, description.trim());
-					adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.description);
+					break;
 				}
-				break;
-			}
-			case ReactomeJavaConstants.sequenceLength:
-			{
-				if (data.getSequenceLength() != null)
-				{
-					instance.setAttributeValue(ReactomeJavaConstants.sequenceLength, new Integer(data.getSequenceLength()));
-					adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.sequenceLength);
+				case ReactomeJavaConstants.description: {
+					if (data.getRecommendedName() != null) {
+						String alternativeNames = "";
+						if (data.getAlternativeNames() != null) {
+							alternativeNames = data.getAlternativeNames().stream().reduce("", (x, y) -> x + " " + y);
+						}
+						String description = data.getRecommendedName() + " " + alternativeNames;
+						instance.setAttributeValue(ReactomeJavaConstants.description, description.trim());
+						adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.description);
+					}
+					break;
 				}
-				break;
-			}
-			case ReactomeJavaConstants.referenceGene:
-			{
-				break;
-			}
-			case ReactomeJavaConstants.species:
-			{
-				String speciesName = data.getScientificName();
-				try
-				{
-					List<GKInstance> dataSpeciesInst = determineDataSpeciesInsts(speciesName);
+				case ReactomeJavaConstants.sequenceLength: {
+					if (data.getSequenceLength() != null) {
+						instance.setAttributeValue(
+							ReactomeJavaConstants.sequenceLength,
+							Integer.valueOf(data.getSequenceLength())
+						);
+						adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.sequenceLength);
+					}
+					break;
+				}
+				case ReactomeJavaConstants.referenceGene: {
+					break;
+				}
+				case ReactomeJavaConstants.species: {
+					String speciesName = data.getScientificName();
+					try {
+						List<GKInstance> dataSpeciesInst = determineDataSpeciesInsts(speciesName);
 
-					Set<Long> speciesDBIDs = new HashSet<>();
-					for (GKInstance inst : dataSpeciesInst)
-					{
-						speciesDBIDs.add(inst.getDBID());
+						Set<Long> speciesDBIDs = new HashSet<>();
+						for (GKInstance inst : dataSpeciesInst) {
+							speciesDBIDs.add(inst.getDBID());
+						}
+						GKInstance speciesInst = (GKInstance) instance.getAttributeValue(ReactomeJavaConstants.species);
+						// The list of Species that we got by looking up the name from "data" does not
+						// contain the Species DB ID on the current instance.
+						// This means we need to update the instance to use the one from the input.
+						// does it make sense in the data model for speciesInst to be null?
+						if (speciesInst != null && !speciesDBIDs.contains(speciesInst.getDBID())) {
+							instance.setAttributeValue(ReactomeJavaConstants.species, dataSpeciesInst.get(0));
+							adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.species);
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
-					GKInstance speciesInst = (GKInstance) instance.getAttributeValue(ReactomeJavaConstants.species);
-					// The list of Species that we got by looking up the name from "data" does not
-					// contain the Species DB ID on the current instance.
-					// This means we need to update the instance to use the one from the input.
-					// does it make sense in the data model for speciesInst to be null?
-					if (speciesInst != null && !speciesDBIDs.contains(speciesInst.getDBID()))
-					{
-						instance.setAttributeValue(ReactomeJavaConstants.species, dataSpeciesInst.get(0));
-						adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.species);
-					}
+					break;
 				}
-				catch (Exception e)
+				case "checksum": //TODO: add "checksum" to ReactomeJavaConstants
 				{
-					e.printStackTrace();
-				}
-				break;
-			}
-			case "checksum": //TODO: add "checksum" to ReactomeJavaConstants
-			{
-				try
-				{
-					String oldChecksum = (String) instance.getAttributeValue("checksum");
-					String newChecksum = data.getSequenceChecksum();
-					if (oldChecksum != null && oldChecksum.length() > 0 && newChecksum.equals(oldChecksum))
-					{
-						updateInstanceChecksum(instance, newChecksum, oldChecksum);
+					try {
+						String oldChecksum = (String) instance.getAttributeValue("checksum");
+						String newChecksum = data.getSequenceChecksum();
+						if (oldChecksum != null && oldChecksum.length() > 0 && newChecksum.equals(oldChecksum)) {
+							updateInstanceChecksum(instance, newChecksum, oldChecksum);
+						} else {
+							instance.setAttributeValue("isSequenceChanged", false);
+							adaptor.updateInstanceAttribute(instance, "isSequenceChanged");
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
-					else
-					{
-						instance.setAttributeValue("isSequenceChanged", false);
-						adaptor.updateInstanceAttribute(instance, "isSequenceChanged");
-					}
+					break;
 				}
-				catch (Exception e)
-				{
-					e.printStackTrace();
-				}
-				break;
-			}
-			case ReactomeJavaConstants.name:
-			{
+				case ReactomeJavaConstants.name: {
 
-				if (data.getFlattenedGeneNames() != null && data.getFlattenedGeneNames().size() > 0)
-				{
-					// The first item in the flattened gene names list is the primary gene name.
-					instance.setAttributeValue(ReactomeJavaConstants.name, data.getFlattenedGeneNames().get(0));
-					adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.name);
+					if (data.getFlattenedGeneNames() != null && data.getFlattenedGeneNames().size() > 0) {
+						// The first item in the flattened gene names list is the primary gene name.
+						instance.setAttributeValue(ReactomeJavaConstants.name, data.getFlattenedGeneNames().get(0));
+						adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.name);
+					}
+					break;
 				}
-				break;
-			}
-			case ReactomeJavaConstants.geneName:
-			{
-				if (data.getFlattenedGeneNames() != null && data.getFlattenedGeneNames().size() > 0)
-				{
-					// It could happen that there are duplicate gene names that come from the XML file, but we don't want to insert duplicate gene names.
-					instance.setAttributeValue(ReactomeJavaConstants.geneName, data.getFlattenedGeneNames().stream().distinct().collect(Collectors.toList()));
-					adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.geneName);
+				case ReactomeJavaConstants.geneName: {
+					if (data.getFlattenedGeneNames() != null && data.getFlattenedGeneNames().size() > 0) {
+						// It could happen that there are duplicate gene names that come from the XML file,
+						// but we don't want to insert duplicate gene names.
+						instance.setAttributeValue(
+							ReactomeJavaConstants.geneName,
+							data.getFlattenedGeneNames().stream().distinct().collect(Collectors.toList())
+						);
+						adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.geneName);
+					}
+					break;
 				}
-				break;
-			}
-			case ReactomeJavaConstants.comment:
-			{
-				if (!data.getFlattenedCommentsText().isEmpty())
-				{
-					instance.setAttributeValue(ReactomeJavaConstants.comment, data.getFlattenedCommentsText());
-					adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.comment);
+				case ReactomeJavaConstants.comment: {
+					if (!data.getFlattenedCommentsText().isEmpty()) {
+						instance.setAttributeValue(ReactomeJavaConstants.comment, data.getFlattenedCommentsText());
+						adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.comment);
+					}
+					break;
 				}
-				break;
-			}
-			case ReactomeJavaConstants.keyword:
-			{
-				if (!data.getFlattenedKeywords().isEmpty())
-				{
-					instance.setAttributeValue(ReactomeJavaConstants.keyword, data.getFlattenedKeywords());
-					adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.keyword);
+				case ReactomeJavaConstants.keyword: {
+					if (!data.getFlattenedKeywords().isEmpty()) {
+						instance.setAttributeValue(ReactomeJavaConstants.keyword, data.getFlattenedKeywords());
+						adaptor.updateInstanceAttribute(instance, ReactomeJavaConstants.keyword);
+					}
+					break;
 				}
-				break;
-			}
-			case "chain": //TODO: Add "chain" to ReactomeJavaConstants
-			{
-				if (data.getChains() != null && data.getChains().size() > 0)
+				case "chain": //TODO: Add "chain" to ReactomeJavaConstants
 				{
-					updateChain(instance, data);
+					if (data.getChains() != null && data.getChains().size() > 0) {
+						updateChain(instance, data);
+					}
+					break;
 				}
-				break;
 			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
+	}
+
 	private boolean hasValues(String ...stringArray) {
 		return stringArray != null && stringArray.length > 0;
 	}

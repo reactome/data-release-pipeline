@@ -62,17 +62,7 @@ class ENSEMBLQueryUtil
 				}
 			}
 		}
-		catch (URISyntaxException e)
-		{
-			e.printStackTrace();
-			throw new Error(e);
-		}
-		catch (ClientProtocolException e)
-		{
-			e.printStackTrace();
-			throw new Error(e);
-		}
-		catch (IOException e)
+		catch (URISyntaxException | ClientProtocolException e)
 		{
 			e.printStackTrace();
 			throw new Error(e);

@@ -46,7 +46,7 @@ public class UniprotUpdater
 	{
 		Set<String> genesOKWithENSEMBL = ENSEMBLQueryUtil.checkGenesWithENSEMBL(uniprotData, HOMO_SAPIENS);
 
-		Map<String, List<String>> secondaryAccessions = new HashMap<>();
+		Map<String, List<String>> primaryToSecondaryAccessions = new HashMap<>();
 		long startTime = System.currentTimeMillis();
 		for (UniprotData data : uniprotData)
 		{
@@ -60,14 +60,15 @@ public class UniprotUpdater
 			if (SPECIES_TO_UPDATE.contains(data.getScientificName()))
 			{
 				// Update secondary accessions
-				String accession = data.getAccessions().get(0);
-				if (secondaryAccessions.containsKey(accession))
+				String primaryAccession = data.getAccessions().get(0);
+				List<String> secondaryAccessions = data.getAccessions().subList(1, data.getAccessions().size());
+				if (primaryToSecondaryAccessions.containsKey(primaryAccession))
 				{
-					secondaryAccessions.get(accession).addAll(data.getAccessions().subList(1, data.getAccessions().size()));
+					primaryToSecondaryAccessions.get(primaryAccession).addAll(secondaryAccessions);
 				}
 				else
 				{
-					secondaryAccessions.put(accession, data.getAccessions().subList(1, data.getAccessions().size()));
+					primaryToSecondaryAccessions.put(primaryAccession, secondaryAccessions);
 				}
 
 				// for human data, we may need to update a ReferenceDNASequence.
@@ -75,12 +76,19 @@ public class UniprotUpdater
 				{
 					HumanDataProcessor processor = new HumanDataProcessor(adaptor, instanceEdit);
 					List<String> geneList = getGeneList(data);
-					processor.processHumanData(referenceDNASequences, referenceGeneProducts, genesOKWithENSEMBL, data, geneList, accession);
+					processor.processHumanData(
+						referenceDNASequences,
+						referenceGeneProducts,
+						genesOKWithENSEMBL,
+						data,
+						geneList,
+						primaryAccession
+					);
 				}
 				else // Not human, but still need to process it...
 				{
 					NonHumanDataProcessor processor = new NonHumanDataProcessor(adaptor, instanceEdit);
-					processor.processNonHumanData(referenceGeneProducts, data, accession);
+					processor.processNonHumanData(referenceGeneProducts, data, primaryAccession);
 				}
 			}
 			recordsProcessed += 1;

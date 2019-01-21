@@ -240,7 +240,7 @@ public abstract class AbstractDataProcessor
 			// honestly don't expect more than one result.
 			// It would be *very* weird if two different Species objects existed with the
 			// same name.
-			dataSpeciesInst = new ArrayList<>((Set<GKInstance>) adaptor.fetchInstanceByAttribute(
+			dataSpeciesInst = new ArrayList<>(adaptor.fetchInstanceByAttribute(
 				ReactomeJavaConstants.Species, ReactomeJavaConstants.name, "=", speciesName
 			));
 			speciesCache.put(speciesName, dataSpeciesInst);

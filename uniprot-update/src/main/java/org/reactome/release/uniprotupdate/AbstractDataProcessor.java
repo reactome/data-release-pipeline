@@ -264,14 +264,18 @@ public abstract class AbstractDataProcessor
 	private void updateChain(GKInstance instance, UniprotData data)
 		throws Exception, InvalidAttributeException, InvalidAttributeValueException
 	{
-		List<String> chainStrings = new ArrayList<>();
-		for (Chain chain : data.getChains())
-		{
-			chainStrings.add(chain.toString());
-		}
-		logChainChanges(new HashSet<>(chainStrings), instance);
-		instance.setAttributeValue("chain", chainStrings);
+		List<String> newChains = getNewChains(data);
+
+		logChainChanges(new HashSet<>(newChains), instance);
+		instance.setAttributeValue("chain", newChains);
 		adaptor.updateInstanceAttribute(instance, "chain");
+	}
+
+	private List<String> getNewChains(UniprotData data) {
+		return data.getChains()
+			.stream()
+			.map(Chain::toString)
+			.collect(Collectors.toList());
 	}
 
 	/**
@@ -306,51 +310,66 @@ public abstract class AbstractDataProcessor
 	 */
 	private void logChainChanges(Set<String> newChains, GKInstance instance) throws Exception
 	{
+		String additionalChainLogEntries = getAdditionalChainLogEntries(instance, newChains);
+
+		if (!additionalChainLogEntries.isEmpty())
+		{
+			sequencesLog.info("Chain differences: {} ; For: {}", additionalChainLogEntries, instance.toString());
+			instance.setAttributeValue(
+				CHAIN_CHANGE_LOG, getUpdatedChainLog(getCurrentChainLog(instance), additionalChainLogEntries)
+			);
+			adaptor.updateInstanceAttribute(instance, CHAIN_CHANGE_LOG);
+		}
+	}
+
+	private String getCurrentChainLog(GKInstance referenceGeneProduct) throws Exception {
+		String changeLog = (String) referenceGeneProduct.getAttributeValue(CHAIN_CHANGE_LOG);
+
+		return changeLog != null ? changeLog.trim() : "";
+	}
+
+	private String getAdditionalChainLogEntries(GKInstance referenceGeneProduct, Set<String> newChains) throws Exception{
+		List<String> additionalChainLogEntries = new ArrayList<>();
+
 		@SuppressWarnings("unchecked")
-		Set<String> oldChains = new HashSet<>((List<String>) instance.getAttributeValuesList("chain"));
-		boolean needsUpdate = false;
-		LocalDateTime currentDate = LocalDateTime.now();
+		Set<String> oldChains = new HashSet<>(referenceGeneProduct.getAttributeValuesList("chain"));
+
+		List<String> removedChains = oldChains.stream().filter(oldChain -> !newChains.contains(oldChain)).collect(Collectors.toList());
+		List<String> removedChainLogEntries = getChainLogEntries(referenceGeneProduct.getDBID(), removedChains, "removed");
+		additionalChainLogEntries.addAll(removedChainLogEntries);
+
+		List<String> addedChains = newChains.stream().filter(newChain -> !oldChains.contains(newChain)).collect(Collectors.toList());
+		List<String> addedChainLogEntries = getChainLogEntries(referenceGeneProduct.getDBID(), addedChains, "added");
+		additionalChainLogEntries.addAll(addedChainLogEntries);
+
+		return String.join(";", additionalChainLogEntries);
+	}
+
+	private List<String> getChainLogEntries(long instanceDBID, List<String> chains, String actionPerformed) {
+		return chains
+		.stream()
+		.map(chain ->
+			chain + " for " + instanceDBID + " " + actionPerformed + " on " + getCurrentDateString()
+		)
+		.collect(Collectors.toList());
+	}
+
+	private String getCurrentDateString() {
 		// Perl code was:
 		// my $t = localtime;
 		// my $date = $t->day . ' ' . $t->fullmonth . ' ' . $t->mday . ' ' . $t->year;
 		// See "Patterns for Formatting and Parsing" on this page:
 		// https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE LLLL dd yyyy");
-		String dateString = formatter.toFormat().format(currentDate);
-
-		String priorLog = (String) instance.getAttributeValue(CHAIN_CHANGE_LOG);
-		if (priorLog == null)
-		{
-			priorLog = "";
-		}
-		String logEntry = priorLog;
-		for (String oldChain : oldChains)
-		{
-			if (!newChains.contains(oldChain))
-			{
-				logEntry = (logEntry.trim().equals("") ? "" : logEntry + " ; ") +
-					oldChain + " for " + instance.getDBID() + " removed on " + dateString;
-				needsUpdate = true;
-			}
-		}
-
-		for (String newChain : newChains)
-		{
-			if (!oldChains.contains(newChain))
-			{
-				logEntry = (logEntry.trim().equals("") ? "" : logEntry + " ; ") +
-					newChain + " for " + instance.getDBID() + " added on " + dateString;
-				needsUpdate = true;
-			}
-		}
-
-		if (needsUpdate)
-		{
-			sequencesLog.info("Chain differences: {} ; For: {}", logEntry, instance.toString());
-			instance.setAttributeValue(CHAIN_CHANGE_LOG, logEntry);
-			adaptor.updateInstanceAttribute(instance, CHAIN_CHANGE_LOG);
-		}
+		LocalDateTime currentDate = LocalDateTime.now();
+		return DateTimeFormatter.ofPattern("EEEE LLLL dd yyyy").toFormat().format(currentDate);
 	}
+
+	private String getUpdatedChainLog(String currentChainLog, String additionalChainLogEntries) {
+		return currentChainLog.isEmpty() ?
+			additionalChainLogEntries :
+			currentChainLog.concat(";").concat(additionalChainLogEntries);
+	}
+
 	/**
 	 * Updates a ReferenceGeneProduct: updates the attributes of the ReferenceGeneProduct based
 	 * on the contents of a UniprotData object.

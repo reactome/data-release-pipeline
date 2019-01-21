@@ -216,7 +216,7 @@ class ENSEMBLQueryUtil
 							}
 						}
 					}
-					catch (URISyntaxException e)
+					catch (IOException | URISyntaxException e)
 					{
 						e.printStackTrace();
 					}

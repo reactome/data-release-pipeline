@@ -65,7 +65,7 @@ class ProcessUniprotXML
 		Source xsl = new StreamSource(new FileInputStream(PATH_TO_XSL));
 		Transformer transformer = TransformerFactory.newInstance().newTransformer(xsl);
 		// ...AND we'll use JAXB to take the transformed output and turn it into an object!
-		JAXBContext unmarshallerContext = JAXBContext.newInstance(org.reactome.release.uniprotupdate.dataschema.UniprotData.class);
+		JAXBContext unmarshallerContext = JAXBContext.newInstance(UniprotData.class);
 
 		long startTime = System.currentTimeMillis();
 		while (xsr.nextTag() == XMLStreamConstants.START_ELEMENT)

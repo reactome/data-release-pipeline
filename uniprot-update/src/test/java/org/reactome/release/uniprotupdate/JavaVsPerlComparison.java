@@ -106,7 +106,7 @@ public class JavaVsPerlComparison
 						{
 							StringBuilder sb = new StringBuilder();
 							totalComparisonsCount++;
-							int diffs = DBObjectComparer.compareInstances(refEnt, perlInst, sb, 0);
+							int diffs = DBObjectComparer.compareInstances(refEnt, perlInst, sb, false);
 							if (diffs > 0)
 							{
 								diffCount++;

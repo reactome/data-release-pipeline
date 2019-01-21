@@ -472,8 +472,9 @@ public abstract class AbstractDataProcessor
 	 * @param data - the UniprotData object.
 	 * @throws Exception
 	 */
-	private void updateOrCreateIsoforms(GKInstance referenceGeneProduct, List<Isoform> isoforms, String accession, UniprotData data)
-		throws Exception
+	private void updateOrCreateIsoforms(
+		GKInstance referenceGeneProduct, List<Isoform> isoforms, String accession, UniprotData data
+	) throws Exception
 	{
 		if (isoforms != null)
 		{
@@ -495,9 +496,12 @@ public abstract class AbstractDataProcessor
 					{
 						for (GKInstance refIsoformFromDB : refIsoformsFromDB)
 						{
-							if ((refIsoformFromDB.getAttributeValue(ReactomeJavaConstants.variantIdentifier)).equals(isoformID))
+							if (refIsoformFromDB.getAttributeValue(ReactomeJavaConstants.variantIdentifier)
+									.equals(isoformID))
 							{
-								refIsoformFromDB.setAttributeValue(ReactomeJavaConstants.isoformParent, referenceGeneProduct);
+								refIsoformFromDB.setAttributeValue(
+									ReactomeJavaConstants.isoformParent, referenceGeneProduct
+								);
 								adaptor.updateInstanceAttribute(refIsoformFromDB, ReactomeJavaConstants.isoformParent);
 								updateInstanceWithData(refIsoformFromDB, data);
 							}

@@ -85,7 +85,8 @@ class ProcessUniprotXML
 				}
 				catch (TransformerException e)
 				{
-					// Hmmm... should I break the loop if something bad happens here? Or just print the stacktrace/some custom message, and then
+					// Hmmm... should I break the loop if something bad happens here?
+					// Or just print the stacktrace/some custom message, and then
 					// keep going? Hasn't happened yet with samples of REAL data.
 					e.printStackTrace();
 				}

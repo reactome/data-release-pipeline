@@ -96,7 +96,9 @@ public class InstanceCreator
 		throws InvalidAttributeException, InvalidAttributeValueException, Exception
 	{
 		long dbID;
-		GKInstance referenceIsoform = new GKInstance(this.adaptor.getSchema().getClassByName(ReactomeJavaConstants.ReferenceIsoform));
+		GKInstance referenceIsoform = new GKInstance(
+			this.adaptor.getSchema().getClassByName(ReactomeJavaConstants.ReferenceIsoform)
+		);
 		referenceIsoform.setAttributeValue(ReactomeJavaConstants.created, this.creationInstanceEdit);
 		referenceIsoform.setAttributeValue(ReactomeJavaConstants.identifier, accession);
 		referenceIsoform.setAttributeValue(ReactomeJavaConstants.referenceDatabase,

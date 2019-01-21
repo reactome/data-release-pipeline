@@ -14,25 +14,25 @@ import java.sql.SQLException;
 import java.util.*;
 
 /**
- * 
+ *
  * @author sshorser
  *
  */
-public class UniprotUpdateStep extends ReleaseStep 
+public class UniprotUpdateStep extends ReleaseStep
 {
 
 	private static final String SAVEPOINT_NAME = "PRE_UNIPROT_UPDATE";
-	
+
 	private static final Logger logger = LogManager.getLogger();
-	
+
 	@Override
 	public void executeStep(Properties props) throws Exception
 	{
 		String pathToUniprotFile = props.getProperty("pathToUniprotFile");
 		String pathToUnreviewedUniprotIDsFile = props.getProperty("pathToUnreviewedUniprotIDsFile");
 		MySQLAdaptor adaptor = getMySQLAdaptorFromProperties(props);
-		String personID = props.getProperty("person.id"); 
-		
+		String personID = props.getProperty("person.id");
+
 		this.loadTestModeFromProperties(props);
 
 		adaptor.executeQuery("SAVEPOINT " + SAVEPOINT_NAME , null);
@@ -59,7 +59,7 @@ public class UniprotUpdateStep extends ReleaseStep
 		{
 			logger.info("Test mode is set - Rolling back transaction...");
 			//adaptor.rollback();
-			adaptor.executeQuery("ROLLBACK TO " + SAVEPOINT_NAME , null);	
+			adaptor.executeQuery("ROLLBACK TO " + SAVEPOINT_NAME , null);
 		}
 		else
 		{
@@ -93,16 +93,17 @@ public class UniprotUpdateStep extends ReleaseStep
 	 * @throws Exception
 	 * @throws InvalidAttributeException
 	 */
-	private Map<String, GKInstance> getIdentifierMappedCollectionOfType(MySQLAdaptor adaptor, String reactomeClassName, String refDBName)
-		throws Exception, InvalidAttributeException
+	private Map<String, GKInstance> getIdentifierMappedCollectionOfType(
+		MySQLAdaptor adaptor, String reactomeClassName, String refDBName)
+			throws Exception, InvalidAttributeException
 	{
 		@SuppressWarnings("unchecked")
 		Collection<GKInstance> instances = (Collection<GKInstance>)adaptor.fetchInstancesByClass(reactomeClassName);
 		Map<String, GKInstance> instanceMap = Collections.synchronizedMap(new HashMap<>(instances.size()));
 		//for (GKInstance instance : instances)
 		Map<String, MySQLAdaptor> adaptorPool = Collections.synchronizedMap(new HashMap<>());
-		
-		instances.parallelStream().forEach( instance -> 
+
+		instances.parallelStream().forEach( instance ->
 		{
 			try
 			{
@@ -140,7 +141,7 @@ public class UniprotUpdateStep extends ReleaseStep
 				e.printStackTrace();
 			}
 		});
-		
+
 		// Clean up other adaptors.
 		for (String k : adaptorPool.keySet())
 		{
@@ -148,7 +149,7 @@ public class UniprotUpdateStep extends ReleaseStep
 		}
 
 		logger.info("{}s {} mapped by Identifier.", reactomeClassName, instanceMap.size());
-		
+
 		return instanceMap;
 	}
 

@@ -27,7 +27,7 @@ public class UniprotData
 	private String scientificName;
 	private String recommendedName;
 	private List<String> alternativeNames;
-	
+
 	@XmlElement(name="accession")
 	public List<String> getAccessions()
 	{
@@ -38,7 +38,7 @@ public class UniprotData
 	{
 		this.accessions = accessions;
 	}
-	
+
 	@XmlElement(name="chain")
 	public List<Chain> getChains()
 	{
@@ -64,7 +64,7 @@ public class UniprotData
 		// Only execute the gene name-flattening code when the genes list is actually set.
 		// This is the only place where the data structures that underly flattenedGeneNames
 		// can be modified.
-		
+
 	}
 
 	@XmlElement(name="isoform")
@@ -153,8 +153,8 @@ public class UniprotData
 	public void setCommentTexts(List<CommentText> commentText)
 	{
 		this.commentTexts = commentText;
-	}	
-	
+	}
+
 	public List<String> getFlattenedGeneNames()
 	{
 		int i = 0;
@@ -188,10 +188,10 @@ public class UniprotData
 			// add it at the begining.
 			this.flattenedGeneNames.add(0, primaryGeneName);
 		}
-		
+
 		return this.flattenedGeneNames;
 	}
-	
+
 	public String getFlattenedCommentsText()
 	{
 		StringBuilder flattenedCommentsText = new StringBuilder();
@@ -199,13 +199,17 @@ public class UniprotData
 		{
 			for (CommentText comment : this.commentTexts)
 			{
-				flattenedCommentsText.append(comment.getType().toUpperCase()).append(" ").append(comment.getText()).append(" ");
+				flattenedCommentsText
+				.append(comment.getType().toUpperCase())
+				.append(" ")
+				.append(comment.getText())
+				.append(" ");
 			}
 		}
 		// TODO: move the bulk of this code to the setter method for commentTexts?
 		return flattenedCommentsText.toString().trim();
 	}
-	
+
 	public List<String> getFlattenedKeywords()
 	{
 		List<String> flattenedKeywords = new ArrayList<>();

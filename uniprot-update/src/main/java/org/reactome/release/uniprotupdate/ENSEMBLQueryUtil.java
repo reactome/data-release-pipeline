@@ -32,8 +32,11 @@ class ENSEMBLQueryUtil
 {
 	private static final String ENSEMBL_LOOKUP_URI_PREFIX = "https://rest.ensembl.org/lookup/id/";
 	private static final Logger logger = LogManager.getLogger();
-	private static final Pattern validSeqRegionPatter = Pattern.compile(".* seq_region_name=\"(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|X|Y|MT)\" .*", Pattern.MULTILINE);
-	public static boolean checkOKWithENSEMBL(String ensemblGeneID) throws URISyntaxException
+	private static final Pattern validSeqRegionPatter = Pattern.compile(
+		".* seq_region_name=\"(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|X|Y|MT)\" .*",
+		Pattern.MULTILINE
+	);
+	public static boolean checkOKWithENSEMBL(String ensemblGeneID) throws URISyntaxException, IOException
 	{
 		boolean isOK = false;
 		// need to query a URL of the form:
@@ -41,7 +44,8 @@ class ENSEMBLQueryUtil
 		// See the old Perl version of this: EnsEMBLUtils.pm, sub on_EnsEMBL_primary_assembly
 		URI uri = new URI(ENSEMBLQueryUtil.ENSEMBL_LOOKUP_URI_PREFIX + ensemblGeneID);
 		URIBuilder builder = new URIBuilder();
-		builder.setHost(uri.getHost()).setPath(uri.getPath()).setScheme(uri.getScheme()).addParameter("content-type", "text/xml");
+		builder.setHost(uri.getHost()).setPath(uri.getPath()).setScheme(uri.getScheme())
+			.addParameter("content-type", "text/xml");
 		try
 		{
 			HttpGet get = new HttpGet(builder.build());
@@ -49,7 +53,8 @@ class ENSEMBLQueryUtil
 			if (queryResponse != null)
 			{
 				queryResponse = queryResponse.replaceAll("\n", "");
-				// According to the old Perl code, seq_region_name must match any of these: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y MT
+				// According to the old Perl code, seq_region_name must match any of these:
+				// 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y MT
 				Matcher m = ENSEMBLQueryUtil.validSeqRegionPatter.matcher(queryResponse);
 				if (m.matches())
 				{
@@ -82,7 +87,8 @@ class ENSEMBLQueryUtil
 		boolean done = false;
 		while (!done)
 		{
-			try (CloseableHttpClient getClient = HttpClients.createDefault(); CloseableHttpResponse getResponse = getClient.execute(get);)
+			try (CloseableHttpClient getClient = HttpClients.createDefault();
+				CloseableHttpResponse getResponse = getClient.execute(get))
 			{
 				EnsemblServiceResult result = responseProcessor.processResponse(getResponse, get.getURI());
 				if (!result.getWaitTime().equals(Duration.ZERO))
@@ -102,12 +108,18 @@ class ENSEMBLQueryUtil
 					}
 					else if (result.getStatus() == HttpStatus.SC_BAD_REQUEST)
 					{
-						logger.trace("Got BAD_REQUEST reponse. This was the request that was sent: {}", get.toString());
+						logger.trace(
+							"Got BAD_REQUEST reponse. This was the request that was sent: {}",
+							get.toString()
+						);
 						done = true;
 					}
 					else if (result.getResult() == null && result.isOkToRetry())
 					{
-						logger.trace("No result, status was {}, but it is OK to retry. Retrying...", result.getStatus());
+						logger.trace(
+							"No result, status was {}, but it is OK to retry. Retrying...",
+							result.getStatus()
+						);
 						done = false;
 					}
 					else
@@ -126,7 +138,8 @@ class ENSEMBLQueryUtil
 		return null;
 	}
 
-	public static Set<String> checkGenesWithENSEMBL(List<UniprotData> uniprotData, String speciesName) throws IOException
+	public static Set<String> checkGenesWithENSEMBL(List<UniprotData> uniprotData, String speciesName)
+		throws IOException
 	{
 		AtomicInteger totalEnsemblGeneCount = new AtomicInteger(0);
 		Set<String> genesOKWithENSEMBL = Collections.synchronizedSet(new HashSet<>());
@@ -135,7 +148,7 @@ class ENSEMBLQueryUtil
 		// If the file already exists, load it into memory, into genesOKWithENSEMBL
 		if (Files.exists(Paths.get(ensemblGenesFileName)))
 		{
-			Files.readAllLines(Paths.get(ensemblGenesFileName)).parallelStream().forEach(line -> genesOKWithENSEMBL.add(line));
+			Files.readAllLines(Paths.get(ensemblGenesFileName)).parallelStream().forEach(genesOKWithENSEMBL::add);
 		}
 //		int startingSize = genesOKWithENSEMBL.size();
 
@@ -143,27 +156,31 @@ class ENSEMBLQueryUtil
 		// we'll write in append mode, just in case we encounter new Gene IDs that weren't in the file originally.
 		try(FileWriter fileWriter = new FileWriter(ensemblGenesFileName, true))
 		{
-			// 8 threads (my workstation has 8 cores, parallelStream defaults to 8 threads) and we start getting told "too many requests - please wait 2 seconds". This slows
-			// everything down, so we should try to send as many requests as we can without hitting the 15/second rate limit.
-			// I've determined experimentally that no matter how many threads try to make requests, the best rate I can get is 10 requests per second.
+			// 8 threads (my workstation has 8 cores, parallelStream defaults to 8 threads) and we start getting told
+			// "too many requests - please wait 2 seconds". This slows everything down, so we should try to send as
+			// many requests as we can without hitting the 15/second rate limit.
+			// I've determined experimentally that no matter how many threads try to make requests,
+			// the best rate I can get is 10 requests per second.
 			// It seems that with 5 threads, I can get 10 requests/second with almost no "please wait" responses.
 			System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "5");
 
 			List<String> geneBuffer = Collections.synchronizedList(new ArrayList<>(1000));
 			uniprotData.parallelStream()
-						.filter(data ->  data.getEnsembleGeneIDs()!=null && data.getScientificName().equals(speciesName))
-						.forEach( data -> {
+			.filter(data ->  data.getEnsembleGeneIDs()!=null && data.getScientificName().equals(speciesName))
+			.forEach( data -> {
 				List<String> geneList = data.getEnsembleGeneIDs().stream().distinct().collect(Collectors.toList());
 				for(String ensemblGeneID : geneList)
 				{
 					try
 					{
-						// If the gene ID is not already in the set (could happen if you're using a pre-existing gene list).
-						// We'll assume that if it a Gene ID is in the list, it's OK. This *might* not be a very good assumption for Production (unless you know the list is fresh),
+						// If the gene ID is not already in the set (could happen if you're using a pre-existing
+						// gene list).  We'll assume that if it a Gene ID is in the list, it's OK. This *might*
+						// not be a very good assumption for Production (unless you know the list is fresh),
 						// but for testing purposes, it will probably speed things up greatly.
 						if (!genesOKWithENSEMBL.contains(ensemblGeneID))
 						{
-							// Check if the gene is "OK" with ENSEMBL. Here, "OK" means the response matches this regexp:
+							// Check if the gene is "OK" with ENSEMBL.
+							// Here, "OK" means the response matches this regexp:
 							// .* seq_region_name=\"(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|X|Y|MT)\" .*
 							if (ENSEMBLQueryUtil.checkOKWithENSEMBL(ensemblGeneID))
 							{
@@ -200,7 +217,12 @@ class ENSEMBLQueryUtil
 								{
 									currentTime += 1;
 								}
-								logger.info("{} genes were checked with ENSEMBL, {} were \"OK\"; query rate: {} per second", amt, size,(double)size / (double)((currentTime-startTimeEnsemblLookup)/1000.0));
+								logger.info(
+									"{} genes were checked with ENSEMBL, " +
+									"{} were \"OK\"; " +
+									"query rate: {} per second",
+									amt, size,(double)size / ((currentTime-startTimeEnsemblLookup)/1000.0)
+								);
 							}
 						}
 					}
@@ -212,7 +234,11 @@ class ENSEMBLQueryUtil
 			});
 		}
 		long currentTimeEnsembl = System.currentTimeMillis();
-		logger.info("{} genes were checked with ENSEMBL, {} were \"OK\". Time spent: {}", totalEnsemblGeneCount.get(), genesOKWithENSEMBL.size(), Duration.ofMillis(currentTimeEnsembl - startTimeEnsemblLookup).toString());
+		logger.info("{} genes were checked with ENSEMBL, {} were \"OK\". Time spent: {}",
+			totalEnsemblGeneCount.get(),
+			genesOKWithENSEMBL.size(),
+			Duration.ofMillis(currentTimeEnsembl - startTimeEnsemblLookup).toString()
+		);
 		return genesOKWithENSEMBL;
 	}
 }

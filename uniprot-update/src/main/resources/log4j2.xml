@@ -4,7 +4,11 @@
 		<Console name="Console" target="SYSTEM_OUT">
 			<PatternLayout pattern="%d{YYYY-MM-dd HH:mm:ss.SSS} [%t] %-5level %C - %msg%n" />
 		</Console>
-		<RollingFile name="LogFile" fileName="logs/Uniprot_Update-${date:MM-dd-yyyy_HH.mm.ss}.log" filePattern="logs/Uniprot_Update-%d{MM-dd-yyyy_HH.mm.ss}.log">
+		<RollingFile
+			name="LogFile"
+			fileName="logs/Uniprot_Update-${date:MM-dd-yyyy_HH.mm.ss}.log"
+			filePattern="logs/Uniprot_Update-%d{MM-dd-yyyy_HH.mm.ss}.log"
+		>
 			<PatternLayout>
 				<Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %C - %msg%n</Pattern>
 			</PatternLayout>
@@ -12,7 +16,11 @@
 					<OnStartupTriggeringPolicy />
 				</Policies>
 		</RollingFile>
-		<RollingFile name="uniprotRecordsLogFile" fileName="logs/Uniprot_Update_records-${date:MM-dd-yyyy_HH.mm.ss}.log" filePattern="logs/Uniprot_Update_records-%d{MM-dd-yyyy_HH.mm.ss}.log">
+		<RollingFile
+			name="uniprotRecordsLogFile"
+			fileName="logs/Uniprot_Update_records-${date:MM-dd-yyyy_HH.mm.ss}.log"
+			filePattern="logs/Uniprot_Update_records-%d{MM-dd-yyyy_HH.mm.ss}.log"
+		>
 			<PatternLayout>
 				<Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %C - %msg%n</Pattern>
 			</PatternLayout>
@@ -20,7 +28,11 @@
 					<OnStartupTriggeringPolicy />
 				</Policies>
 		</RollingFile>
-		<RollingFile name="sequencesLogFile" fileName="logs/Uniprot_Update_sequence-${date:MM-dd-yyyy_HH.mm.ss}.log" filePattern="logs/Uniprot_Update_sequence-%d{MM-dd-yyyy_HH.mm.ss}.log">
+		<RollingFile
+			name="sequencesLogFile"
+			fileName="logs/Uniprot_Update_sequence-${date:MM-dd-yyyy_HH.mm.ss}.log"
+			filePattern="logs/Uniprot_Update_sequence-%d{MM-dd-yyyy_HH.mm.ss}.log"
+		>
 			<PatternLayout>
 				<Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %C - %msg%n</Pattern>
 			</PatternLayout>
@@ -28,7 +40,11 @@
 					<OnStartupTriggeringPolicy />
 				</Policies>
 		</RollingFile>
-		<RollingFile name="referenceDNASequenceLogFile" fileName="logs/Uniprot_Update_referenceDNASequence-${date:MM-dd-yyyy_HH.mm.ss}.log" filePattern="logs/Uniprot_Update_referenceDNASequence-%d{MM-dd-yyyy_HH.mm.ss}.log">
+		<RollingFile
+			name="referenceDNASequenceLogFile"
+			fileName="logs/Uniprot_Update_referenceDNASequence-${date:MM-dd-yyyy_HH.mm.ss}.log"
+			filePattern="logs/Uniprot_Update_referenceDNASequence-%d{MM-dd-yyyy_HH.mm.ss}.log"
+		>
 			<PatternLayout>
 				<Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %C - %msg%n</Pattern>
 			</PatternLayout>
@@ -36,7 +52,11 @@
 					<OnStartupTriggeringPolicy />
 				</Policies>
 		</RollingFile>
-		<RollingFile name="commLog" fileName="logs/Uniprot_Update_communication-${date:MM-dd-yyyy_HH.mm.ss}.log" filePattern="logs/Uniprot_Update_communication-%d{MM-dd-yyyy_HH.mm.ss}.log">
+		<RollingFile
+			name="commLog"
+			fileName="logs/Uniprot_Update_communication-${date:MM-dd-yyyy_HH.mm.ss}.log"
+			filePattern="logs/Uniprot_Update_communication-%d{MM-dd-yyyy_HH.mm.ss}.log"
+		>
 			<PatternLayout>
 				<Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %C - %msg%n</Pattern>
 			</PatternLayout>

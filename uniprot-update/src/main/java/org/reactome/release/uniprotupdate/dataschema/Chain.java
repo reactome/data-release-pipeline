@@ -10,8 +10,8 @@ public class Chain
 	private String begin;
 	private String end;
 	private String position;
-	
-	
+
+
 	@XmlAttribute(name="type")
 	public String getType()
 	{
@@ -33,7 +33,7 @@ public class Chain
 	{
 		this.begin = begin;
 	}
-	
+
 	@XmlAttribute(name="end")
 	public String getEnd()
 	{
@@ -44,14 +44,14 @@ public class Chain
 	{
 		this.end = end;
 	}
-	
+
 	@XmlAttribute(name="position")
 	public String getPosition()
 	{
 		return position;
 	}
 
-	public void setPosition(String position) 
+	public void setPosition(String position)
 	{
 		this.position = position;
 	}
@@ -59,7 +59,8 @@ public class Chain
 	/**
 	 * Returns the string-form of this chain, for Reactome.
 	 * The posibilities are: "initiator methionine:&lt;position&gt;" if there is a value for position
-	 * or "&lt;type&gt;:&lt;begin&gt;-&lt;end&gt;" if there are values for type, begin, end. Otherwise, super.toString() is called.
+	 * or "&lt;type&gt;:&lt;begin&gt;-&lt;end&gt;" if there are values for type, begin, end.
+	 * Otherwise, super.toString() is called.
 	 */
 	@Override
 	public String toString()
@@ -75,12 +76,12 @@ public class Chain
 		{
 			chainAsString = type+":"+begin+"-"+end;
 		}
-		
+
 		if (chainAsString.equals(""))
 		{
 			chainAsString = super.toString();
 		}
 		return chainAsString;
 	}
-	
+
 }

@@ -416,7 +416,7 @@ public abstract class AbstractDataProcessor
 	 * @throws InvalidAttributeValueException
 	 * @throws Exception
 	 */
-	void createOrUpdateIsoform(String accession, GKInstance referenceGeneProduct, Isoform isoform)
+	private void createOrUpdateIsoform(String accession, GKInstance referenceGeneProduct, Isoform isoform)
 		throws InvalidAttributeException, InvalidAttributeValueException, Exception
 	{
 		String isoformID = isoform.getIsoformID();
@@ -453,7 +453,7 @@ public abstract class AbstractDataProcessor
 	 * @param data - the UniprotData object.
 	 * @throws Exception
 	 */
-	void updateOrCreateIsoforms(GKInstance referenceGeneProduct, List<Isoform> isoforms, String accession, UniprotData data)
+	private void updateOrCreateIsoforms(GKInstance referenceGeneProduct, List<Isoform> isoforms, String accession, UniprotData data)
 		throws Exception
 	{
 		if (isoforms != null)
@@ -512,7 +512,7 @@ public abstract class AbstractDataProcessor
 	 * @param accession - the Uniprot Accession.
 	 * @throws Exception
 	 */
-	void updateMismatchedIsoform(String isoformID, String accession) throws Exception
+	private void updateMismatchedIsoform(String isoformID, String accession) throws Exception
 	{
 		// Again, we really shouldn't expect more than 1 to be returned,
 		// but we still *need* to treat this as a collection, because that's what the API returns.

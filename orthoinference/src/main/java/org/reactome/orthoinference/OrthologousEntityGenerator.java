@@ -187,7 +187,7 @@ public class OrthologousEntityGenerator {
 			}
 			if (!override)
 			{
-				if ((complexTotalProteinCounts > 0 && complexInferrableProteinCounts == 0) || percent < 75)
+				if ((complexTotalProteinCounts > 0 && complexInferrableProteinCounts == 0) || percent < 1) // TODO: pass the percentage as a threshold setting
 				{
 					logger.info("\tComplex/Polymer protein count is below threshold -- terminating inference");
 					return nullInst;

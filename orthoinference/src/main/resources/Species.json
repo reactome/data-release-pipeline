@@ -1,4 +1,50 @@
 {
+	"osat":{
+		"mart_url":"http:\/\/plants.ensembl.org\/biomart\/martservice",
+		"refdb":{
+			"url":"http:\/\/plants.ensembl.org\/Oryza_sativa\/Info\/Index",
+			"ensg_access":"http:\/\/plants.ensembl.org\/Oryza_sativa\/geneview?gene=###ID###&db=core",
+			"dbname":[
+				"ENSEMBL",
+				"Ensembl",
+				"ENSEMBL_Oryza_sativa_PROTEIN"
+			],
+			"access":"http:\/\/plants.ensembl.org\/Oryza_sativa\/Transcript\/ProteinSummary?peptide=###ID###"
+		},
+		"mart_group":"osativa_eg_gene",
+		"name":[
+			"Oryza sativa"
+		],
+		"mart_virtual_schema":"plants_mart",
+		"group":"Fungi\/Plants"
+	},
+	"atha":{
+		"mart_url":"http:\/\/plants.ensembl.org\/biomart\/martservice",
+		"refdb":{
+			"url":"http:\/\/plants.ensembl.org\/Arabidopsis_thaliana",
+			"ensg_access":"http:\/\/plants.ensembl.org\/Arabidopsis_thaliana\/geneview?gene=###ID###&db=core",
+			"dbname":[
+				"ENSEMBL",
+				"Ensembl",
+				"ENSEMBL_Arabidopsis_PROTEIN"
+			],
+			"access":"http:\/\/plants.ensembl.org\/Arabidopsis_thaliana\/Transcript\/ProteinSummary?peptide=###ID###"
+		},
+		"alt_refdb":{
+			"url":"http:\/\/www.arabidopsis.org\/index.jsp",
+			"alt_id":"-TAIR-G",
+			"access":"http:\/\/www.arabidopsis.org\/servlets\/TairObject?type=locus&name=###ID###",
+			"dbname":[
+				"TAIR"
+			]
+		},
+		"mart_group":"athaliana_eg_gene",
+		"name":[
+			"Arabidopsis thaliana"
+		],
+		"mart_virtual_schema":"plants_mart",
+		"group":"Fungi\/Plants"
+	},
 	"ddis":{
 		"mart_url":"http:\/\/protists.ensembl.org\/biomart\/martservice",
 		"refdb":{

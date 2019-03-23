@@ -52,7 +52,7 @@ public class EventsInferrer
 	private static List<GKInstance> manualHumanEvents = new ArrayList<GKInstance>();
 
 	@SuppressWarnings("unchecked")
-	public static void inferEvents(Properties props, String pathToConfig, String species) throws Exception
+	public static void inferEvents(Properties props, String pathToConfig, String refSpecies, String species) throws Exception
 	{	
 		logger.info("Preparing DB Adaptor and setting project variables");
 		// Set up DB adaptor using config.properties file
@@ -89,8 +89,8 @@ public class EventsInferrer
 		String refDbGeneUrl = (String) refDb.get("ensg_access");
 		
 		// Creates two files that a) list reactions that are eligible for inference and b) those that are successfully inferred
-		String eligibleFilename = "eligible_" + species	+ "_75.txt";
-		String inferredFilename = "inferred_" + species + "_75.txt";
+		String eligibleFilename = "eligible_" + species	+ "_01.txt";
+		String inferredFilename = "inferred_" + species + "_01.txt";
 		File eligibleFile = new File(eligibleFilename);
 		if (eligibleFile.exists()) {
 			eligibleFile.delete();
@@ -108,11 +108,11 @@ public class EventsInferrer
 		setInstanceEdits(personId);
 		logger.info("Reading in Orthopairs files");
 		try {
-			Map<String,String[]> homologueMappings = readHomologueMappingFile(species, "hsap", pathToOrthopairs);
+			Map<String,String[]> homologueMappings = readHomologueMappingFile(species, refSpecies, pathToOrthopairs);
 			ProteinCountUtility.setHomologueMappingFile(homologueMappings);
 			EWASInferrer.setHomologueMappingFile(homologueMappings);
 		} catch (FileNotFoundException e) {
-			logger.warn("Unable to locate " + speciesName +" mapping file: hsap_" + species + "_mapping.txt. Orthology prediction not possible.");
+			logger.warn("Unable to locate " + speciesName +" mapping file: " + refSpecies + "_" + species + "_mapping.txt. Orthology prediction not possible.");
 			return;
 		}
 		EWASInferrer.readENSGMappingFile(species, pathToOrthopairs);
@@ -188,7 +188,7 @@ public class EventsInferrer
 		}
 		HumanEventsUpdater.setInferredEvent(ReactionInferrer.getInferredEvent());
 		HumanEventsUpdater.updateHumanEvents(ReactionInferrer.getInferrableHumanEvents());
-		outputReport(species);
+		outputReport(refSpecies, species);
 		resetVariables();
 		System.gc();
 		logger.info("Finished orthoinference of " + speciesName + ".");
@@ -215,7 +215,7 @@ public class EventsInferrer
 		return previouslyInferredInstances;
 	}
 
-	private static void outputReport(String species) throws IOException
+	private static void outputReport(String refSpecies, String species) throws IOException
 	{
 		int eligibleCount = ReactionInferrer.getEligibleCount();
 		int inferredCount = ReactionInferrer.getInferredCount();
@@ -225,7 +225,7 @@ public class EventsInferrer
 		logger.info("Updating " + reportFilename);
 		File reportFile = new File(reportFilename);
 		reportFile.createNewFile();
-		String results = "hsap to " + species + ":\t" + inferredCount + " out of " + eligibleCount + " eligible reactions (" + String.format("%.2f", percentInferred) + "%)\n";
+		String results = refSpecies + " to " + species + ":\t" + inferredCount + " out of " + eligibleCount + " eligible reactions (" + String.format("%.2f", percentInferred) + "%)\n";
 		Files.write(Paths.get(reportFilename), results.getBytes(), StandardOpenOption.APPEND);
 	}
 	

@@ -14,6 +14,7 @@ public class Main {
 		
 		String pathToConfig = "src/main/resources/config.properties";
 		
+		String refSpeciesCode = "";
 		String speciesCode = "";
 		if (args.length > 0 && args[0].matches("config.properties"))
 		{
@@ -21,6 +22,9 @@ public class Main {
 			speciesCode = args[1];
 		} else if (args.length == 1 && args[0].length() == 4){
 			speciesCode = args[0];
+		} else if (args.length == 2 && args[0].length() == 4){
+			refSpeciesCode = args[0];
+			speciesCode = args[1];
 		} else {
 			logger.fatal("Please include a 4-letter species code as the first argument (eg: mmus)");
 			System.exit(0);
@@ -28,7 +32,7 @@ public class Main {
 		
 		Properties props = new Properties();
 		props.load(new FileInputStream(pathToConfig));
-        EventsInferrer.inferEvents(props, pathToConfig, speciesCode);
+        EventsInferrer.inferEvents(props, pathToConfig, refSpeciesCode, speciesCode);
 	}
 
 }

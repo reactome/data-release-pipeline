@@ -32,7 +32,7 @@ public class EWASInferrer {
 	private static Map<String,GKInstance> ewasIdenticals = new HashMap<String,GKInstance>();
 	private static Map<String,GKInstance> residueIdenticals = new HashMap<String,GKInstance>();
 
-	// Creates an array of inferred EWAS instances from the homologue mappings file (hsap_species_mapping.txt).
+	// Creates an array of inferred EWAS instances from the homologue mappings file (osat_species_mapping.txt).
 	@SuppressWarnings("unchecked")
 	public static List<GKInstance> inferEWAS(GKInstance ewasInst) throws InvalidAttributeException, Exception
 	{

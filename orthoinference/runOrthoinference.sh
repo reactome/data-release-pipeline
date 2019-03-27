@@ -3,14 +3,14 @@ DIR=$(dirname "$(readlink -f "$0")") # Directory of the script -- allows the scr
 cd $DIR
 
 ## Update repo
-#git pull
+git pull
 ## Create new jar file with orthoinference code
-#mvn clean compile assembly:single
+mvn clean compile assembly:single
 
 ## set args - all required
 configPath="src/main/resources/config.properties"	# Path to main configuration file
-refSpecies="osat"	# Reference species (4-digit abbv)
-projSpecies=(atha)	# Projected species (4-digit abbv); may contain multiple species, space-delimited
+refSpecies="orig"	# Reference species (4-digit abbv)
+projSpecies=(prj1 prj2 prj3)	# Projected species (4-digit abbv); may contain multiple species, space-delimited
 threshold="1"		# Minimum percentage of orthologous catalysts required to project event
 
 ## Run orthoinference for each species

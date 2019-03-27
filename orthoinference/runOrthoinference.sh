@@ -7,14 +7,17 @@ cd $DIR
 ## Create new jar file with orthoinference code
 #mvn clean compile assembly:single
 
+## set args - all required
+configPath="src/main/resources/config.properties"	# Path to main configuration file
+refSpecies="osat"	# Reference species (4-digit abbv)
+projSpecies=(atha)	# Projected species (4-digit abbv); may contain multiple species, space-delimited
+threshold="1"		# Minimum percentage of orthologous catalysts required to project event
+
 ## Run orthoinference for each species
-refSpecies="osat"
-#allSpecies=(mmus rnor cfam btau sscr drer xtro ggal dmel cele ddis spom scer pfal)
-allSpecies=(atha)
-for species in "${allSpecies[@]}"
+for species in "${projSpecies[@]}"
 do
-	echo "java -jar target/orthoinference-0.0.1-SNAPSHOT-jar-with-dependencies.jar $species > orthoinference_$species.out";
-	java -jar target/orthoinference-0.0.1-SNAPSHOT-jar-with-dependencies.jar $refSpecies $species > orthoinference_$species.out;
+	cmd="java -jar target/orthoinference-0.0.1-SNAPSHOT-jar-with-dependencies.jar $configPath $refSpecies $species $threshold > orthoinference_$species.out;"
+	echo $cmd
+	eval $cmd
 done
 echo "Orthoinference complete"
-

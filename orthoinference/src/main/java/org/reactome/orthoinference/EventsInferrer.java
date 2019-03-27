@@ -41,19 +41,18 @@ import org.reactome.release.common.database.InstanceEditUtils;
  *
  */
 
-public class EventsInferrer
-{
+public class EventsInferrer {
 	private static final Logger logger = LogManager.getLogger();
 	static MySQLAdaptor dbAdaptor = null;
 	private static String releaseVersion = "";
 	private static GKInstance instanceEditInst;
 	private static GKInstance speciesInst;
-	private static Map<GKInstance,GKInstance> manualEventToNonHumanSource = new HashMap<GKInstance,GKInstance>();
+	private static Map<GKInstance, GKInstance> manualEventToNonHumanSource = new HashMap<GKInstance, GKInstance>();
 	private static List<GKInstance> manualHumanEvents = new ArrayList<GKInstance>();
 
 	@SuppressWarnings("unchecked")
-	public static void inferEvents(Properties props, String pathToConfig, String refSpecies, String species) throws Exception
-	{	
+	public static void inferEvents(Properties props, String refSpecies, String species, int threshold) throws Exception
+	{
 		logger.info("Preparing DB Adaptor and setting project variables");
 		// Set up DB adaptor using config.properties file
 		String username = props.getProperty("username");
@@ -64,14 +63,15 @@ public class EventsInferrer
 		
 		dbAdaptor = new MySQLAdaptor(host, database, username, password, port);
 		setDbAdaptors(dbAdaptor);
-		
+
 		releaseVersion = props.getProperty("releaseNumber");
 		String pathToOrthopairs = props.getProperty("pathToOrthopairs");
 		String pathToSpeciesConfig = props.getProperty("pathToSpeciesConfig");
+		String refSpeciesName = props.getProperty("referenceSpeciesName");
 		String dateOfRelease = props.getProperty("dateOfRelease");
 		int personId = Integer.valueOf(props.getProperty("personId"));
 		setReleaseDates(dateOfRelease);
-		
+
 		SkipInstanceChecker.getSkipList("normal_event_skip_list.txt");
 		
 		JSONParser parser = new JSONParser();
@@ -89,8 +89,8 @@ public class EventsInferrer
 		String refDbGeneUrl = (String) refDb.get("ensg_access");
 		
 		// Creates two files that a) list reactions that are eligible for inference and b) those that are successfully inferred
-		String eligibleFilename = "eligible_" + species	+ "_01.txt";
-		String inferredFilename = "inferred_" + species + "_01.txt";
+		String eligibleFilename = "eligible_" + species	+ "_" + threshold + ".txt";
+		String inferredFilename = "inferred_" + species + "_" + threshold + ".txt";
 		File eligibleFile = new File(eligibleFilename);
 		if (eligibleFile.exists()) {
 			eligibleFile.delete();
@@ -129,7 +129,7 @@ public class EventsInferrer
 			EWASInferrer.setAltRefDbToFalse();
 		}
 		createAndSetSpeciesInstance(speciesName);
-		setSummationInstance();
+		setSummationInstance(threshold);
 		setEvidenceTypeInstance();
 		OrthologousEntityGenerator.setComplexSummationInstance();
 
@@ -137,10 +137,10 @@ public class EventsInferrer
  *  Start of ReactionlikeEvent inference. Retrieves all human ReactionlikeEvents, and attempts to infer each for the species.
  */
 		// Gets DB instance of source species (human)
-		Collection<GKInstance> sourceSpeciesInst = (Collection<GKInstance>) dbAdaptor.fetchInstanceByAttribute("Species", "name", "=", "Homo sapiens");
+		Collection<GKInstance> sourceSpeciesInst = (Collection<GKInstance>) dbAdaptor.fetchInstanceByAttribute("Species", "name", "=", refSpeciesName);
 		if (sourceSpeciesInst.isEmpty())
 		{
-			logger.info("Could not find Species instance for Homo sapiens");
+			logger.info("Could not find Species instance for reference species");
 			return;
 		}
 		String humanInstanceDbId = sourceSpeciesInst.iterator().next().getDBID().toString();
@@ -181,7 +181,7 @@ public class EventsInferrer
 			
 			try {
 				logger.info("Attempting to infer " + reactionInst);
-				ReactionInferrer.inferReaction(reactionInst);
+				ReactionInferrer.inferReaction(reactionInst, threshold);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -279,12 +279,12 @@ public class EventsInferrer
 		InstanceUtilities.setSpeciesInstance(speciesInst);
 	}
 	// Create and set static Summation instance
-	private static void setSummationInstance() throws Exception
+	private static void setSummationInstance(int threshold) throws Exception
 	{
 		GKInstance summationInst = new GKInstance(dbAdaptor.getSchema().getClassByName(Summation));
 		summationInst.setDbAdaptor(dbAdaptor);
 		summationInst.addAttributeValue(created, instanceEditInst);
-		String summationText = "This event has been computationally inferred from an event that has been demonstrated in another species.<p>The inference is based on the homology mapping from PANTHER. Briefly, reactions for which all involved PhysicalEntities (in input, output and catalyst) have a mapped orthologue/paralogue (for complexes at least 75% of components must have a mapping) are inferred to the other species. High level events are also inferred for these events to allow for easier navigation.<p><a href='/electronic_inference_compara.html' target = 'NEW'>More details and caveats of the event inference in Reactome.</a> For details on PANTHER see also: <a href='http://www.pantherdb.org/about.jsp' target='NEW'>http://www.pantherdb.org/about.jsp</a>";
+		String summationText = "This event has been computationally inferred from an event that has been demonstrated in another species.<p>The inference is based on the homology mapping from PANTHER. Briefly, reactions for which all involved PhysicalEntities (in input, output and catalyst) have a mapped orthologue/paralogue (for complexes at least " + threshold + "% of components must have a mapping) are inferred to the other species. High level events are also inferred for these events to allow for easier navigation.<p><a href='/electronic_inference_compara.html' target = 'NEW'>More details and caveats of the event inference in Reactome.</a> For details on PANTHER see also: <a href='http://www.pantherdb.org/about.jsp' target='NEW'>http://www.pantherdb.org/about.jsp</a>";
 		summationInst.addAttributeValue(text, summationText);
 		summationInst.addAttributeValue(_displayName, summationText);
 		summationInst = InstanceUtilities.checkForIdenticalInstances(summationInst);

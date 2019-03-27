@@ -4,4 +4,6 @@ src/main/resources/*.txt
 src/main/resources/*.properties
 src/main/resources/orthopairs/*
 *.txt
+*.iml
+*.out
 target/*

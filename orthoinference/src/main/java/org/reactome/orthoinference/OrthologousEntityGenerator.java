@@ -39,7 +39,7 @@ public class OrthologousEntityGenerator {
 	 on constituent PE's with the override attribute set to 'true'. This ensures that these PE's are inferred, despite the fact that they might not pass some filter criteria.
 	 This is often handled using 'mock' instances (i.e. 'ghost instances' from Perl script), which allow a PE to be inferred without having to commit a 'real' instance to the DB.
 */
-	public static GKInstance createOrthoEntity(GKInstance entityInst, boolean override) throws InvalidAttributeException, Exception
+	public static GKInstance createOrthoEntity(GKInstance entityInst, int threshold, boolean override) throws InvalidAttributeException, Exception
 	{
 		logger.info("\tGenerating orthologous instance for " + entityInst);
 		GKInstance infEntityInst = null;
@@ -72,7 +72,7 @@ public class OrthologousEntityGenerator {
 				} else if (entityInst.getSchemClass().isa(Complex) || entityInst.getSchemClass().isa(Polymer))
 				{
 					logger.info("\tInferring Complex/Polymer instance...");
-					infEntityInst = createInfComplexPolymer(entityInst, override);
+					infEntityInst = createInfComplexPolymer(entityInst, threshold, override);
 				// Infers EntitySetInstances that themselves contain the species attribute (Not just constituent instances as when hasSpecies is called above),
 				// returning the current instance if it doesn't.
 				} else if (entityInst.getSchemClass().isa(EntitySet))
@@ -80,7 +80,7 @@ public class OrthologousEntityGenerator {
 					if (entityInst.getAttributeValue(species) != null)
 					{
 						logger.info("\tInferring EntitySet instance...");
-						infEntityInst = createInfEntitySet(entityInst, override);
+						infEntityInst = createInfEntitySet(entityInst, threshold, override);
 					} else {
 						infEntityInst = entityInst;
 					}
@@ -169,8 +169,8 @@ public class OrthologousEntityGenerator {
 		return homolEWASIdenticals.get(ewasInst);
 	}
 	// Infers Complex or Polymer instances. These instances are generally comprised of more than 1 PhysicalEntity, and calls 'createOrthoEntity' for each one. Complex/Polymer instances
-	// are also subject to the 'countDistinctProteins' function. The result from this needs to have at least 75% of total proteins to be inferrable for inference to continue. 
-	private static GKInstance createInfComplexPolymer(GKInstance complexInst, boolean override) throws InvalidAttributeException, InvalidAttributeValueException, Exception
+	// are also subject to the 'countDistinctProteins' function. The result from this needs to have at least <threshold>% of total proteins to be inferrable for inference to continue.
+	private static GKInstance createInfComplexPolymer(GKInstance complexInst, int threshold, boolean override) throws InvalidAttributeException, InvalidAttributeValueException, Exception
 	{
 		if (complexPolymerIdenticals.get(complexInst) == null)
 		{
@@ -179,7 +179,7 @@ public class OrthologousEntityGenerator {
 			int complexInferrableProteinCounts = complexProteinCounts.get(1);
 //			int complexMax = complexProteinCounts.get(2); // Doesn't get used, since MaxHomologue isn't a valid attribute anymore.
 			
-			// Filtering based on results of ProteinCounts and threshold (currently hard-coded at 75%).
+			// Filtering based on results of ProteinCounts and threshold (currently hard-coded at <threshold>%).
 			int percent = 0;
 			if (complexTotalProteinCounts > 0)
 			{
@@ -187,7 +187,7 @@ public class OrthologousEntityGenerator {
 			}
 			if (!override)
 			{
-				if ((complexTotalProteinCounts > 0 && complexInferrableProteinCounts == 0) || percent < 1) // TODO: pass the percentage as a threshold setting
+				if ((complexTotalProteinCounts > 0 && complexInferrableProteinCounts == 0) || percent < threshold)
 				{
 					logger.info("\tComplex/Polymer protein count is below threshold -- terminating inference");
 					return nullInst;
@@ -204,7 +204,7 @@ public class OrthologousEntityGenerator {
 				logger.info("\tInferring Complex components...");
 				for (Object componentInst : complexInst.getAttributeValuesList(hasComponent))
 				{	
-					infComponentInstances.add(createOrthoEntity((GKInstance) componentInst, true));
+					infComponentInstances.add(createOrthoEntity((GKInstance) componentInst, threshold, true));
 				}
 				infComplexInst.addAttributeValue(hasComponent, infComponentInstances);
 			} else  if (complexInst.getSchemClass().isa(Polymer))
@@ -212,7 +212,7 @@ public class OrthologousEntityGenerator {
 				logger.info("\tInferring Polymer repeatedUnits...");
 				for (Object repeatedUnitInst : complexInst.getAttributeValuesList(repeatedUnit))
 				{		
-					infComponentInstances.add(createOrthoEntity((GKInstance) repeatedUnitInst, true));
+					infComponentInstances.add(createOrthoEntity((GKInstance) repeatedUnitInst, threshold, true));
 				}
 				infComplexInst.addAttributeValue(repeatedUnit, infComponentInstances);
 			} else {
@@ -250,7 +250,7 @@ public class OrthologousEntityGenerator {
 	// Presumably, this is because the instances aren't a constituent part of a single instance (as in Complexes), but rather are stand-alone ones that also happen to be included in a Set. 
 	// This means they should be subject  to the stringency of a typical instance, rather then using override to create mock instances that allow an instance to be inferred more easily.
 	@SuppressWarnings("unchecked")
-	private static GKInstance createInfEntitySet(GKInstance entitySetInst, boolean override) throws InvalidAttributeException, Exception
+	private static GKInstance createInfEntitySet(GKInstance entitySetInst, int threshold, boolean override) throws InvalidAttributeException, Exception
 	{
 		if (inferredEntitySetIdenticals.get(entitySetInst) == null)
 		{
@@ -260,7 +260,7 @@ public class OrthologousEntityGenerator {
 			logger.info("\tInferring EntitySet member instances...");
 			for (GKInstance memberInst : (Collection<GKInstance>) entitySetInst.getAttributeValuesList(hasMember))
 			{
-				GKInstance infMemberInst = createOrthoEntity(memberInst, false);
+				GKInstance infMemberInst = createOrthoEntity(memberInst, threshold, false);
 				if (infMemberInst != null && !existingMemberInstances.contains(infMemberInst.getAttributeValue(name).toString()))
 				{
 					existingMemberInstances.add(infMemberInst.getAttributeValue(name).toString());
@@ -292,7 +292,7 @@ public class OrthologousEntityGenerator {
 				logger.info("\tInferring CandidateSet candidate instances...");
 				for (GKInstance candidateInst : (Collection<GKInstance>) entitySetInst.getAttributeValuesList(hasCandidate))	
 				{
-					GKInstance infCandidateInst = createOrthoEntity(candidateInst, false);
+					GKInstance infCandidateInst = createOrthoEntity(candidateInst, threshold, false);
 					if (infCandidateInst != null && !existingMemberInstances.contains(infCandidateInst.getAttributeValue(name).toString()) && !existingCandidateInstances.contains(infCandidateInst.getAttributeValue(name).toString()))
 					{
 						existingCandidateInstances.add(infCandidateInst.getAttributeValue(name).toString());

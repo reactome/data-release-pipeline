@@ -12,27 +12,28 @@ public class Main {
 	
 	public static void main(String[] args) throws Exception {
 		
-		String pathToConfig = "src/main/resources/config.properties";
-		
-		String refSpeciesCode = "";
-		String speciesCode = "";
-		if (args.length > 0 && args[0].matches("config.properties"))
-		{
-			pathToConfig = args[0];
-			speciesCode = args[1];
-		} else if (args.length == 1 && args[0].length() == 4){
-			speciesCode = args[0];
-		} else if (args.length == 2 && args[0].length() == 4){
-			refSpeciesCode = args[0];
-			speciesCode = args[1];
+		String 	pathToConfig = "";
+		String  refSpeciesCode = "";
+		String	projSpeciesCode = "";
+		int 	threshold = 0;
+
+		if (args.length == 4) {
+			pathToConfig	= args[0];
+			refSpeciesCode	= args[1];
+			projSpeciesCode	= args[2];
+			threshold		= Integer.parseInt(args[3]);
 		} else {
-			logger.fatal("Please include a 4-letter species code as the first argument (eg: mmus)");
+			logger.fatal("args - all required\n" +
+					"configPath: path to config file\n" +
+					"refSpecies: Reference species (4-digit abbv)\n" +
+					"projSpecies: Projected species (4-digit abbv); may contain multiple species, space-delimited\n" +
+					"threshold: Minimum percentage of orthologous catalysts required to project event\n");
 			System.exit(0);
 		}
 		
 		Properties props = new Properties();
 		props.load(new FileInputStream(pathToConfig));
-        EventsInferrer.inferEvents(props, pathToConfig, refSpeciesCode, speciesCode);
+        EventsInferrer.inferEvents(props, refSpeciesCode, projSpeciesCode, threshold);
 	}
 
 }

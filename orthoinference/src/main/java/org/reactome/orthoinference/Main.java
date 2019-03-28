@@ -25,8 +25,8 @@ public class Main {
 		} else {
 			logger.fatal("args - all required\n" +
 					"configPath: path to config file\n" +
-					"refSpecies: Reference species (4-digit abbv)\n" +
-					"projSpecies: Projected species (4-digit abbv); may contain multiple species, space-delimited\n" +
+					"refSpecies: Reference species (4-char abbv)\n" +
+					"projSpecies: Projected species (4-char abbv); may contain multiple species, space-delimited\n" +
 					"threshold: Minimum percentage of orthologous catalysts required to project event\n");
 			System.exit(0);
 		}

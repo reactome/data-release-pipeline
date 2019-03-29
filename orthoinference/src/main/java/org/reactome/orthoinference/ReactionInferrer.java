@@ -67,18 +67,18 @@ public class ReactionInferrer {
 				// Attempt to infer all PhysicalEntities associated with this reaction's Input, Output, CatalystActivity and RegulatedBy attributes.
 				// Failure to successfully infer any of these attributes will end inference for this reaction.
 				logger.info("Inferring inputs...");
-				if (inferReactionInputsOrOutputs(reactionInst, infReactionInst, input, threshold))
+				if (inferReactionInputsOrOutputs(reactionInst, infReactionInst, input))
 				{
 					logger.info("Inferring outputs...");
-					if (inferReactionInputsOrOutputs(reactionInst, infReactionInst, output, threshold))
+					if (inferReactionInputsOrOutputs(reactionInst, infReactionInst, output))
 					{
 						logger.info("Inferring catalysts...");
-						if (inferReactionCatalysts(reactionInst, infReactionInst, threshold))
+						if (inferReactionCatalysts(reactionInst, infReactionInst))
 						{
 							// Many reactions are not regulated at all, meaning inference is attempted but will not end the process if there is nothing to infer. 
 							// The inference process will end though if inferRegulations returns an invalid value.
 							logger.info("Inferring regulations...");
-							List<GKInstance> inferredRegulations = inferReactionRegulations(reactionInst, threshold);
+							List<GKInstance> inferredRegulations = inferReactionRegulations(reactionInst);
 							if (inferredRegulations.size() == 1 && inferredRegulations.get(0) == null)
 							{
 								logger.info("\tRegulation is a 'Requirement' and regulation inference was unsuccessful -- terminating inference");
@@ -137,12 +137,12 @@ public class ReactionInferrer {
 	
 	// Function used to create inferred PhysicalEntities contained in the 'input' or 'output' attributes of the current reaction instance.
 	@SuppressWarnings("unchecked")
-	private static boolean inferReactionInputsOrOutputs(GKInstance reactionInst, GKInstance infReactionInst, String attribute, int threshold) throws InvalidAttributeException, Exception
+	private static boolean inferReactionInputsOrOutputs(GKInstance reactionInst, GKInstance infReactionInst, String attribute) throws InvalidAttributeException, Exception
 	{
 		List<GKInstance> infAttributeInstances = new ArrayList<GKInstance>();
 		for (GKInstance attributeInst : (Collection<GKInstance>) reactionInst.getAttributeValuesList(attribute))
 		{
-			GKInstance infAttributeInst = OrthologousEntityGenerator.createOrthoEntity(attributeInst, threshold, false);
+			GKInstance infAttributeInst = OrthologousEntityGenerator.createOrthoEntity(attributeInst,false);
 			if (infAttributeInst == null)
 			{
 				return false;
@@ -156,7 +156,7 @@ public class ReactionInferrer {
 	// Function used to create inferred catalysts associated with the current reaction instance.
 	// Infers all PhysicalEntity's associated with the reaction's 'catalystActivity' and 'activeUnit' attributes
 	@SuppressWarnings("unchecked")
-	private static boolean inferReactionCatalysts(GKInstance reactionInst, GKInstance infReactionInst, int threshold) throws InvalidAttributeException, Exception
+	private static boolean inferReactionCatalysts(GKInstance reactionInst, GKInstance infReactionInst) throws InvalidAttributeException, Exception
 	{
 		for (GKInstance catalystInst : (Collection<GKInstance>) reactionInst.getAttributeValuesList(catalystActivity))
 		{
@@ -167,7 +167,7 @@ public class ReactionInferrer {
 				infCatalystInst.addAttributeValue(activity, catalystInst.getAttributeValue(activity));
 				if (catalystInst.getAttributeValuesList(physicalEntity) != null)
 				{
-					GKInstance infCatalystPEInst = OrthologousEntityGenerator.createOrthoEntity((GKInstance) catalystInst.getAttributeValue(physicalEntity), threshold, false);
+					GKInstance infCatalystPEInst = OrthologousEntityGenerator.createOrthoEntity((GKInstance) catalystInst.getAttributeValue(physicalEntity), false);
 					if (infCatalystPEInst != null) 
 					{
 						infCatalystInst.addAttributeValue(physicalEntity, infCatalystPEInst);
@@ -179,7 +179,7 @@ public class ReactionInferrer {
 				List<GKInstance> activeUnits = new ArrayList<GKInstance>();
 				for (GKInstance activeUnitInst : (Collection<GKInstance>) catalystInst.getAttributeValuesList(activeUnit))
 				{
-					GKInstance infActiveUnitInst = OrthologousEntityGenerator.createOrthoEntity(activeUnitInst, threshold, false);
+					GKInstance infActiveUnitInst = OrthologousEntityGenerator.createOrthoEntity(activeUnitInst, false);
 					if (infActiveUnitInst != null)
 					{
 						activeUnits.add(infActiveUnitInst);
@@ -197,7 +197,7 @@ public class ReactionInferrer {
 	
 	@SuppressWarnings("unchecked")
 	// Function used to infer regulation instances. Logic existed for regulators that had CatalystActivity and Event instances, but they have never come up in the many times this has been run.
-	private static List<GKInstance> inferReactionRegulations(GKInstance reactionInst, int threshold) throws InvalidAttributeException, Exception
+	private static List<GKInstance> inferReactionRegulations(GKInstance reactionInst) throws InvalidAttributeException, Exception
 	{
 		List<GKInstance> inferredRegulations = new ArrayList<GKInstance>();
 		for (GKInstance regulatedInst : (Collection<GKInstance>) reactionInst.getAttributeValuesList("regulatedBy"))
@@ -206,7 +206,7 @@ public class ReactionInferrer {
 			GKInstance infRegulatorInst = null;
 			if (regulatorInst.getSchemClass().isa(PhysicalEntity))
 			{
-				infRegulatorInst = OrthologousEntityGenerator.createOrthoEntity(regulatorInst, threshold, false);
+				infRegulatorInst = OrthologousEntityGenerator.createOrthoEntity(regulatorInst, false);
 			} else if (regulatorInst.getSchemClass().isa(CatalystActivity))
 			{
 				logger.warn(regulatorInst + " is a CatalystActivity, which is unexpected -- refer to infer_events.pl");

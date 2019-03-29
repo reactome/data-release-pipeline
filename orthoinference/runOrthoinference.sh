@@ -11,12 +11,12 @@ mvn clean compile assembly:single
 configPath="src/main/resources/config.properties"	# Path to main configuration file
 refSpecies="orig"	# Reference species (4-char abbv)
 projSpecies=(prj1 prj2 prj3)	# Projected species (4-char abbv); may contain multiple species, space-delimited
-threshold="1"		# Minimum percentage of orthologous catalysts required to project event
+
 
 ## Run orthoinference for each species
 for species in "${projSpecies[@]}"
 do
-	cmd="java -jar target/orthoinference-0.0.1-SNAPSHOT-jar-with-dependencies.jar $configPath $refSpecies $species $threshold > orthoinference_$species.out;"
+	cmd="java -jar target/orthoinference-0.0.1-SNAPSHOT-jar-with-dependencies.jar $configPath $refSpecies $species > orthoinference_$species.out;"
 	echo $cmd
 	eval $cmd
 done

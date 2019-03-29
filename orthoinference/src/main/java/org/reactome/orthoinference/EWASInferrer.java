@@ -132,7 +132,7 @@ public class EWASInferrer {
 						infModifiedResidueInst.setAttributeValue(_displayName, modifiedResidueInst.getAttributeValue(_displayName));
 						// Update name to reflect that coordinate values are taken from humans. This takes place after cache retrieval, since the name from DB won't contain updated name.
 						if (modifiedResidueInst.getAttributeValue(coordinate) != null) {
-							String newModifiedResidueDisplayName = modifiedResidueInst.getAttributeValue(_displayName).toString() + " (in reference species)";
+							String newModifiedResidueDisplayName = modifiedResidueInst.getAttributeValue(_displayName).toString() + " (in " + EventsInferrer.refSpeciesName + ")";
 							infModifiedResidueInst.setAttributeValue(_displayName, newModifiedResidueDisplayName);
 
 						} else {

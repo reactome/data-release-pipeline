@@ -86,10 +86,10 @@ public class EventsInferrer {
 		JSONArray speciesNames = (JSONArray) speciesObject.get("name");
 		String speciesName = (String) speciesNames.get(0);
 		logger.info("Beginning orthoinference of " + speciesName + ".");
-		JSONObject refDb = (JSONObject) speciesObject.get("refdb");
-		String refDbUrl = (String) refDb.get("url");
-		String refDbProteinUrl = (String) refDb.get("access");
-		String refDbGeneUrl = (String) refDb.get("ensg_access");
+		JSONObject refDbJSON = (JSONObject) speciesObject.get("refdb");
+		//String refDbUrl = (String) refDbJSON.get("url");
+		//String refDbProteinUrl = (String) refDbJSON.get("access");
+		//String refDbGeneUrl = (String) refDbJSON.get("ensg_access");
 		
 		// Creates two files that a) list reactions that are eligible for inference and b) those that are successfully inferred
 		String eligibleFilename = "eligible_" + species	+ "_" + inferenceThreshold + ".txt";
@@ -120,9 +120,11 @@ public class EventsInferrer {
 		}
 		EWASInferrer.readENSGMappingFile(species, pathToOrthopairs);
 		EWASInferrer.fetchAndSetUniprotDbInstance();
-		EWASInferrer.createEnsemblProteinDbInstance(speciesName, refDbUrl, refDbProteinUrl);
-		EWASInferrer.createEnsemblGeneDBInstance(speciesName, refDbUrl, refDbGeneUrl);
-		
+		//EWASInferrer.createEnsemblProteinDbInstance(speciesName, refDbUrl, refDbProteinUrl);
+		//EWASInferrer.createEnsemblGeneDBInstance(speciesName, refDbUrl, refDbGeneUrl);
+		EWASInferrer.createProteinDbInstance(speciesName, refDbJSON);
+		EWASInferrer.createGeneDBInstance(speciesName, refDbJSON);
+
 		JSONObject altRefDbJSON = (JSONObject) speciesObject.get("alt_refdb");
 		if (altRefDbJSON != null)
 		{

@@ -36,6 +36,25 @@ public class EWASInferrer {
 	@SuppressWarnings("unchecked")
 	public static List<GKInstance> inferEWAS(GKInstance ewasInst) throws InvalidAttributeException, Exception
 	{
+		/*
+		.get EWAS
+		.what kind is EWAS it? (class: RGP/RNA/DNA)
+			.look for appropriate type of homolog(s)
+				.allows for id-switching template (G’s for T’s - very specific to PR, and a hack)
+				.maybe also refDB switching? b/c Ensemble-Gramene: won't be in orthopair files
+			.curated RGP (* current case)
+				.make RefRNASeq, too, just for grins?
+				.make RefDNASeq
+				*.make homolog EWAS for RGP
+			.curated RNA (* new case)
+				.check for pre-existence (avoid dupes)
+				.make RefDNASeq
+				*.make homolog EWAS for curated RNA
+			.curated DNA (* new case)
+				.check for pre-existence (avoid dupes)
+				.make projected RefDNASeq
+				.make homolog EWAS for curated DNA
+		*/
 		List<GKInstance> infEWASInstances = new ArrayList<GKInstance>();
 		String referenceEntityId = ((GKInstance) ewasInst.getAttributeValue(referenceEntity)).getAttributeValue(identifier).toString();
 		if (homologueMappings.get(referenceEntityId) != null)
@@ -54,7 +73,8 @@ public class EWASInferrer {
 						infReferenceGeneProductInst.addAttributeValue(identifier, homologueId);
 						// Reference DB can differ between homologue mappings, but can be differentiated by the 'homologueSource' found in each mapping.
 						// With PANTHER data, the Protein IDs are exclusively UniProt
-						GKInstance referenceDatabaseInst = homologueSource.equals("ENSP") ? enspDbInst : uniprotDbInst;
+						GKInstance referenceDatabaseInst = homologueSource.isEmpty() ? uniprotDbInst : enspDbInst;
+						//GKInstance referenceDatabaseInst = homologueSource.equals("ENSP") ? enspDbInst : uniprotDbInst;
 						infReferenceGeneProductInst.addAttributeValue(referenceDatabase, referenceDatabaseInst);
 
 						// Creates ReferenceDNASequence instance from ReferenceEntity
@@ -62,8 +82,9 @@ public class EWASInferrer {
 						infReferenceGeneProductInst.addAttributeValue(referenceGene, inferredReferenceDNAInstances);
 
 						infReferenceGeneProductInst.addAttributeValue(species, speciesInst);
-						String referenceGeneProductSource = homologueSource.equals("ENSP") ? "ENSEMBL:" : "UniProt:";
-						infReferenceGeneProductInst.setAttributeValue(_displayName, referenceGeneProductSource + homologueId);
+						String referenceGeneProductSource = homologueSource.isEmpty() ? "UniProt" : homologueSource.toUpperCase();
+						//String referenceGeneProductSource = homologueSource.equals("ENSP") ? "ENSEMBL:" : "UniProt:";
+						infReferenceGeneProductInst.setAttributeValue(_displayName, referenceGeneProductSource + ":" + homologueId);
 						infReferenceGeneProductInst = InstanceUtilities.checkForIdenticalInstances(infReferenceGeneProductInst);
 						referenceGeneProductIdenticals.put(homologueId, infReferenceGeneProductInst);
 					} else {
@@ -213,7 +234,7 @@ public class EWASInferrer {
 			referenceDNAInst.addAttributeValue(identifier, ensgId);
 			referenceDNAInst.addAttributeValue(referenceDatabase, ensgDbInst);
 			referenceDNAInst.addAttributeValue(species, speciesInst);
-			referenceDNAInst.setAttributeValue(_displayName, "ENSEMBL:" + ensgId);
+			referenceDNAInst.setAttributeValue(_displayName, ensgDbInst.getAttributeValue(name) + ":" + ensgId);
 			referenceDNAInst = InstanceUtilities.checkForIdenticalInstances(referenceDNAInst);
 			referenceDNAInstances.add(referenceDNAInst);
 			if (altRefDbExists)
@@ -293,7 +314,7 @@ public class EWASInferrer {
 		Collection<GKInstance> uniprotDbInstances = (Collection<GKInstance>) dba.fetchInstanceByAttribute(ReferenceDatabase, name, "=", "UniProt");
 		uniprotDbInst = uniprotDbInstances.iterator().next();
 	}
-
+/*
 	// Creates instance pertaining to the species Ensembl Protein DB
 	public static void createEnsemblProteinDbInstance(String toSpeciesLong, String toSpeciesReferenceDbUrl, String toSpeciesEnspAccessUrl) throws InvalidAttributeException, InvalidAttributeValueException, Exception
 	{
@@ -321,6 +342,42 @@ public class EWASInferrer {
 		ensgDbInst.addAttributeValue(url, toSpeciesReferenceDbUrl);
 		ensgDbInst.addAttributeValue(accessUrl, toSpeciesEnsgAccessUrl);
 		ensgDbInst.setAttributeValue(_displayName, "ENSEMBL");
+		dba.storeInstance(ensgDbInst);
+	}
+*/
+	// Creates instance pertaining to the species Protein DB (could be Ensembl, could be another refDb)
+	public static void createProteinDbInstance(String toSpeciesLong, JSONObject refDbJSON) throws InvalidAttributeException, InvalidAttributeValueException, Exception
+	{
+		String dbName = ((JSONArray)refDbJSON.get("dbname")).get(0).toString().toUpperCase();
+		enspDbInst = new GKInstance(dba.getSchema().getClassByName(ReferenceDatabase));
+		enspDbInst.setDbAdaptor(dba);
+		enspDbInst.addAttributeValue(created, instanceEditInst);
+		enspDbInst.addAttributeValue(name, dbName);
+		if (dbName.equals("ENSEMBL")) {
+			String enspSpeciesDb = "ENSEMBL_" + toSpeciesLong + "_PROTEIN";
+			enspDbInst.addAttributeValue(name, enspSpeciesDb);
+		}
+		enspDbInst.addAttributeValue(url, refDbJSON.get("url"));
+		enspDbInst.addAttributeValue(accessUrl, refDbJSON.get("access"));
+		enspDbInst.setAttributeValue(_displayName, dbName);
+		dba.storeInstance(enspDbInst);
+	}
+
+	// Creates instance pertaining to the species Gene DB (could be Ensembl, could be another refDb)
+	public static void createGeneDBInstance(String toSpeciesLong, JSONObject refDbJSON) throws InvalidAttributeException, InvalidAttributeValueException, Exception
+	{
+		String dbName = ((JSONArray)refDbJSON.get("dbname")).get(0).toString().toUpperCase();
+		ensgDbInst = new GKInstance(dba.getSchema().getClassByName(ReferenceDatabase));
+		ensgDbInst.setDbAdaptor(dba);
+		ensgDbInst.addAttributeValue(created, instanceEditInst);
+		ensgDbInst.addAttributeValue(name, dbName);
+		if (dbName.equals("ENSEMBL")) {
+			String ensgSpeciesDb = "ENSEMBL_" + toSpeciesLong + "_GENE";
+			ensgDbInst.addAttributeValue(name, ensgSpeciesDb);
+		}
+		ensgDbInst.addAttributeValue(url, refDbJSON.get("url"));
+		ensgDbInst.addAttributeValue(accessUrl, refDbJSON.get("ensg_access"));
+		ensgDbInst.setAttributeValue(_displayName, dbName);
 		dba.storeInstance(ensgDbInst);
 	}
 

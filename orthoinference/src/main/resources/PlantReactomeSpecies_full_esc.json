@@ -42,7 +42,7 @@
       }
    },
    "aipa" : {
-      "alt_refdb" : {
+      "refdb" : {
          "access" : "http:\/\/peanutbase.org\/feature\/Arachis\/ipaensis\/gene\/###ID###",
          "dbname" : [
             "PeanutBase_Ai"
@@ -196,7 +196,7 @@
       }
    },
    "cann" : {
-      "alt_refdb" : {
+      "refdb" : {
          "access" : "\/pages\/content\/release-summary\/",
          "dbname" : [
             "Jaiswal"
@@ -208,7 +208,7 @@
       ]
    },
    "cari" : {
-      "alt_refdb" : {
+      "refdb" : {
          "access" : "http:\/\/www.ncbi.nlm.nih.gov\/protein\/###ID###",
          "dbname" : [
             "NCBI"
@@ -220,7 +220,7 @@
       ]
    },
    "ccaj" : {
-      "alt_refdb" : {
+      "refdb" : {
          "access" : "https:\/\/legumeinfo.org\/feature\/Cajanus\/cajan\/gene\/###ID###_gene",
          "dbname" : [
             "LegumeInfo"
@@ -232,7 +232,7 @@
       ]
    },
    "ccan" : {
-      "alt_refdb" : {
+      "refdb" : {
          "access" : "\/pages\/content\/release-summary\/",
          "dbname" : [
             "Jaiswal"
@@ -319,7 +319,7 @@
       }
    },
    "csin" : {
-      "alt_refdb" : {
+      "refdb" : {
          "access" : "http:\/\/phytozome.jgi.doe.gov\/pz\/portal.html#!results?search=0&crown=1&star=1&method=2312&searchText=###ID###",
          "dbname" : [
             "Phytozome_Cs"
@@ -361,7 +361,7 @@
       }
    },
    "egra" : {
-      "alt_refdb" : {
+      "refdb" : {
          "access" : "http:\/\/phytozome.jgi.doe.gov\/pz\/portal.html#!results?search=0&crown=1&star=1&method=4908&searchText=###ID###",
          "dbname" : [
             "Phytozome_Eg"
@@ -373,7 +373,7 @@
       ]
    },
    "fves" : {
-      "alt_refdb" : {
+      "refdb" : {
          "access" : "http:\/\/phytozome.jgi.doe.gov\/pz\/portal.html#!results?search=0&crown=1&star=1&method=3309&searchText=###ID###",
          "dbname" : [
             "Phytozome_Fv"
@@ -460,7 +460,7 @@
       }
    },
    "jcur" : {
-      "alt_refdb" : {
+      "refdb" : {
          "access" : "http:\/\/www.kazusa.or.jp\/jatropha\/cgi-bin\/orfinfo.cgi?db=jatropha&id=###ID###",
          "dbname" : [
             "KDRI_Jc"
@@ -517,7 +517,7 @@
       }
    },
    "mdom" : {
-      "alt_refdb" : {
+      "refdb" : {
          "access" : "http:\/\/phytozome.jgi.doe.gov\/pz\/portal.html#!results?search=0&crown=1&star=1&method=3124&searchText=###ID###",
          "dbname" : [
             "Phytozome_Md"
@@ -544,7 +544,7 @@
       }
    },
    "mgut" : {
-      "alt_refdb" : {
+      "refdb" : {
          "access" : "http:\/\/phytozome.jgi.doe.gov\/pz\/portal.html#!results?search=0&crown=1&star=1&method=3464&searchText=###ID###",
          "dbname" : [
             "Phytozome_Mg"
@@ -586,7 +586,7 @@
       }
    },
    "oaus" : {
-      "alt_refdb" : {
+      "refdb" : {
          "access" : "\/pages\/content\/release-summary\/",
          "dbname" : [
             "Jaiswal"
@@ -658,7 +658,7 @@
       }
    },
    "ogra" : {
-      "alt_refdb" : {
+      "refdb" : {
          "access" : "\/pages\/content\/release-summary\/",
          "dbname" : [
             "Jaiswal"
@@ -670,7 +670,7 @@
       ]
    },
    "okas" : {
-      "alt_refdb" : {
+      "refdb" : {
          "access" : "\/pages\/content\/release-summary\/",
          "dbname" : [
             "Jaiswal"
@@ -727,7 +727,7 @@
       }
    },
    "omin" : {
-      "alt_refdb" : {
+      "refdb" : {
          "access" : "\/pages\/content\/release-summary\/",
          "dbname" : [
             "Jaiswal"
@@ -754,7 +754,7 @@
       }
    },
    "ooff" : {
-      "alt_refdb" : {
+      "refdb" : {
          "access" : "\/pages\/content\/release-summary\/",
          "dbname" : [
             "Jaiswal"
@@ -826,7 +826,7 @@
       }
    },
    "pabi" : {
-      "alt_refdb" : {
+      "refdb" : {
          "access" : "http:\/\/congenie.org\/gene?id=###ID###",
          "dbname" : [
             "Congenie"
@@ -838,7 +838,7 @@
       ]
    },
    "pdac" : {
-      "alt_refdb" : {
+      "refdb" : {
          "access" : "\/pages\/content\/release-summary\/",
          "dbname" : [
             "Jaiswal"
@@ -910,7 +910,7 @@
       }
    },
    "ptae" : {
-      "alt_refdb" : {
+      "refdb" : {
          "access" : "\/pages\/content\/release-summary\/",
          "dbname" : [
             "Jaiswal"
@@ -1012,7 +1012,7 @@
       }
    },
    "spcc" : {
-      "alt_refdb" : {
+      "refdb" : {
          "access" : "http:\/\/cyano.genome.jp\/cgi-bin\/cyorf_view.cgi?ORG=syn&ACCESSION=###ID###",
          "dbname" : [
             "MicrobeDB"
@@ -1099,7 +1099,7 @@
       }
    },
    "ttur" : {
-      "alt_refdb" : {
+      "refdb" : {
          "access" : "\/pages\/content\/release-summary\/",
          "dbname" : [
             "Jaiswal"

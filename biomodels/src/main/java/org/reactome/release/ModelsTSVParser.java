@@ -31,6 +31,7 @@ public class ModelsTSVParser {
                 String pathwayStableId = fields[1];
 
                 if (!matchBioModelsPattern(biomodelsId) || !matchStableIdPattern(pathwayStableId)) {
+                    logger.warn("Line has improperly formatted BioModel ID or Stable ID -- skipping");
                     continue;
                 }
 
@@ -50,10 +51,10 @@ public class ModelsTSVParser {
     }
 
     private static boolean matchBioModelsPattern(String bioModelsId) {
-        return bioModelsId != null && !bioModelsId.startsWith("BIOMD");
+        return bioModelsId != null && bioModelsId.startsWith("BIOMD");
     }
 
     private static boolean matchStableIdPattern(String pathwayStableId) {
-        return pathwayStableId != null || pathwayStableId.matches("R-\\w{3}-\\d+");
+        return pathwayStableId != null && pathwayStableId.matches("R-\\w{3}-\\d+");
     }
 }

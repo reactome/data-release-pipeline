@@ -23,10 +23,22 @@ public class ModelsTSVParserTester {
     }
 
     @Test
+    public void emptyMapFromImproperFile() {
+        Map<String, List<String>> pathwayToBioModelsIds = ModelsTSVParser.parse("src/test/resources/improper_models2pathways.tsv");
+        assertTrue("Improperly formatted file produces empty pathwayToBioModelsIds map", pathwayToBioModelsIds.isEmpty());
+    }
+
+    @Test
+    public void populatedMapFromPartiallyCorrectFile() {
+        Map<String, List<String>> pathwayToBioModelsIds = ModelsTSVParser.parse("src/test/resources/partiallycorrect_models2pathways.tsv");
+        assertEquals(pathwayToBioModelsIds.keySet().size(), 3);
+        assertTrue(pathwayToBioModelsIds.get("R-MMU-1169091").contains("BIOMD0000000226"));
+    }
+
+    @Test
     public void testModels2PathwaysCorrectlyParsed() {
         Map<String, List<String>> pathwayToBioModelsIds =
             ModelsTSVParser.parse("src/test/resources/models2pathways.tsv");
-
         assertEquals(pathwayToBioModelsIds.keySet().size(), 745); // Number of pathways in test input file
 
         long bioModelsIdsCount =

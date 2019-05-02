@@ -89,7 +89,7 @@ public class Main {
         try {
             pathways.addAll(dba.fetchInstancesByClass(ReactomeJavaConstants.Pathway));
         } catch (Exception e) {
-            logAndThrow("Unable to fetch pathways from database", e);
+            BioModelsUtilities.logAndThrow("Unable to fetch pathways from database", e);
         }
 
         return pathways;
@@ -112,10 +112,10 @@ public class Main {
                 biomodelsDatabaseIdentifier.addAttributeValue(ReactomeJavaConstants.created, instanceEdit);
                 biomodelsDatabaseIdentifier.addAttributeValue(ReactomeJavaConstants.identifier, biomodelsId);
                 biomodelsDatabaseIdentifier.addAttributeValue(ReactomeJavaConstants.referenceDatabase,
-                        fetchBiomodelsReferenceDatabase(dba, instanceEdit));
+                        BioModelsUtilities.fetchBiomodelsReferenceDatabase(dba, instanceEdit));
                 InstanceDisplayNameGenerator.setDisplayName(biomodelsDatabaseIdentifier);
             } catch (Exception e) {
-                logAndThrow("Unable to create BioModels database identifier for " + biomodelsId, e);
+                BioModelsUtilities.logAndThrow("Unable to create BioModels database identifier for " + biomodelsId, e);
             }
 
             biomodelsDatabaseIdentifiers.add(biomodelsDatabaseIdentifier);
@@ -131,52 +131,6 @@ public class Main {
                 .stream()
                 .filter(pathway -> pathwayStableIds.contains(getStableIdentifier(pathway)))
                 .collect(Collectors.toList());
-    }
-
-    private static GKInstance fetchBiomodelsReferenceDatabase(MySQLAdaptor dba, GKInstance instanceEdit) {
-        //TODO Need to make this retrieval case insensitive using a REGEX
-        GKInstance biomodelsReferenceDatabase = null;
-        logger.info("Attempting to fetch an existing BioModels reference database");
-        try {
-            biomodelsReferenceDatabase = (GKInstance) dba.fetchInstanceByAttribute(
-                ReactomeJavaConstants.ReferenceDatabase,
-                ReactomeJavaConstants.name,
-                "=",
-                "BioModels"
-            ).toArray()[0];
-        } catch (Exception e) {
-            logAndThrow("Unable to retrieve BioModels reference database", e);
-        }
-
-        if (biomodelsReferenceDatabase == null) {
-            logger.info("Creating BioModels reference database - no existing one was found");
-            biomodelsReferenceDatabase = new GKInstance();
-            biomodelsReferenceDatabase.setDbAdaptor(dba);
-            SchemaClass referenceDatabase = dba.getSchema().getClassByName(ReactomeJavaConstants.ReferenceDatabase);
-            biomodelsReferenceDatabase.setSchemaClass(referenceDatabase);
-
-            try {
-                biomodelsReferenceDatabase.addAttributeValue(ReactomeJavaConstants.created, instanceEdit);
-                biomodelsReferenceDatabase.addAttributeValue(
-                    ReactomeJavaConstants.name, Arrays.asList("BioModels Database", "BioModels")
-                );
-
-                //TODO Check if both accessUrl and Url should be using https
-                biomodelsReferenceDatabase.addAttributeValue(
-                    ReactomeJavaConstants.accessUrl, "http://www.ebi.ac.uk/biomodels-main/publ-model.do?mid=###ID###"
-                );
-                biomodelsReferenceDatabase.addAttributeValue(
-                    ReactomeJavaConstants.url, "https://www.ebi.ac.uk/biomodels/"
-                );
-                dba.storeInstance(biomodelsReferenceDatabase);
-            } catch (Exception e) {
-                logger.error("Unable to create BioModels reference database", e);
-            }
-        }
-        logger.info("Successfully created BioModels reference database with db id of " +
-            biomodelsReferenceDatabase.getDBID());
-
-        return biomodelsReferenceDatabase;
     }
 
     private static String getStableIdentifier(GKInstance instance) {
@@ -200,7 +154,7 @@ public class Main {
         try {
             defaultPerson = dba.fetchInstance(defaultPersonId);
         } catch (Exception e) {
-            logAndThrow("Could not fetch Person entity with ID " + defaultPersonId +
+            BioModelsUtilities.logAndThrow("Could not fetch Person entity with ID " + defaultPersonId +
                 ". Please check that a Person entity exists in the database with this ID", e);
         }
 
@@ -210,14 +164,14 @@ public class Main {
             newIE.addAttributeValue(ReactomeJavaConstants.dateTime, GKApplicationUtilities.getDateTime());
             newIE.addAttributeValue(ReactomeJavaConstants.note, note);
         } catch (InvalidAttributeException | InvalidAttributeValueException e) {
-            logAndThrow("Unable to create instance edit", e);
+            BioModelsUtilities.logAndThrow("Unable to create instance edit", e);
         }
         InstanceDisplayNameGenerator.setDisplayName(newIE);
 
         try {
             dba.storeInstance(newIE);
         } catch (Exception e) {
-            logAndThrow("Unable to store new instance edit", e);
+            BioModelsUtilities.logAndThrow("Unable to store new instance edit", e);
         }
         logger.info("Successfully created new instance edit with db id " + newIE.getDBID() + " for person id " +
             defaultPersonId);
@@ -236,10 +190,5 @@ public class Main {
         instanceEdit.addAttributeValue(ReactomeJavaConstants.author, person);
 
         return instanceEdit;
-    }
-
-    private static void logAndThrow(String errorMessage, Throwable e) {
-        logger.error(errorMessage, e);
-        throw new RuntimeException(errorMessage, e);
     }
 }

@@ -2,12 +2,9 @@ package org.reactome.release;
 
 import org.junit.Test;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class ModelsTSVParserTester {
     @Test
@@ -51,5 +48,18 @@ public class ModelsTSVParserTester {
 
         // Tests pathway contains correct BioModels id
         assertTrue(pathwayToBioModelsIds.get("R-HSA-199418").contains("BIOMD0000000175"));
+
+        // Tests for null in Map keys and value
+        assertTrue("pathwayToBioModelsIds map does not contain any null keys", !pathwayToBioModelsIds.containsKey(null));
+        assertTrue("pathwayToBioModelsIds map does not contain any null values", !pathwayToBioModelsIds.containsValue(null));
+
+        // Tests for null in any List object in pathwayToBioModelsIds Map
+        boolean nullValueInList = false;
+        for (String pathwayToBioModelsIdsKey : pathwayToBioModelsIds.keySet()) {
+            if (pathwayToBioModelsIds.get(pathwayToBioModelsIdsKey).contains(null)) {
+                nullValueInList = true;
+            }
+        }
+        assertTrue("No null values in any lists in pathwaysToBioModelsIds map", !nullValueInList);
     }
 }

@@ -14,11 +14,9 @@ pipeline {
 			def userInput = input(
 				id: 'userInput', message: 'What is the release number?',
 				parameters: [
-                                    string(defaultValue: 'None',
-                                            description: 'Release Version',
-                                            name: 'ReleaseNumber'),
-					])
-			echo("The release number: " + userInput['ReleaseNumber'])
+            [$class: 'TextParameterDefinition', defaultValue: '', description: 'Release Version', name: 'ReleaseNumber']
+            ])
+			echo("The release number: " + userInput)
 		}
             }
         }

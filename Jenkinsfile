@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Build') { 
             steps {
-	       sh 'cd orthopairs'
+	       cd orthopairs
 	       sh 'bash updateOrthopairsConfig.sh -r 69'
 	       sh 'mvn clean compile assembly:single'
             }

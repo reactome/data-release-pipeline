@@ -17,7 +17,7 @@ while (( "$#" )); do
 			exit 1;
 	esac
 done
-echo $releaseNumber;
+
 if [ -z "$releaseNumber" ]
 then
 	echo "Updates config.properties with release information used by Orthopairs"

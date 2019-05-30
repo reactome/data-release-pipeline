@@ -11,7 +11,11 @@ pipeline {
               dir('updateStableIds') {
                 sh 'pwd'
     	          sh 'mvn clean compile assembly:single'
+                withCredentials([file(credentialsId: 'UpdateStableIdsConfig', variable: 'configFile')]) {
+                  sh "cp \$configFile /src/main/resources/config.properties"
+                }
                 sh 'cat src/main/resources/config.properties'
+
               }
            }
         }

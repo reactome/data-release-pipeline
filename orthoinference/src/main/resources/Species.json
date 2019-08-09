@@ -69,7 +69,8 @@
 			"Dictyostelium discoideum"
 		],
 		"mart_virtual_schema":"protists_mart",
-		"group":"Eukaryotes"
+		"group":"Eukaryotes",
+		"abbreviation": "DDI"
 	},
 	"cele":{
 		"alt_refdb":{
@@ -94,7 +95,8 @@
 		],
 		"mart_group":"celegans_gene_ensembl",
 		"compara":"core",
-		"group":"Metazoan"
+		"group":"Metazoan",
+		"abbreviation": "CEL"
 	},
 	"scer":{
 		"mart_group":"scerevisiae_gene_ensembl",
@@ -120,7 +122,8 @@
 			"url":"http:\/\/www.yeastgenome.org"
 		},
 		"group":"Fungi\/Plants",
-		"compara":"core"
+		"compara":"core",
+		"abbreviation": "SCE"
 	},
 	"sscr":{
 		"group":"Vertebrate",
@@ -138,7 +141,8 @@
 				"ENSEMBL_Sus_scrofa_PROTEIN"
 			],
 			"access":"http:\/\/www.ensembl.org\/Sus_scrofa\/Transcript\/ProteinSummary?peptide=###ID###"
-		}
+		},
+		"abbreviation": "SSC"
 	},
 	"hsap":{
 		"group":"Human",
@@ -155,7 +159,8 @@
 				"ENSEMBL_Homo_sapiens_PROTEIN"
 			],
 			"access":"http:\/\/www.ensembl.org\/Homo_sapiens\/Transcript\/ProteinSummary?peptide=###ID###"
-		}
+		},
+		"abbreviation": "HSA"
 	},
 	"ggal":{
 		"refdb":{
@@ -173,7 +178,8 @@
 			"Gallus gallus"
 		],
 		"compara":"core",
-		"group":"Vertebrate"
+		"group":"Vertebrate",
+		"abbreviation": "GGA"
 	},
 	"xtro":{
 		"mart_group":"xtropicalis_gene_ensembl",
@@ -191,7 +197,8 @@
 			"ensg_access":"http:\/\/www.ensembl.org\/Xenopus_tropicalis\/geneview?gene=###ID###&db=core"
 		},
 		"group":"Vertebrate",
-		"compara":"core"
+		"compara":"core",
+		"abbreviation": "XTR"
 	},
 	"spom":{
 		"group":"Fungi\/Plants",
@@ -217,7 +224,8 @@
 			"access":"http:\/\/fungi.ensembl.org\/Schizosaccharomyces_pombe\/Transcript\/ProteinSummary?peptide=###ID###",
 			"ensg_access":"http:\/\/fungi.ensembl.org\/Schizosaccharomyces_pombe\/geneview?gene=###ID###&db=core",
 			"url":"http:\/\/fungi.ensembl.org\/Schizosaccharomyces_pombe\/Info\/Index"
-		}
+		},
+		"abbreviation": "SPO"
 	},
 	"btau":{
 		"refdb":{
@@ -235,7 +243,8 @@
 			"Bos taurus"
 		],
 		"compara":"core",
-		"group":"Vertebrate"
+		"group":"Vertebrate",
+		"abbreviation": "BTA"
 	},
 	"mmus":{
 		"refdb":{
@@ -253,7 +262,8 @@
 			"Mus musculus"
 		],
 		"compara":"core",
-		"group":"Vertebrate"
+		"group":"Vertebrate",
+		"abbreviation": "MMU"
 	},
 	"cfam":{
 		"compara":"core",
@@ -271,7 +281,8 @@
 		"name":[
 			"Canis familiaris"
 		],
-		"mart_group":"cfamiliaris_gene_ensembl"
+		"mart_group":"cfamiliaris_gene_ensembl",
+		"abbreviation": "CFA"
 	},
 	"pfal":{
 		"mart_group":"pfalciparum_eg_gene",
@@ -297,7 +308,8 @@
 			"url":"http:\/\/plasmodb.org"
 		},
 		"group":"Eukaryotes",
-		"mart_virtual_schema":"protists_mart"
+		"mart_virtual_schema":"protists_mart",
+		"abbreviation": "PFA"
 	},
 	"dmel":{
 		"compara":"core",
@@ -322,7 +334,8 @@
 		"mart_group":"dmelanogaster_gene_ensembl",
 		"name":[
 			"Drosophila melanogaster"
-		]
+		],
+		"abbreviation": "DME"
 	},
 	"drer":{
 		"mart_group":"drerio_gene_ensembl",
@@ -340,7 +353,8 @@
 			"url":"http:\/\/www.ensembl.org\/Danio_rerio\/Info\/Index\/"
 		},
 		"group":"Vertebrate",
-		"compara":"core"
+		"compara":"core",
+		"abbreviation": "DRE"
 	},
 	"rnor":{
 		"compara":"core",
@@ -358,6 +372,7 @@
 		"mart_group":"rnorvegicus_gene_ensembl",
 		"name":[
 			"Rattus norvegicus"
-		]
+		],
+		"abbreviation": "RNO"
 	}
 }

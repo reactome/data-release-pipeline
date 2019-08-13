@@ -50,8 +50,6 @@ public class EventsInferrer
 	private static GKInstance instanceEditInst;
 	private static GKInstance speciesInst;
     public static String refSpeciesName = "";
-	private static Map<GKInstance, GKInstance> manualEventToNonHumanSource = new HashMap<GKInstance, GKInstance>();
-	private static List<GKInstance> manualHumanEvents = new ArrayList<GKInstance>();
     public static int inferenceThreshold;
 	private static Map<GKInstance,GKInstance> manualEventToNonHumanSource = new HashMap<>();
 	private static List<GKInstance> manualHumanEvents = new ArrayList<>();

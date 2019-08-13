@@ -30,7 +30,7 @@ public class Main {
 		
 		Properties props = new Properties();
 		props.load(new FileInputStream(pathToConfig));
-        EventsInferrer.inferEvents(props, refSpeciesCode, projSpeciesCode);
+        EventsInferrer.inferEvents(props, pathToConfig, refSpeciesCode, projSpeciesCode);
 	}
 
 }

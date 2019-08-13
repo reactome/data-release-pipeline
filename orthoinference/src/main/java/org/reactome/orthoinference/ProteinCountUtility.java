@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.gk.model.ClassAttributeFollowingInstruction;
 import org.gk.model.GKInstance;
 import org.gk.model.InstanceUtilities;
@@ -15,7 +17,8 @@ import static org.gk.model.ReactomeJavaConstants.*;
 import org.gk.schema.InvalidAttributeException;
 
 public class ProteinCountUtility {
-	
+
+	private static final Logger logger = LogManager.getLogger();
 	private static Map<String, String[]> homologueMappings = new HashMap<String,String[]>();
 	
 	/** This function is meant to emulate the count_distinct_proteins function found in infer_events.pl.
@@ -63,23 +66,25 @@ public class ProteinCountUtility {
 		// If it is a ReferenceGene Product, the inferrable and max values are incremented depending on the number of homologue mappings, while total is incremented for each entity. 
 		for (GKInstance entityInst : sortedFollowedInstances)
 		{
-			if (entityInst.getSchemClass().isa(ReferenceGeneProduct))
+			if (entityInst.getSchemClass().isa(ReferenceGeneProduct)) // TODO: protect from NPE (diagnose why necessary)
 			{
 				int count = 0;
-				String identifierName = entityInst.getAttributeValue(identifier).toString();
-				if (homologueMappings.get(identifierName) != null)
-				{
-					count = homologueMappings.get(identifierName).length;
-				}
-				total++;
-				if (count > max)
-				{
-					max = count;
-				}
-				if (count > 0)
-				{
-					inferrable++;
-				}
+				//if (entityInst.getAttributeValue(identifier) != null) {
+					String identifierName = entityInst.getAttributeValue(identifier).toString();
+					if (homologueMappings.get(identifierName) != null) {
+						count = homologueMappings.get(identifierName).length;
+					}
+					total++;
+					if (count > max) {
+						max = count;
+					}
+					if (count > 0) {
+						inferrable++;
+					}
+				//} else {
+				//	logger.info(entityInst + " does not have an identifier.");
+				//	continue;
+				//}
 			}
 		}
 		// For EntitySets, another AttributeQueryRequest is completed. This time the output classes are Complex, Polymer, and ReferenceSequence.

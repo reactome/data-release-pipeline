@@ -22,6 +22,19 @@
       },
       "abbreviation": "ATH"
    },
+   "adur" : {
+      "refdb" : {
+         "access" : "http:\/\/peanutbase.org\/feature\/Arachis\/duranensis\/gene\/###ID###",
+         "dbname" : [
+            "PeanutBase_Ad"
+         ],
+         "url" : "http:\/\/peanutbase.org\/"
+      },
+      "name" : [
+         "Arachis duranensis"
+      ],
+      "abbreviation": "ADU"
+   },
    "osat" : {
       "name" : [
          "Oryza sativa"

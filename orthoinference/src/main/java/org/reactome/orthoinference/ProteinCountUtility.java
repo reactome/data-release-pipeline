@@ -66,10 +66,10 @@ public class ProteinCountUtility {
 		// If it is a ReferenceGene Product, the inferrable and max values are incremented depending on the number of homologue mappings, while total is incremented for each entity. 
 		for (GKInstance entityInst : sortedFollowedInstances)
 		{
-			if (entityInst.getSchemClass().isa(ReferenceGeneProduct)) // TODO: protect from NPE (diagnose why necessary)
+			if (entityInst.getSchemClass().isa(ReferenceGeneProduct))
 			{
 				int count = 0;
-				//if (entityInst.getAttributeValue(identifier) != null) {
+				if (entityInst.getAttributeValue(identifier) != null) {  // protect from NPE for incomplete entities
 					String identifierName = entityInst.getAttributeValue(identifier).toString();
 					if (homologueMappings.get(identifierName) != null) {
 						count = homologueMappings.get(identifierName).length;
@@ -81,10 +81,14 @@ public class ProteinCountUtility {
 					if (count > 0) {
 						inferrable++;
 					}
-				//} else {
-				//	logger.info(entityInst + " does not have an identifier.");
-				//	continue;
-				//}
+				} else {
+					logger.warn(entityInst + " does not have an identifier. Skip.");
+					continue;
+				}
+			}
+			else {
+				logger.info(entityInst + " does not have a valid schemaClass.");
+				continue;
 			}
 		}
 		// For EntitySets, another AttributeQueryRequest is completed. This time the output classes are Complex, Polymer, and ReferenceSequence.
@@ -184,21 +188,26 @@ public class ProteinCountUtility {
 						} else if (physicalEntityInst.getSchemClass().isa(ReferenceGeneProduct)) 
 						{
 							flag = 1;
-							String identifierName = physicalEntityInst.getAttributeValue(identifier).toString();
-							int count = 0;
-							if (homologueMappings.get(identifierName) != null)
-							{
-								count = homologueMappings.get(identifierName).length;
+							if (physicalEntityInst.getAttributeValue(identifier) != null) {
+								String identifierName = physicalEntityInst.getAttributeValue(identifier).toString();
+								int count = 0;
+								if (homologueMappings.get(identifierName) != null)
+								{
+									count = homologueMappings.get(identifierName).length;
+								}
+								if (count > max)
+								{
+									max = count;
+								}
+								if (count > 0)
+								{
+									flagInferred = 1;
+								}
+							} else {
+								logger.warn(physicalEntityInst + " does not have an identifier. Skip.");
+								continue;
 							}
-							if (count > max)
-							{
-								max = count;
-							}
-							if (count > 0)
-							{
-								flagInferred = 1;
-							}
-						} 
+						}
 					}
 					// After going through the logic for Complexes/Polymers and ReferenceGeneProduct, the total and inferrable values are incremented by their respective flag totals.
 					total += flag;

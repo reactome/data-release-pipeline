@@ -48,8 +48,13 @@ public class Main
         // If using an alternative source species, specify the 4-letter code as the second argument
         //TODO: Better solution for this. What if user wants default config but to change source species?
         if (args.length > 0) {
-            pathToConfig = args[0];
-            sourceMappingSpecies = args[1];
+            if (args.length > 1) {
+                pathToConfig = args[0];
+                sourceMappingSpecies = args[1];
+            } else {
+                pathToConfig = args[0];
+                sourceMappingSpecies = "hsap";
+            }
         } else {
             pathToConfig = "src/main/resources/config.properties";
             sourceMappingSpecies = "hsap";

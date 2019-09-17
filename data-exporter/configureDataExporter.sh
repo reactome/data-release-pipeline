@@ -48,10 +48,10 @@ if [ -z $port ]; then
     port=7687
 fi
 
-echo -n "Enter path to output directory (leave blank for $DIR/archive): "
+echo -n "Enter path to output directory (leave blank for $DIR/output): "
 read output_directory
 if [ -z $output_directory ]; then
-    output_directory="$DIR/archive"
+    output_directory="$DIR/output"
 fi
 
 config_file=config.properties

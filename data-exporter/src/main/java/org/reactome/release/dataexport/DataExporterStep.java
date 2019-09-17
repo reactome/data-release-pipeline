@@ -47,7 +47,7 @@ public class DataExporterStep extends ReleaseStep {
 		logger.info("Beginning NCBI, UCSC, and Europe PMC export step...");
 
 		int version = Integer.parseInt(props.getProperty("reactomeVersion"));
-		String outputDir = props.getProperty("outputDir", "archive");
+		String outputDir = props.getProperty("outputDir", "output");
 		Files.createDirectories(Paths.get(outputDir));
 		logger.info("Files for Reactome version " + version + " will be output to the directory " + outputDir);
 

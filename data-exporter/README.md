@@ -50,7 +50,7 @@ pass=neo4j_pass
 host=localhost
 port=7687 # Default Bolt port for Neo4J
 reactomeVersion=67
-outputDir=data-exporter/archive
+outputDir=data-exporter/output
 ```
 
 ## Logging

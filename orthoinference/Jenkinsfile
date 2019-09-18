@@ -1,4 +1,4 @@
-speciesList = ['pfal', 'mmus', 'rnor', 'cfam', 'btau', 'sscr', 'drer', 'xtro', 'ggal', 'dmel', 'cele', 'ddis', 'spom', 'scer', 'pfal']
+//speciesList = ['pfal', 'mmus', 'rnor', 'cfam', 'btau', 'sscr', 'drer', 'xtro', 'ggal', 'dmel', 'cele', 'ddis', 'spom', 'scer', 'pfal']
 
 pipeline{
     agent any
@@ -25,18 +25,166 @@ pipeline{
 				}
 			}
 		}
-	    stage('Run Orthoinference'){
-			script {
-				speciesList.each { species ->
-					stage("Main: Infer ${species}"){
-						steps {
-							script{
-								dir('orthoinference'){
-									withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-										sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE ${species}"
-									}
-								}
-							}
+		stage('Main: Infer mmus'){
+			steps {
+				script{
+					dir('orthoinference'){
+						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
+							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE mmus"
+						}
+					}
+				}
+			}
+		}
+		stage('Main: Infer rnor'){
+			steps {
+				script{
+					dir('orthoinference'){
+						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
+							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE rnor"
+						}
+					}
+				}
+			}
+		}
+		stage('Main: Infer rnor'){
+			steps {
+				script{
+					dir('orthoinference'){
+						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
+							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE rnor"
+						}
+					}
+				}
+			}
+		}
+		stage('Main: Infer cfam'){
+			steps {
+				script{
+					dir('orthoinference'){
+						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
+							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE cfam"
+						}
+					}
+				}
+			}
+		}
+		stage('Main: Infer btau'){
+			steps {
+				script{
+					dir('orthoinference'){
+						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
+							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE btau"
+						}
+					}
+				}
+			}
+		}
+		stage('Main: Infer sscr'){
+			steps {
+				script{
+					dir('orthoinference'){
+						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
+							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE sscr"
+						}
+					}
+				}
+			}
+		}
+		stage('Main: Infer drer'){
+			steps {
+				script{
+					dir('orthoinference'){
+						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
+							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE drer"
+						}
+					}
+				}
+			}
+		}
+		stage('Main: Infer xtro'){
+			steps {
+				script{
+					dir('orthoinference'){
+						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
+							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE xtro"
+						}
+					}
+				}
+			}
+		}
+		stage('Main: Infer ggal'){
+			steps {
+				script{
+					dir('orthoinference'){
+						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
+							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE ggal"
+						}
+					}
+				}
+			}
+		}
+		stage('Main: Infer dmel'){
+			steps {
+				script{
+					dir('orthoinference'){
+						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
+							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE dmel"
+						}
+					}
+				}
+			}
+		}
+		stage('Main: Infer cele'){
+			steps {
+				script{
+					dir('orthoinference'){
+						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
+							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE cele"
+						}
+					}
+				}
+			}
+		}
+		stage('Main: Infer ddis'){
+			steps {
+				script{
+					dir('orthoinference'){
+						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
+							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE ddis"
+						}
+					}
+				}
+			}
+		}
+		stage('Main: Infer spom'){
+			steps {
+				script{
+					dir('orthoinference'){
+						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
+							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE spom"
+						}
+					}
+				}
+			}
+		}
+		stage('Main: Infer scer'){
+			steps {
+				script{
+					dir('orthoinference'){
+						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
+							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE scer"
+						}
+					}
+				}
+			}
+		}
+		stage('Main: Infer pfal'){
+			steps {
+				script{
+					dir('orthoinference'){
+						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
+							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE pfal"
 						}
 					}
 				}

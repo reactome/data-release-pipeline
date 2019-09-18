@@ -28,7 +28,7 @@ pipeline{
 				script{
 					dir('orthoinference'){
 						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar mmus"
+							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE mmus"
 						}
 					}
 				}

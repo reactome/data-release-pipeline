@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     stages {
-		stage('Back up slice_current') {
+		stage('Setup: Create release_current from slice_current') {
 			steps {
 				script {
 					dir('orthoinference') {
@@ -10,6 +10,15 @@ pipeline {
 							sh "mysql -u$user -p$pass -e \'drop database if exists release_current; create database release_current\'"
 							sh "mysqldump --opt -u$user -p$pass -hlocalhost slice_current | mysql -u$user -p$pass -hlocalhost release_current"
 						}
+					}
+				}
+			}
+		}
+		stage('Setup: Build jar file') {
+			steps {
+				script{
+					dir('orthoinference') {
+						sh "mvn clean compile assembly:single"
 					}
 				}
 			}

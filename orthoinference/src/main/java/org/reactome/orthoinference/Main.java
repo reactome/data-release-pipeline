@@ -17,8 +17,7 @@ public class Main {
 
 		String pathToConfig = "src/main/resources/config.properties";
 		String speciesCode = "";
-		if (args.length > 0 && args[0].matches("config.properties"))
-		{
+		if (args.length == 2) {
 			pathToConfig = args[0];
 			speciesCode = args[1];
 		} else if (args.length == 1 && args[0].length() == 4) {
@@ -30,13 +29,13 @@ public class Main {
 
 		Properties props = new Properties();
 		props.load(new FileInputStream(pathToConfig));
-        EventsInferrer.inferEvents(props, speciesCode);
+		EventsInferrer.inferEvents(props, speciesCode);
 
-        // Link report file to report_ortho_inference.txt in website_files_update directory
-        Path pathtoWebsiteFilesUpdateWithReportFile = Paths.get(props.getProperty("pathToWebsiteFilesUpdateFolder") + "report_ortho_inference.txt");
-        Path reportFilename = Paths.get("report_ortho_inference_test_reactome_" + props.getProperty("releaseNumber") + ".txt");
-        Files.deleteIfExists(pathtoWebsiteFilesUpdateWithReportFile);
-        Files.createLink(pathtoWebsiteFilesUpdateWithReportFile, reportFilename);
+		// Link report file to report_ortho_inference.txt in website_files_update directory
+		Path pathtoWebsiteFilesUpdateWithReportFile = Paths.get(props.getProperty("pathToWebsiteFilesUpdateFolder") + "report_ortho_inference.txt");
+		Path reportFilename = Paths.get("report_ortho_inference_test_reactome_" + props.getProperty("releaseNumber") + ".txt");
+		Files.deleteIfExists(pathtoWebsiteFilesUpdateWithReportFile);
+		Files.createLink(pathtoWebsiteFilesUpdateWithReportFile, reportFilename);
 	}
 
 }

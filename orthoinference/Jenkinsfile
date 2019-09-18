@@ -25,7 +25,7 @@ pipeline{
 				}
 			}
 		}
-	    stage('Run Orthoinference){
+	    stage('Run Orthoinference'){
 			speciesList.each { species ->
 				stage("Main: Infer ${species}"){
 					steps {

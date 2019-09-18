@@ -2,10 +2,10 @@ pipeline {
     agent any
 
     stages {
-		dir('orthoinference') {
-			stage('Back up DB') {
-				steps {
-					script {
+		stage('Back up slice_current') {
+			steps {
+				script {
+					dir('orthoinference') {
 						sh 'touch orthoinference.txt'
 					}
 				}

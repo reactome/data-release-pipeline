@@ -25,18 +25,20 @@ pipeline{
 				}
 			}
 		}
-	    speciesList.each { species ->
-			stage("Main: Infer ${species}"){
-				steps {
-					script{
-						dir('orthoinference'){
-							withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-								sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE ${species}"
+	    stage('Run Orthoinference){
+			speciesList.each { species ->
+				stage("Main: Infer ${species}"){
+					steps {
+						script{
+							dir('orthoinference'){
+								withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
+									sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE ${species}"
+								}
 							}
 						}
 					}
 				}
 			}
-	    }
+		}
 	}
 }

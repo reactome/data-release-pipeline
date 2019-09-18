@@ -47,7 +47,7 @@ public class SkipInstanceChecker {
 			}
 		}
 		// Generates skiplist
-		FileReader fr = new FileReader(skipListFilePath);
+		FileReader fr = new FileReader(pathToSkipList);
 		BufferedReader br = new BufferedReader(fr);
 		String currentLine;
 		while ((currentLine = br.readLine()) != null)

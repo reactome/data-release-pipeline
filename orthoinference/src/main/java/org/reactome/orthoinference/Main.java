@@ -32,10 +32,12 @@ public class Main {
 		EventsInferrer.inferEvents(props, speciesCode);
 
 		// Link report file to report_ortho_inference.txt in website_files_update directory
+		/*
 		Path pathtoWebsiteFilesUpdateWithReportFile = Paths.get(props.getProperty("pathToWebsiteFilesUpdateFolder") + "report_ortho_inference.txt");
 		Path reportFilename = Paths.get("report_ortho_inference_test_reactome_" + props.getProperty("releaseNumber") + ".txt");
 		Files.deleteIfExists(pathtoWebsiteFilesUpdateWithReportFile);
 		Files.createLink(pathtoWebsiteFilesUpdateWithReportFile, reportFilename);
+		*/
 	}
 
 }

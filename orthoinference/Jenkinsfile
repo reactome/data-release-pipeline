@@ -1,3 +1,5 @@
+speciesList = ['pfal', 'mmus', 'rnor', 'cfam', 'btau', 'sscr', 'drer', 'xtro', 'ggal', 'dmel', 'cele', 'ddis', 'spom', 'scer', 'pfal']
+
 pipeline{
     agent any
 
@@ -23,16 +25,18 @@ pipeline{
 				}
 			}
 		}
-		stage('Main: Infer mmus'){
-			steps {
-				script{
-					dir('orthoinference'){
-						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE mmus"
+	    speciesList.each { species ->
+			stage("Main: Infer ${species}"){
+				steps {
+					script{
+						dir('orthoinference'){
+							withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
+								sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE ${species}"
+							}
 						}
 					}
 				}
 			}
-		}
+	    }
 	}
 }

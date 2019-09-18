@@ -47,17 +47,6 @@ pipeline{
 				}
 			}
 		}
-		stage('Main: Infer rnor'){
-			steps {
-				script{
-					dir('orthoinference'){
-						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE rnor"
-						}
-					}
-				}
-			}
-		}
 		stage('Main: Infer cfam'){
 			steps {
 				script{

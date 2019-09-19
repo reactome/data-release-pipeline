@@ -1,14 +1,13 @@
 import groovy.json.JsonSlurper
 
+def statusUrl = httpRequest "http://localhost:6060/job/Release/job/Orthopairs/lastBuild/api/json"
+def statusJson = new JsonSlurper().parseText(statusUrl.getContent())
+error(statusJson['result'])
+
 pipeline{
     agent any
 
     stages{
-		stage('Confirm upstream success'){
-			def statusUrl = httpRequest "http://localhost:6060/job/Release/job/Orthopairs/lastBuild/api/json"
-			def statusJson = new JsonSlurper().parseText(statusUrl.getContent())
-			error(statusJson['result'])
-		}
 		stage('Setup: Create release_current from slice_current'){
 			steps{
 				script{

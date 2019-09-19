@@ -4,7 +4,7 @@ def statusUrl = httpRequest authentication: 'jenkinsKey', url: "http://localhost
 def statusJson = new JsonSlurper().parseText(statusUrl.getContent())
 if(statusJson['result'] != "SUCCESS"){
 	error("Last Release/Orthopairs build status: " + statusJson['result'])
-}
+} else {
 
 pipeline{
     agent any
@@ -186,4 +186,5 @@ pipeline{
 			}
 		}
 	}
+}
 }

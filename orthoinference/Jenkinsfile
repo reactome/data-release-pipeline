@@ -2,7 +2,9 @@ import groovy.json.JsonSlurper
 
 def statusUrl = httpRequest authentication: 'jenkinsKey', url: "http://localhost:6060/job/Release/job/Orthopairs/lastBuild/api/json"
 def statusJson = new JsonSlurper().parseText(statusUrl.getContent())
-error(statusJson['result'])
+if(statusJson['result'] != "SUCCESS"){
+	error("Last Release/Orthopairs build status: " + OrthopairsstatusJson['result'])
+}
 
 pipeline{
     agent any

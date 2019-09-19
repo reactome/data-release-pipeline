@@ -1,6 +1,6 @@
 import groovy.json.JsonSlurper
 
-def statusUrl = httpRequest "http://localhost:6060/job/Release/job/Orthopairs/lastBuild/api/json"
+def statusUrl = httpRequest authentication: 'jenkinsKey', url: "http://localhost:6060/job/Release/job/Orthopairs/lastBuild/api/json"
 def statusJson = new JsonSlurper().parseText(statusUrl.getContent())
 error(statusJson['result'])
 

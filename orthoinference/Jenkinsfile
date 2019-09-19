@@ -1,17 +1,13 @@
-//speciesList = ['pfal', 'mmus', 'rnor', 'cfam', 'btau', 'sscr', 'drer', 'xtro', 'ggal', 'dmel', 'cele', 'ddis', 'spom', 'scer', 'pfal']
+import groovy.json.JsonSlurper
 
 pipeline{
     agent any
 
     stages{
 		stage('Confirm upstream success'){
-			steps{
-				script{
-					def statusUrl = httpRequest "http://localhost:6060/job/Release/job/Orthopairs/lastBuild/api/json"
-					def statusJson = new JsonSlurper().parseText(statusUrl.getContent())
-					error(statusJson['result'])
-				}
-			}
+			def statusUrl = httpRequest "http://localhost:6060/job/Release/job/Orthopairs/lastBuild/api/json"
+			def statusJson = new JsonSlurper().parseText(statusUrl.getContent())
+			error(statusJson['result'])
 		}
 		stage('Setup: Create release_current from slice_current'){
 			steps{

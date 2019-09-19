@@ -3,13 +3,18 @@ import groovy.json.JsonSlurper
 pipeline{
     agent any
 	
-	def statusUrl = httpRequest authentication: 'jenkinsKey', url: "http://localhost:6060/job/Release/job/Orthopairs/lastBuild/api/json"
-	def statusJson = new JsonSlurper().parseText(statusUrl.getContent())
-	if(statusJson['result'] != "SUCCESS"){
-		error("Last Release/Orthopairs build status: " + statusJson['result'])
-	} 
-
     stages{
+	    stage('Check if upstream build success'){
+		    steps{
+			    script{
+				    	def statusUrl = httpRequest authentication: 'jenkinsKey', url: "http://localhost:6060/job/Release/job/Orthopairs/lastBuild/api/json"
+					def statusJson = new JsonSlurper().parseText(statusUrl.getContent())
+					if(statusJson['result'] != "SUCCESS"){
+						error("Last Release/Orthopairs build status: " + statusJson['result'])
+					} 
+			    }
+		    }
+	    }
 		stage('Setup: Create release_current from slice_current'){
 			steps{
 				script{

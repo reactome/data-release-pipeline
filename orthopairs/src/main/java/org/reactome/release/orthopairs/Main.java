@@ -59,7 +59,7 @@ public class Main
             pathToConfig = "src/main/resources/config.properties";
             sourceMappingSpecies = "hsap";
         }
-        System.out.println(pathToConfig);
+
         Properties props = new Properties();
         props.load(new FileInputStream(pathToConfig));
         // Load all config properties

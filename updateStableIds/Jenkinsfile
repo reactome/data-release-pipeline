@@ -7,7 +7,7 @@ pipeline {
 					dir('updateStableIds'){
 						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]) {
 							sh "mysql -u$user -p$pass -e \'drop database if exists slice_previous; create database slice_previous\'"
-							zcat  test_slice_69_snapshot.sql.gz |& mysql -u$user -p$pass -hlocalhost slice_previous
+							sh "zcat  test_slice_69_snapshot.sqll.gz 2>&1 | mysql -u$user -p$pass -hlocalhost slice_previous"
 							sh "mysqldump -u$user -p$pass slice_test > test_slice_70_snapshot.sql"
 							sh "gzip -f test_slice_70_snapshot.sql"
 							sh "mysql -u$user -p$pass -e \'drop database if exists slice_current; create database slice_current\'"

@@ -53,7 +53,7 @@ pipeline {
 			steps{
 				script{
 					dir('updateStableIds'){
-						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
+						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
 							sh "mysqldump -u$user -p$pass gk_central > gk_central_70_after_st_id.dump"
 							sh "gzip -f gk_central_70_after_st_id.dump"
 							sh "mysqldump -u$user -p$pass slice_current > slice_current_70_after_st_id.dump"
@@ -63,5 +63,5 @@ pipeline {
 				}
 			}
 		}
-    }
+	}
 }

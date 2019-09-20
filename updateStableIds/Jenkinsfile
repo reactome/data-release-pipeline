@@ -38,5 +38,16 @@ pipeline {
 				}
 			}
 		}
+		stage('Main: Update Stable Identifiers'){
+			steps {
+				script{
+					dir('updateStableIds'){
+						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
+							sh "java -jar target/updateStableIds-0.0.1-SNAPSHOT-jar-with-dependencies.jar $FILE"
+						}
+					}
+				}
+			}
+		}
     }
 }

@@ -49,5 +49,17 @@ pipeline {
 				}
 			}
 		}
+		stage('Post: Backup DBs'){
+			steps{
+				script{
+					dir('updateStableIds'){
+						sh "mysqldump -u$user -p$pass gk_central > gk_central_70_after_st_id.dump"
+						sh "gzip -f gk_central_70_after_st_id.dump"
+						sh "mysqldump -u$user -p$pass slice_current > slice_current_70_after_st_id.dump"
+						sh "gzip -f slice_current_70_after_st_id.dump"
+					}
+				}
+			}
+		}
     }
 }

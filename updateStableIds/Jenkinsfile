@@ -1,14 +1,22 @@
 pipeline {
   agent any
     stages {
-        stage('Setup') {
-          steps {
-            dir('release-common-lib') {
-              sh 'mvn clean install'
-            }
-          }
-        }
-        stage('Run') {
+		stage('Setup: Rotate slice DBs'){
+			steps{
+				script{
+					dir('updateStableIds'){
+						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]) {
+							sh "mysql -u$user -p$pass -e \'drop database if exists slice_previous; create database slice_previous\'"
+							sh "zcat  test_slice_69_snapshot.sq.gz| mysql -u$user -p$pass -hlocalhost slice_previous"
+							sh "mysqldump -u$user -p$pass slice_test > test_slice_70_snapshot.sql | gzip test_slice_70_snapshot.sql"
+							sh "mysql -u$user -p$pass -e \'drop database if exists slice_current; create database slice_current\'"
+							sh "zcat  test_slice_70_snapshot.sq.gz| mysql -u$user -p$pass -hlocalhost slice_current"
+						}
+					}
+				}
+			}
+		}
+        /*stage('Run') {
             steps {
               dir('updateStableIds') {
     	          sh 'mvn clean compile assembly:single'
@@ -17,6 +25,6 @@ pipeline {
                 }
               }
            }
-        }
+        }*/
     }
 }

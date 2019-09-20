@@ -27,6 +27,7 @@ public class Main
     		pathToConfig = "src/main/resources/config.properties";
     	}
        
+	System.out.println(pathToConfig);
        //Sets up the various DB Adaptors needed. This includes the current and previous test_slice versions on the release server, 
        //as well as gk_central on the curation server.
        Properties props = new Properties();

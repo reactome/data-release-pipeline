@@ -7,10 +7,10 @@ pipeline{
 	    stage('Check if upstream build success'){
 		    steps{
 			    script{
-				    	def statusUrl = httpRequest authentication: 'jenkinsKey', url: "http://localhost:6060/job/Release/job/Orthopairs/lastBuild/api/json"
+				    def statusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}Release/job/Orthopairs/lastBuild/api/json"
 					def statusJson = new JsonSlurper().parseText(statusUrl.getContent())
 					if(statusJson['result'] != "SUCCESS"){
-						error("Last Release/Orthopairs build status: " + statusJson['result'])
+						error("Most recent Orthopairs build status: " + statusJson['result'])
 					} 
 			    }
 		    }
@@ -20,8 +20,8 @@ pipeline{
 				script{
 					dir('orthoinference'){
 						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]) {
-							sh "mysql -u$user -p$pass -e \'drop database if exists release_current; create database release_current\'"
-							sh "mysqldump --opt -u$user -p$pass -hlocalhost slice_current | mysql -u$user -p$pass -hlocalhost release_current"
+							sh "mysql -u$user -p$pass -e \'drop database if exists ${env.RELEASE_CURRENT}; create database ${env.RELEASE_CURRENT}\'"
+							sh "mysqldump --opt -u$user -p$pass -hlocalhost ${env.SLICE_CURRENT} | mysql -u$user -p$pass -hlocalhost ${env.RELEASE_CURRENT}"
 						}
 					}
 				}
@@ -190,6 +190,7 @@ pipeline{
 				}
 			}
 		}
+	    
 	}
 }
 

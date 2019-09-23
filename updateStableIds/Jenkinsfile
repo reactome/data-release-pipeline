@@ -6,18 +6,18 @@ pipeline {
 				script{
 					dir('updateStableIds'){
 						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
-							sh "mysql -u$user -p$pass -e \'drop database if exists slice_previous; create database slice_previous\'"
-							sh "zcat  test_slice_69_snapshot.dump.gz 2>&1 | mysql -u$user -p$pass -hlocalhost slice_previous"
+							sh "mysql -u$user -p$pass -e \'drop database if exists ${env.SLICE_PREVIOUS}; create database ${env.SLICE_PREVIOUS}\'"
+							sh "zcat  test_slice_${env.PREV_RELEASE_NUMBER}_snapshot.dump.gz 2>&1 | mysql -u$user -p$pass -hlocalhost ${env.SLICE_PREVIOUS}"
 							sh "mysqldump -u$user -p$pass ${env.SLICE_TEST} > test_slice_${env.RELEASE_NUMBER}_snapshot.dump"
-							sh "gzip -f test_slice_70_snapshot.dump"
-							sh "mysql -u$user -p$pass -e \'drop database if exists slice_current; create database slice_current\'"
-							sh "zcat  test_slice_70_snapshot.dump.gz 2>&1 | mysql -u$user -p$pass -hlocalhost slice_current"
+							sh "gzip -f test_slice_${env.RELEASE_NUMBER}_snapshot.dump"
+							sh "mysql -u$user -p$pass -e \'drop database if exists ${env.SLICE_CURRENT}; create database ${env.SLICE_CURRENT}\'"
+							sh "zcat  test_slice_${env.RELEASE_NUMBER}_snapshot.dump.gz 2>&1 | mysql -u$user -p$pass -hlocalhost ${env.SLICE_CURRENT}"
 						}
 					}
 				}
 			}
 		}
-	    stage('Setup: Back up gk_central'){
+	    stage('Setup: Back up gk_central'{
 		    steps{
 			    script{
 				    dir('updateStableIds'){

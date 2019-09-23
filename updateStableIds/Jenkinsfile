@@ -17,7 +17,7 @@ pipeline {
 				}
 			}
 		}
-	    stage('Setup: Back up gk_central'{
+	    stage('Setup: Back up gk_central'){
 		    steps{
 			    script{
 				    dir('updateStableIds'){

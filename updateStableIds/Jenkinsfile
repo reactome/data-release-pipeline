@@ -17,13 +17,13 @@ pipeline {
 				}
 			}
 		}
-	    stage('Setup: Back up gk_central'){
+	    stage('Setup: Back up ${env.GK_CENTRAL}'){
 		    steps{
 			    script{
 				    dir('updateStableIds'){
 					    withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
-							sh "mysqldump -u$user -p$pass gk_central > gk_central_70_before_st_id.dump"
-							sh "gzip -f gk_central_70_before_st_id.dump"
+						    sh "mysqldump -u$user -p$pass gk_central > gk_central_${env.RELEASE_NUMBER}_before_st_id.dump"
+							sh "gzip -f gk_central_${env.RELEASE_NUMBER}_before_st_id.dump"
 						}
 					}
 				}
@@ -54,10 +54,10 @@ pipeline {
 				script{
 					dir('updateStableIds'){
 						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
-							sh "mysqldump -u$user -p$pass gk_central > gk_central_70_after_st_id.dump"
-							sh "gzip -f gk_central_70_after_st_id.dump"
-							sh "mysqldump -u$user -p$pass slice_current > slice_current_70_after_st_id.dump"
-							sh "gzip -f slice_current_70_after_st_id.dump"
+							sh "mysqldump -u$user -p$pass ${env.GK_CENTRAL} > gk_central_${env.RELEASE_NUMBER}_after_st_id.dump"
+							sh "gzip -f gk_central_${env.RELEASE_NUMBER}_after_st_id.dump"
+							sh "mysqldump -u$user -p$pass ${env.SLICE_CURRENT} > slice_current_${env.RELEASE_NUMBER}_after_st_id.dump"
+							sh "gzip -f slice_current_${env.RELEASE_NUMBER}_after_st_id.dump"
 						}
 					}
 				}

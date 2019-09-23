@@ -8,7 +8,7 @@ pipeline {
 						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
 							sh "mysql -u$user -p$pass -e \'drop database if exists slice_previous; create database slice_previous\'"
 							sh "zcat  test_slice_69_snapshot.dump.gz 2>&1 | mysql -u$user -p$pass -hlocalhost slice_previous"
-							sh "mysqldump -u$user -p$pass slice_test > test_slice_70_snapshot.dump"
+							sh "mysqldump -u$user -p$pass ${env.SLICE_TEST} > test_slice_${env.RELEASE_NUMBER}_snapshot.dump"
 							sh "gzip -f test_slice_70_snapshot.dump"
 							sh "mysql -u$user -p$pass -e \'drop database if exists slice_current; create database slice_current\'"
 							sh "zcat  test_slice_70_snapshot.dump.gz 2>&1 | mysql -u$user -p$pass -hlocalhost slice_current"

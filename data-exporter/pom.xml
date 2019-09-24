@@ -1,5 +1,5 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.reactome.release</groupId>
@@ -26,6 +26,11 @@
 	<dependencies>
 		<!-- Main dependencies -->
 		<dependency>
+			<groupId>org.neo4j.driver</groupId>
+			<artifactId>neo4j-java-driver</artifactId>
+			<version>${neo4j-java-driver.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>org.reactome.release</groupId>
 			<artifactId>release-common-lib</artifactId>
 			<version>${reactome-release-common-lib.version}</version>
@@ -35,13 +40,14 @@
 			<artifactId>graph-core</artifactId>
 			<version>${reactome-graph-core.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.neo4j.driver</groupId>
-			<artifactId>neo4j-java-driver</artifactId>
-			<version>${neo4j-java-driver.version}</version>
-		</dependency>
 
 		<!-- Test dependencies -->
+		<dependency>
+			<groupId>org.hamcrest</groupId>
+			<artifactId>hamcrest</artifactId>
+			<version>${hamcrest.version}</version>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
@@ -52,12 +58,6 @@
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-engine</artifactId>
 			<version>${junit.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.hamcrest</groupId>
-			<artifactId>hamcrest</artifactId>
-			<version>${hamcrest.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -124,32 +124,6 @@
 
 	<repositories>
 		<repository>
-			<id>oicr-central</id>
-			<name>artifacts.oicr.on.ca-releases</name>
-			<url>https://artifacts.oicr.on.ca/artifactory/reactome</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-		</repository>
-
-		<repository>
-			<id>oicr-snapshots</id>
-			<name>artifacts.oicr.on.ca-snapshots</name>
-			<url>https://artifacts.oicr.on.ca/artifactory/reactome</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-
-		<repository>
-			<id>EBI_m2repo</id>
-			<url>https://www.ebi.ac.uk/~maven/m2repo/</url>
-		</repository>
-
-		<repository>
 			<id>nexus-ebi-repo</id>
 			<name>The EBI internal repository</name>
 			<url>http://www.ebi.ac.uk/Tools/maven/repos/content/groups/ebi-repo/</url>
@@ -172,22 +146,6 @@
 			<snapshots>
 				<enabled>true</enabled>
 			</snapshots>
-		</repository>
-
-		<repository>
-			<name>EBI</name>
-			<url>http://www.ebi.ac.uk/Tools/maven/repos/content/repositories/releases/</url>
-			<id>EBI</id>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-		</repository>
-
-		<!-- EBI repo -->
-		<repository>
-			<id>pst-release</id>
-			<name>EBI Nexus Repository</name>
-			<url>http://www.ebi.ac.uk/Tools/maven/repos/content/repositories/pst-release</url>
 		</repository>
 	</repositories>
 </project>

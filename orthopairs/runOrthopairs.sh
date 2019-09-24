@@ -10,7 +10,7 @@ git pull
 mvn clean compile assembly:single
 
 ## Run Orthopairs file generating script
-echo "java -jar target/orthopairs-1.0.0-jar-with-dependencies.jar"
+echo "java -jar target/orthopairs-1.0.1-jar-with-dependencies.jar"
 java -jar target/orthopairs-1.0.1-jar-with-dependencies.jar
 
 echo "Finished Orthopairs"

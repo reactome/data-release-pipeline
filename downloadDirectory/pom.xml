@@ -47,6 +47,12 @@
 			<artifactId>log4j-core</artifactId>
 			<version>2.11.0</version>
 		</dependency>
+		<!-- release-common-lib must be before biopax dependencies to avoid conflict between libraries -->
+		<dependency>
+			<groupId>org.reactome.release</groupId>
+			<artifactId>release-common-lib</artifactId>
+			<version>1.1.1-SNAPSHOT</version>
+		</dependency>
 		<dependency>
 			<groupId>org.biopax.paxtools</groupId>
 			<artifactId>paxtools-core</artifactId>
@@ -78,11 +84,6 @@
 			<groupId>org.reactome.pathway-exchange</groupId>
 			<artifactId>pathwayExchange</artifactId>
 			<version>1.0.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.reactome.release</groupId>
-			<artifactId>release-common-lib</artifactId>
-			<version>1.1.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>

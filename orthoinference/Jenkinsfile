@@ -4,17 +4,34 @@ pipeline{
     agent any
 	
     stages{
-	    stage('Check if upstream build success'){
+	    stage('Check if upstream builds succeeded'){
 		    steps{
 			    script{
-				    def statusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}Release/job/Orthopairs/lastBuild/api/json"
-					def statusJson = new JsonSlurper().parseText(statusUrl.getContent())
-					if(statusJson['result'] != "SUCCESS"){
-						error("Most recent Orthopairs build status: " + statusJson['result'])
+				    def orthopairsStatusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}Release/job/Orthopairs/lastBuild/api/json"
+					def orthopairsStatusJson = new JsonSlurper().parseText(orthopairsStatusUrl.getContent())
+					if(orthopairsStatusJson['result'] != "SUCCESS"){
+						error("Most recent Orthopairs build status: " + orthopairsStatusJson['result'])
+					}
+					def updateStIdsStatusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}Release/job/UpdateStableIdentifiers/lastBuild/api/json"
+					def updateStIdsStatusJson = new JsonSlurper().parseText(updateStIdsStatusUrl.getContent())
+					if(updateStIdsStatusJson['result'] != "SUCCESS"){
+						error("Most recent UpdateStableIdentifiers build status: " + updateStIdsStatusJson['result'])
 					} 
 			    }
 		    }
 	    }
+		stage('Setup: Backup release_current'){
+			steps{
+				script{
+					dir('orthoinference'){
+						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
+							sh "mysqldump -u$user -p$pass ${env.RELEASE_CURRENT} > ${env.RELEASE_CURRENT}_${env.RELEASE_NUMBER}_before_orthoinference_dois.dump"
+							sh "gzip -f ${env.RELEASE_CURRENT}_${env.RELEASE_NUMBER}_before_orthoinference_dois.dump"
+						}
+					}
+				}
+			}
+		}			
 		stage('Setup: Build jar file'){
 			steps{
 				script{
@@ -178,7 +195,29 @@ pipeline{
 				}
 			}
 		}
-	    
+	    stage('Post: Backup DB'){
+			steps{
+				script{
+					dir('orthoinference'){
+						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
+							sh "mysqldump -u$user -p$pass ${env.RELEASE_CURRENT} > ${env.RELEASE_CURRENT}_${env.RELEASE_NUMBER}_after_orthoinference.dump"
+							sh "gzip -f ${env.RELEASE_CURRENT}_${env.RELEASE_NUMBER}_after_orthoinference.dump"
+						}
+					}
+				}
+			}
+		}
+		stage('Archive logs and backups'){
+			steps{
+				script{
+					dir('orthoinference'){
+						sh "mv --backup=numbered *_${env.RELEASE_NUMBER}_*.dump.gz archive/${env.RELEASE_NUMBER}/"
+						sh "gzip logs/*"
+						sh "mv logs/* archive/${env.RELEASE_NUMBER}/logs/"
+					}
+				}
+			}
+		}
 	}
 }
 

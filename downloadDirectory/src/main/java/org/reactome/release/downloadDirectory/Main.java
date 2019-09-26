@@ -54,7 +54,7 @@ public class Main {
 		String database = props.getProperty("database");
 		String host = props.getProperty("host");
 		int port = Integer.valueOf(props.getProperty("port"));
-		String releaseNumber = props.getProperty("release");
+		String releaseNumber = props.getProperty("releaseNumber");
 		String releaseDirAbsolute = props.getProperty("absoluteReleaseDirectoryPath");
 		String releaseDownloadDir = props.getProperty("releaseDownloadDirectoryPath");
 		String releaseDownloadDirWithNumber = releaseDownloadDir + releaseNumber;

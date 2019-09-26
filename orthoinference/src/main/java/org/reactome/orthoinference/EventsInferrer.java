@@ -59,12 +59,12 @@ public class EventsInferrer
 	{
 		logger.info("Preparing DB Adaptor and setting project variables");
 		// Set up DB adaptor using config.properties file
-		String username = props.getProperty("username");
-		String password = props.getProperty("password");
-		String database = props.getProperty("currentDatabase");
-		String prevDatabase = props.getProperty("previousDatabase");
-		String host = props.getProperty("host");
-		int port = Integer.valueOf(props.getProperty("port"));
+		String username = props.getProperty("release.database.user");
+		String password = props.getProperty("release.database.password");
+		String database = props.getProperty("release_current.name");
+		String prevDatabase = props.getProperty("release_previous.name");
+		String host = props.getProperty("release.database.host");
+		int port = Integer.valueOf(props.getProperty("release.database.port"));
 
 		dbAdaptor = new MySQLAdaptor(host, database, username, password, port);
 		dbAdaptorPrev = new MySQLAdaptor(host, prevDatabase, username, password, port);

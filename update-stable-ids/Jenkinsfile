@@ -7,7 +7,7 @@ pipeline {
 					dir('update-stable-ids'){
 						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
 							sh "mysql -u$user -p$pass -e \'drop database if exists ${env.SLICE_PREVIOUS}; create database ${env.SLICE_PREVIOUS}\'"
-							sh "zcat  test_slice_${env.PREV_RELEASE_NUMBER}_snapshot.dump.gz 2>&1 | mysql -u$user -p$pass -hlocalhost ${env.SLICE_PREVIOUS}"
+							sh "zcat  archive/${env.PREV_RELEASE_NUMBER}/test_slice_${env.PREV_RELEASE_NUMBER}_snapshot.dump.gz 2>&1 | mysql -u$user -p$pass -hlocalhost ${env.SLICE_PREVIOUS}"
 							sh "mysqldump -u$user -p$pass ${env.SLICE_TEST} > test_slice_${env.RELEASE_NUMBER}_snapshot.dump"
 							sh "gzip -f test_slice_${env.RELEASE_NUMBER}_snapshot.dump"
 							sh "mysql -u$user -p$pass -e \'drop database if exists ${env.SLICE_CURRENT}; create database ${env.SLICE_CURRENT}\'"
@@ -80,8 +80,7 @@ pipeline {
 				script{
 					dir('update-stable-ids'){
 						sh "mkdir -p archive/${env.RELEASE_NUMBER}"
-						sh "mv --backup=numbered test_slice_${env.PREV_RELEASE_NUMBER}_snapshot.dump.gz archive/${env.RELEASE_NUMBER}/"
-						sh "mv --backup=numbered *_${env.RELEASE_NUMBER}_*_st_id.dump.gz archive/${env.RELEASE_NUMBER}/"
+						sh "mv --backup=numbered *_${env.RELEASE_NUMBER}_*.dump.gz archive/${env.RELEASE_NUMBER}/"
 						sh "gzip logs/*"
 						sh "mv logs/* archive/${env.RELEASE_NUMBER}"
 					}

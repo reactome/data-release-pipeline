@@ -15,7 +15,7 @@ pipeline {
             steps {
 				script {
                     dir ('downloadDirectory') {
-						sh 'mvn clean package'
+						sh 'mvn clean package -DskipTests'
 						sh 'unzip -o target/downliadDirectory-distr.zip'
                 	}
           		}

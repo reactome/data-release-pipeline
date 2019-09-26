@@ -27,10 +27,17 @@ public class Main {
 
 		logger.info("Beginning Download Directory step");
 		String pathToConfig = "";
+		String pathToStepConfig = "";
 		if (args.length > 0) {
 			pathToConfig = args[0];
+			if (args.length > 1) {
+				pathToStepConfig = args[1];
+			} else {
+				pathToStepConfig = "src/main/resources/stepsToRun.config";
+			}
 		} else {
 			pathToConfig = "src/main/resources/config.properties";
+			pathToStepConfig = "src/main/resources/stepsToRun.config";
 		}
 		Properties props = new Properties();
 		props.load(new FileInputStream(pathToConfig));
@@ -58,10 +65,10 @@ public class Main {
 			releaseDir.mkdir();
 		}
 
-		String pathToSpeciesConfig = props.getProperty("speciesConfigPath");
+		String pathToSpeciesConfig = "src/main/resources/Species.json";
 
 		// Determine which steps will be run via stepsToRun.config file
-		String pathToStepConfig = props.getProperty("stepsToRunConfigPath");
+		
 		Set<String> stepsToRun;
 		
 		try(FileReader fr = new FileReader(pathToStepConfig);

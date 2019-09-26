@@ -32,29 +32,29 @@ public class Main
        //as well as gk_central on the curation server.
        Properties props = new Properties();
        props.load(new FileInputStream(pathToConfig));
-       int port = Integer.valueOf(props.getProperty("port"));
+       int port = Integer.valueOf(props.getProperty("release.database.port"));
        int releaseNumber = Integer.valueOf(props.getProperty("releaseNumber"));
        int prevReleaseNumber = releaseNumber - 1;
        
        logger.info("Creating DB adaptors for test_slice_" + releaseNumber + ", test_slice_" + prevReleaseNumber + "_snapshot and gk_central");
        
-       String sliceUsername = props.getProperty("sliceUsername");
-       String slicePassword = props.getProperty("slicePassword");
-       String sliceHost = props.getProperty("sliceHost");	   
-       String sliceDatabase = props.getProperty("sliceDatabase");
+       String sliceUsername = props.getProperty("release.database.user");
+       String slicePassword = props.getProperty("release.database.password");
+       String sliceHost = props.getProperty("release.database.host");	   
+       String sliceDatabase = props.getProperty("slice_current.name");
        MySQLAdaptor dbaSlice = new MySQLAdaptor(sliceHost, sliceDatabase, sliceUsername, slicePassword, port);
        
-       String prevSliceDatabase = props.getProperty("prevSliceDatabase");
+       String prevSliceDatabase = props.getProperty("slice_previous.name");
        MySQLAdaptor dbaPrevSlice = new MySQLAdaptor(sliceHost, prevSliceDatabase, sliceUsername, slicePassword, port);
        
-       String gkCentralUsername = props.getProperty("gkCentralUsername");
-       String gkCentralPassword = props.getProperty("gkCentralPassword");
-       String gkCentralHost = props.getProperty("gkCentralHost");
-       String gkCentralDatabase = props.getProperty("gkCentralDatabase");
+       String gkCentralUsername = props.getProperty("curator.database.user");
+       String gkCentralPassword = props.getProperty("curator.database.password");
+       String gkCentralHost = props.getProperty("curator.database.host");
+       String gkCentralDatabase = props.getProperty("gk_central.name");
        
        MySQLAdaptor dbaGkCentral = new MySQLAdaptor(gkCentralHost, gkCentralDatabase, gkCentralUsername, gkCentralPassword, port);
        
-       long personId = Long.parseLong(props.getProperty("personInstanceId"));
+       long personId = Long.parseLong(props.getProperty("personId"));
        StableIdentifierUpdater.updateStableIdentifiers(dbaSlice, dbaPrevSlice, dbaGkCentral, personId);
  
 

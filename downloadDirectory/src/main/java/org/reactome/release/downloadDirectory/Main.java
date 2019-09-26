@@ -51,7 +51,7 @@ public class Main {
 		//Set up DB adaptor
 		String username = props.getProperty("username");
 		String password = props.getProperty("password");
-		String database = props.getProperty("database");
+		String database = props.getProperty("currentDatabase");
 		String host = props.getProperty("host");
 		int port = Integer.valueOf(props.getProperty("port"));
 		String releaseNumber = props.getProperty("releaseNumber");

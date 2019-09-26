@@ -1,0 +1,25 @@
+pipeline {
+    agent any
+
+    stages {
+		stage('Setup: Install Pathway Exchange artifact'){
+			steps{
+				script{
+					dir('downloadDirectory'){
+						sh './build_pathway_exchange.sh'
+					}
+				}
+			}
+		}
+        stage('Setup: Build DownloadDirectory archive') {
+            steps {
+				script {
+                    dir ('downloadDirectory') {
+						sh 'mvn clean package'
+						sh 'unzip -o target/downliadDirectory-distr.zip'
+                	}
+          		}
+            }
+        }
+    }
+}

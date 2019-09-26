@@ -84,5 +84,9 @@ pipeline {
 						sh "mv --backup=numbered *_${env.RELEASE_NUMBER}_*_st_id.dump.gz archive/${env.RELEASE_NUMBER}/"
 						sh "gzip logs/*"
 						sh "mv logs/* archive/${env.RELEASE_NUMBER}"
+					}
+				}
+			}
+		}
 	}
 }

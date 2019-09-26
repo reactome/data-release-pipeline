@@ -79,10 +79,10 @@ pipeline {
 			steps{
 				script{
 					dir('update-stable-ids'){
-						sh "mkdir -p archive/${env.RELEASE_NUMBER}"
+						sh "mkdir -p archive/${env.RELEASE_NUMBER}/logs"
 						sh "mv --backup=numbered *_${env.RELEASE_NUMBER}_*.dump.gz archive/${env.RELEASE_NUMBER}/"
 						sh "gzip logs/*"
-						sh "mv logs/* archive/${env.RELEASE_NUMBER}"
+						sh "mv logs/* archive/${env.RELEASE_NUMBER}/logs/"
 					}
 				}
 			}

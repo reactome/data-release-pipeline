@@ -7,11 +7,11 @@ pipeline {
 					dir('update-stable-ids'){
 						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
 							sh "mysql -u$user -p$pass -e \'drop database if exists ${env.SLICE_PREVIOUS}; create database ${env.SLICE_PREVIOUS}\'"
-							sh "zcat  archive/${env.PREV_RELEASE_NUMBER}/test_slice_${env.PREV_RELEASE_NUMBER}_snapshot.dump.gz 2>&1 | mysql -u$user -p$pass -hlocalhost ${env.SLICE_PREVIOUS}"
-							sh "mysqldump -u$user -p$pass ${env.SLICE_TEST} > test_slice_${env.RELEASE_NUMBER}_snapshot.dump"
-							sh "gzip -f test_slice_${env.RELEASE_NUMBER}_snapshot.dump"
+							sh "zcat  archive/${env.PREV_RELEASE_NUMBER}/${env.SLICE_TEST}_${env.PREV_RELEASE_NUMBER}_snapshot.dump.gz 2>&1 | mysql -u$user -p$pass -hlocalhost ${env.SLICE_PREVIOUS}"
+							sh "mysqldump -u$user -p$pass ${env.SLICE_TEST} > ${env.SLICE_TEST}_${env.RELEASE_NUMBER}_snapshot.dump"
+							sh "gzip -f ${env.SLICE_TEST}_${env.RELEASE_NUMBER}_snapshot.dump"
 							sh "mysql -u$user -p$pass -e \'drop database if exists ${env.SLICE_CURRENT}; create database ${env.SLICE_CURRENT}\'"
-							sh "zcat  test_slice_${env.RELEASE_NUMBER}_snapshot.dump.gz 2>&1 | mysql -u$user -p$pass -hlocalhost ${env.SLICE_CURRENT}"
+							sh "zcat  ${env.SLICE_TEST}_${env.RELEASE_NUMBER}_snapshot.dump.gz 2>&1 | mysql -u$user -p$pass -hlocalhost ${env.SLICE_CURRENT}"
 						}
 					}
 				}
@@ -22,8 +22,8 @@ pipeline {
 			    script{
 				    dir('update-stable-ids'){
 					    withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
-						    sh "mysqldump -u$user -p$pass gk_central > gk_central_${env.RELEASE_NUMBER}_before_st_id.dump"
-							sh "gzip -f gk_central_${env.RELEASE_NUMBER}_before_st_id.dump"
+						    sh "mysqldump -u$user -p$pass ${env.GK_CENTRAL} > ${env.GK_CENTRAL}_${env.RELEASE_NUMBER}_before_st_id.dump"
+							sh "gzip -f ${env.GK_CENTRAL}_${env.RELEASE_NUMBER}_before_st_id.dump"
 						}
 					}
 				}
@@ -66,10 +66,10 @@ pipeline {
 				script{
 					dir('update-stable-ids'){
 						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
-							sh "mysqldump -u$user -p$pass ${env.GK_CENTRAL} > gk_central_${env.RELEASE_NUMBER}_after_st_id.dump"
+							sh "mysqldump -u$user -p$pass ${env.GK_CENTRAL} > ${env.GK_CENTRAL}_${env.RELEASE_NUMBER}_after_st_id.dump"
 							sh "gzip -f gk_central_${env.RELEASE_NUMBER}_after_st_id.dump"
-							sh "mysqldump -u$user -p$pass ${env.SLICE_CURRENT} > slice_current_${env.RELEASE_NUMBER}_after_st_id.dump"
-							sh "gzip -f slice_current_${env.RELEASE_NUMBER}_after_st_id.dump"
+							sh "mysqldump -u$user -p$pass ${env.SLICE_CURRENT} > ${env.SLICE_CURRENT}_${env.RELEASE_NUMBER}_after_st_id.dump"
+							sh "gzip -f ${env.SLICE_CURRENT}_${env.RELEASE_NUMBER}_after_st_id.dump"
 						}
 					}
 				}

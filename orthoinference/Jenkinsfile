@@ -15,18 +15,6 @@ pipeline{
 			    }
 		    }
 	    }
-		stage('Setup: Create release_current from slice_current'){
-			steps{
-				script{
-					dir('orthoinference'){
-						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]) {
-							sh "mysql -u$user -p$pass -e \'drop database if exists ${env.RELEASE_CURRENT}; create database ${env.RELEASE_CURRENT}\'"
-							sh "mysqldump --opt -u$user -p$pass -hlocalhost ${env.SLICE_CURRENT} | mysql -u$user -p$pass -hlocalhost ${env.RELEASE_CURRENT}"
-						}
-					}
-				}
-			}
-		}
 		stage('Setup: Build jar file'){
 			steps{
 				script{

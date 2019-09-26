@@ -49,6 +49,18 @@ pipeline {
 				}
 			}
 		}
+		stage('Post: Create release_current from slice_current'){
+			steps{
+				script{
+					dir('update-stable-ids'){
+						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]) {
+							sh "mysql -u$user -p$pass -e \'drop database if exists ${env.RELEASE_CURRENT}; create database ${env.RELEASE_CURRENT}\'"
+							sh "mysqldump --opt -u$user -p$pass -hlocalhost ${env.SLICE_CURRENT} | mysql -u$user -p$pass -hlocalhost ${env.RELEASE_CURRENT}"
+						}
+					}
+				}
+			}
+		}
 		stage('Post: Backup DBs'){
 			steps{
 				script{
@@ -63,17 +75,14 @@ pipeline {
 				}
 			}
 		}
-	    stage('Post: Create release_current from slice_current'){
+		stage('Archive logs and backups'){
 			steps{
 				script{
 					dir('update-stable-ids'){
-						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]) {
-							sh "mysql -u$user -p$pass -e \'drop database if exists ${env.RELEASE_CURRENT}; create database ${env.RELEASE_CURRENT}\'"
-							sh "mysqldump --opt -u$user -p$pass -hlocalhost ${env.SLICE_CURRENT} | mysql -u$user -p$pass -hlocalhost ${env.RELEASE_CURRENT}"
-						}
-					}
-				}
-			}
-		}
+						sh "mkdir -p archive/${env.RELEASE_NUMBER}"
+						sh "mv --backup=numbered test_slice_${env.PREV_RELEASE_NUMBER}_snapshot.dump.gz archive/${env.RELEASE_NUMBER}/"
+						sh "mv --backup=numbered *_${env.RELEASE_NUMBER}_*_st_id.dump.gz archive/${env.RELEASE_NUMBER}/"
+						sh "gzip logs/*"
+						sh "mv logs/* archive/${env.RELEASE_NUMBER}"
 	}
 }

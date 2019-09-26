@@ -11,15 +11,28 @@ pipeline {
 				}
 			}
 		}
-        stage('Setup: Build DownloadDirectory archive') {
-            steps {
-				script {
-                    dir ('downloadDirectory') {
+        stage('Setup: Build DownloadDirectory archive'){
+            steps{
+				script{
+                    dir('downloadDirectory'){
 						sh 'mvn clean package -DskipTests'
 						sh 'unzip -o target/downloadDirectory-distr.zip'
                 	}
           		}
             }
         }
+		stage('Main: Run DownloadDirectory'){
+			steps{
+				script{
+					dir('downloadDirectory'){
+						withCredentials([file(credentialsId: 'Config', variable: 'ConfigFile')]){
+							withCredentials([file(credentialsId: 'stepsToRun', variable: 'StepsToRun')]){
+								sh 'java -Xmx4096m -javaagent:downloadDirectory/lib/spring-instrument-4.2.4.RELEASE.jar -jar downloadDirectory/downloadDirectory.jar $ConfigFile $StepsToRun'
+							}
+						}
+					}
+				}
+			}
+		}
     }
 }

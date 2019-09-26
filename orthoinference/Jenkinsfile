@@ -25,8 +25,8 @@ pipeline{
 				script{
 					dir('orthoinference'){
 						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
-							sh "mysqldump -u$user -p$pass ${env.RELEASE_CURRENT} > ${env.RELEASE_CURRENT}_${env.RELEASE_NUMBER}_before_orthoinference_dois.dump"
-							sh "gzip -f ${env.RELEASE_CURRENT}_${env.RELEASE_NUMBER}_before_orthoinference_dois.dump"
+							sh "mysqldump -u$user -p$pass ${env.RELEASE_CURRENT} > ${env.RELEASE_CURRENT}_${env.RELEASE_NUMBER}_before_orthoinference.dump"
+							sh "gzip -f ${env.RELEASE_CURRENT}_${env.RELEASE_NUMBER}_before_orthoinference.dump"
 						}
 					}
 				}

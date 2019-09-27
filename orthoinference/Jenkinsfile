@@ -46,7 +46,7 @@ pipeline{
 				script{
 					dir('orthoinference'){
 						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE mmus"
+							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE mmus"
 						}
 					}
 				}
@@ -57,7 +57,7 @@ pipeline{
 				script{
 					dir('orthoinference'){
 						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE rnor"
+							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE rnor"
 						}
 					}
 				}
@@ -68,7 +68,7 @@ pipeline{
 				script{
 					dir('orthoinference'){
 						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE cfam"
+							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE cfam"
 						}
 					}
 				}
@@ -79,7 +79,7 @@ pipeline{
 				script{
 					dir('orthoinference'){
 						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE btau"
+							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE btau"
 						}
 					}
 				}
@@ -90,7 +90,7 @@ pipeline{
 				script{
 					dir('orthoinference'){
 						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE sscr"
+							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE sscr"
 						}
 					}
 				}
@@ -101,7 +101,7 @@ pipeline{
 				script{
 					dir('orthoinference'){
 						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE drer"
+							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE drer"
 						}
 					}
 				}
@@ -112,7 +112,7 @@ pipeline{
 				script{
 					dir('orthoinference'){
 						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE xtro"
+							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE xtro"
 						}
 					}
 				}
@@ -123,7 +123,7 @@ pipeline{
 				script{
 					dir('orthoinference'){
 						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE ggal"
+							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE ggal"
 						}
 					}
 				}
@@ -134,7 +134,7 @@ pipeline{
 				script{
 					dir('orthoinference'){
 						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE dmel"
+							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE dmel"
 						}
 					}
 				}
@@ -145,7 +145,7 @@ pipeline{
 				script{
 					dir('orthoinference'){
 						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE cele"
+							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE cele"
 						}
 					}
 				}
@@ -156,7 +156,7 @@ pipeline{
 				script{
 					dir('orthoinference'){
 						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE ddis"
+							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE ddis"
 						}
 					}
 				}
@@ -167,7 +167,7 @@ pipeline{
 				script{
 					dir('orthoinference'){
 						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE spom"
+							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE spom"
 						}
 					}
 				}
@@ -178,7 +178,7 @@ pipeline{
 				script{
 					dir('orthoinference'){
 						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE scer"
+							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE scer"
 						}
 					}
 				}
@@ -189,7 +189,7 @@ pipeline{
 				script{
 					dir('orthoinference'){
 						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE pfal"
+							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-0.0.2-SNAPSHOT-jar-with-dependencies.jar $FILE pfal"
 						}
 					}
 				}
@@ -215,6 +215,9 @@ pipeline{
 						sh "mv --backup=numbered *_${env.RELEASE_NUMBER}_*.dump.gz archive/${env.RELEASE_NUMBER}/"
 						sh "gzip logs/*"
 						sh "mv logs/* archive/${env.RELEASE_NUMBER}/logs/"
+						sh "mkdir -p ${env.RELEASE_NUMBER}"
+						sh "gzip -f *.txt"
+						sh "mv *.txt.gz ${env.RELEASE_NUMBER}/"
 					}
 				}
 			}

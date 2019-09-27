@@ -211,6 +211,7 @@ pipeline{
 			steps{
 				script{
 					dir('orthoinference'){
+						sh "mkdir -p archive/${env.RELEASE_NUMBER}/logs"
 						sh "mv --backup=numbered *_${env.RELEASE_NUMBER}_*.dump.gz archive/${env.RELEASE_NUMBER}/"
 						sh "gzip logs/*"
 						sh "mv logs/* archive/${env.RELEASE_NUMBER}/logs/"

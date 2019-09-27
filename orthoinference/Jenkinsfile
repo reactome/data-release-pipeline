@@ -7,11 +7,11 @@ pipeline{
 	    stage('Check if upstream builds succeeded'){
 		    steps{
 			    script{
-				    /*def orthopairsStatusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}Release/job/Orthopairs/lastBuild/api/json"
+				    	def orthopairsStatusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}Release/job/Orthopairs/lastBuild/api/json"
 					def orthopairsStatusJson = new JsonSlurper().parseText(orthopairsStatusUrl.getContent())
 					if(orthopairsStatusJson['result'] != "SUCCESS"){
 						error("Most recent Orthopairs build status: " + orthopairsStatusJson['result'])
-					}*/
+					}
 					
 					def updateStIdsStatusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}Release/job/UpdateStableIdentifiers/lastBuild/api/json"
 					def updateStIdsStatusJson = new JsonSlurper().parseText(updateStIdsStatusUrl.getContent())

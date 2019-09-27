@@ -49,11 +49,11 @@ public class Main {
 		//TODO: Refactor to Command Pattern for execute calls
 
 		//Set up DB adaptor
-		String username = props.getProperty("username");
-		String password = props.getProperty("password");
-		String database = props.getProperty("currentDatabase");
-		String host = props.getProperty("host");
-		int port = Integer.valueOf(props.getProperty("port"));
+		String username = props.getProperty("release.database.user");
+		String password = props.getProperty("release.database.password");
+		String database = props.getProperty("release_current.name");
+		String host = props.getProperty("release.database.host");
+		int port = Integer.valueOf(props.getProperty("release.database.port"));
 		String releaseNumber = props.getProperty("releaseNumber");
 		String releaseDirAbsolute = props.getProperty("absoluteReleaseDirectoryPath");
 		String releaseDownloadDir = props.getProperty("releaseDownloadDirectoryPath");

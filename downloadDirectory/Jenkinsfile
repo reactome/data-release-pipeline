@@ -34,5 +34,17 @@ pipeline {
 				}
 			}
 		}
+		stage('Post: Archive logs and validation files'){
+			steps{
+				script{
+					dir('downloadDirectory'){
+						sh "mkdir -p archive/${env.RELEASE_NUMBER}/logs"
+						sh "mv --backup=numbered biopax*validator.zip archive/${env.RELEASE_NUMBER}/"
+						sh "gzip logs/*"
+						sh "mv logs/* archive/${env.RELEASE_NUMBER}/logs/"
+					}
+				}
+			}
+		}					
     }
 }

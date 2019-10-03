@@ -1,6 +1,20 @@
+import groovy.json.JsonSlurper
+
 pipeline {
   agent any
     stages {
+		
+		stage('Check upstream builds succeeded'){
+			steps{
+				script{
+					def configStatusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}/job/${env.RELEASE_NUMBER}/job/ConfirmReleaseConfigs/lastBuild/api/json"
+					def configStatusJson = new JsonSlurper().parseText(configStatusUrl.getContent())
+					if(configStatusJson['result'] != "SUCCESS"){
+						error("Most recent ConfirmReleaseConfigs build status: " + configStatusJson['result'] + ". Please complete a successful build.")
+					}
+			    }	
+		    }
+	    }
 		stage('Setup: Rotate slice DBs'){
 			steps{
 				script{
@@ -22,7 +36,7 @@ pipeline {
 			    script{
 				    dir('update-stable-ids'){
 					    withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
-						    sh "mysqldump -u$user -p$pass ${env.GK_CENTRAL} > ${env.GK_CENTRAL}_${env.RELEASE_NUMBER}_before_st_id.dump"
+							sh "mysqldump -u$user -p$pass -h${env.CURATOR_SERVER} ${env.GK_CENTRAL} > ${env.GK_CENTRAL}_${env.RELEASE_NUMBER}_before_st_id.dump"
 							sh "gzip -f ${env.GK_CENTRAL}_${env.RELEASE_NUMBER}_before_st_id.dump"
 						}
 					}
@@ -66,7 +80,7 @@ pipeline {
 				script{
 					dir('update-stable-ids'){
 						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
-							sh "mysqldump -u$user -p$pass ${env.GK_CENTRAL} > ${env.GK_CENTRAL}_${env.RELEASE_NUMBER}_after_st_id.dump"
+							sh "mysqldump -u$user -p$pass -h${env.CURATOR_SERVER} ${env.GK_CENTRAL} > ${env.GK_CENTRAL}_${env.RELEASE_NUMBER}_after_st_id.dump"
 							sh "gzip -f gk_central_${env.RELEASE_NUMBER}_after_st_id.dump"
 							sh "mysqldump -u$user -p$pass ${env.SLICE_CURRENT} > ${env.SLICE_CURRENT}_${env.RELEASE_NUMBER}_after_st_id.dump"
 							sh "gzip -f ${env.SLICE_CURRENT}_${env.RELEASE_NUMBER}_after_st_id.dump"

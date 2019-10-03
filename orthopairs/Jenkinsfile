@@ -7,7 +7,7 @@ pipeline {
 		stage('Check upstream builds succeeded'){
 		    steps{
 			    script{
-				    def configStatusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}/job/${env.RELEASE_NUMBER}/ConfirmReleaseConfigs/lastBuild/api/json"
+				    def configStatusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}/job/${env.RELEASE_NUMBER}/job/ConfirmReleaseConfigs/lastBuild/api/json"
 					def configStatusJson = new JsonSlurper().parseText(configStatusUrl.getContent())
 					if(configStatusJson['result'] != "SUCCESS"){
 						error("Most recent ConfirmReleaseConfigs build status: " + configStatusJson['result'] + ". Please complete a successful build.")

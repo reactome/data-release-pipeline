@@ -5,15 +5,22 @@ pipeline{
 		stage('User input required'){
 			steps{
 				script{
-          			def userInput = input(
+          				def userInput = input(
           				id: 'userInput', message: "Has the Config file credentials been updated for this release?",
           				parameters: [
                       				[$class: 'TextParameterDefinition', defaultValue: '', description: '', name: 'response']
                       			])
 					
-          			if (!userInput.toLowerCase().startsWith("y")) {
-						error("Please fill out/update the config file for this release and upload it in Jenkins as a secret file. Please have the credential scoped to this folder")
+          				if (!userInput.toLowerCase().startsWith("y")) {
+						error("Please update the config file for this release and upload it in Jenkins as a secret file credential. Please have the credential scoped to this folder.")
 					}
+				}
+				script{
+				        def userReleaseNumber = input(
+          				id: 'userInput', message: "Enter release version number.",
+          				parameters: [
+                      				[$class: 'TextParameterDefinition', defaultValue: '', description: '', name: 'response']
+                      			])
 				}
 			}
 		}

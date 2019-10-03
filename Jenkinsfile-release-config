@@ -34,7 +34,7 @@ pipeline{
 										[$class: 'TextParameterDefinition', defaultValue: '', description: '', name: 'response']
 									])
 						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "confirmJenkinsConfigurations.sh $FILE ${env.RELEASE_NUMBER} ${env.PREV_RELEASE_NUMBER} userReleaseNumber"
+							sh "confirmJenkinsConfigurations.sh $FILE ${env.RELEASE_NUMBER} ${env.PREV_RELEASE_NUMBER} $userReleaseNumber"
 						}
 					}
 				}

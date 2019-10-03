@@ -1,27 +1,27 @@
 import groovy.json.JsonSlurper
 
 pipeline{
-    agent any
+	agent any
 	
-    stages{
-	    stage('Check if upstream builds succeeded'){
-		    steps{
-			    script{
-				    def orthopairsStatusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}Release/job/Orthopairs/lastBuild/api/json"
+	stages{
+		stage('Check if upstream builds succeeded'){
+			steps{
+				script{
+					def orthopairsStatusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}/job/${env.RELEASE_NUMBER}/job/Orthopairs/lastBuild/api/json"
 					def orthopairsStatusJson = new JsonSlurper().parseText(orthopairsStatusUrl.getContent())
 					if(orthopairsStatusJson['result'] != "SUCCESS"){
 						error("Most recent Orthopairs build status: " + orthopairsStatusJson['result'])
 					}
-			    }
+			    	}
 				script{
-					def updateStIdsStatusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}Release/job/UpdateStableIdentifiers/lastBuild/api/json"
+					def updateStIdsStatusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}/job/${env.RELEASE_NUMBER}/job/UpdateStableIdentifiers/lastBuild/api/json"
 					def updateStIdsStatusJson = new JsonSlurper().parseText(updateStIdsStatusUrl.getContent())
 					if(updateStIdsStatusJson['result'] != "SUCCESS"){
 						error("Most recent UpdateStableIdentifiers build status: " + updateStIdsStatusJson['result'])
 					}
 				}	
-		    }
-	    }
+		    	}
+	    	}
 		stage('Setup: Backup release_current'){
 			steps{
 				script{
@@ -197,7 +197,7 @@ pipeline{
 				}
 			}
 		}
-	    stage('Post: Backup DB'){
+	    	stage('Post: Backup DB'){
 			steps{
 				script{
 					dir('orthoinference'){

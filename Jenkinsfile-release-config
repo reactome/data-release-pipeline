@@ -16,7 +16,7 @@ pipeline{
 					}
 				}
 				script{
-				        def userReleaseNumber = input(
+				       	env.RELEASE_NUMBER = input(
           				id: 'userInput', message: "Enter release version number.",
           				parameters: [
                       				[$class: 'TextParameterDefinition', defaultValue: '', description: '', name: 'response']

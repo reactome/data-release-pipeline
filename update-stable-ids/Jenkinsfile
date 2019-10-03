@@ -21,11 +21,11 @@ pipeline {
 					dir('update-stable-ids'){
 						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
 							sh "mysql -u$user -p$pass -e \'drop database if exists ${env.SLICE_PREVIOUS}; create database ${env.SLICE_PREVIOUS}\'"
-							sh "zcat  archive/${env.PREV_RELEASE_NUMBER}/${env.SLICE_TEST}_${env.PREV_RELEASE_NUMBER}_snapshot.dump.gz 2>&1 | mysql -u$user -p$pass -hlocalhost ${env.SLICE_PREVIOUS}"
+							sh "zcat  archive/${env.PREV_RELEASE_NUMBER}/${env.SLICE_TEST}_${env.PREV_RELEASE_NUMBER}_snapshot.dump.gz 2>&1 | mysql -u$user -p$pass ${env.SLICE_PREVIOUS}"
 							sh "mysqldump -u$user -p$pass ${env.SLICE_TEST} > ${env.SLICE_TEST}_${env.RELEASE_NUMBER}_snapshot.dump"
 							sh "gzip -f ${env.SLICE_TEST}_${env.RELEASE_NUMBER}_snapshot.dump"
 							sh "mysql -u$user -p$pass -e \'drop database if exists ${env.SLICE_CURRENT}; create database ${env.SLICE_CURRENT}\'"
-							sh "zcat  ${env.SLICE_TEST}_${env.RELEASE_NUMBER}_snapshot.dump.gz 2>&1 | mysql -u$user -p$pass -hlocalhost ${env.SLICE_CURRENT}"
+							sh "zcat  ${env.SLICE_TEST}_${env.RELEASE_NUMBER}_snapshot.dump.gz 2>&1 | mysql -u$user -p$pass ${env.SLICE_CURRENT}"
 						}
 					}
 				}
@@ -69,7 +69,7 @@ pipeline {
 					dir('update-stable-ids'){
 						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]) {
 							sh "mysql -u$user -p$pass -e \'drop database if exists ${env.RELEASE_CURRENT}; create database ${env.RELEASE_CURRENT}\'"
-							sh "mysqldump --opt -u$user -p$pass -hlocalhost ${env.SLICE_CURRENT} | mysql -u$user -p$pass -hlocalhost ${env.RELEASE_CURRENT}"
+							sh "mysqldump --opt -u$user -p$pass ${env.SLICE_CURRENT} | mysql -u$user -p$pass ${env.RELEASE_CURRENT}"
 						}
 					}
 				}

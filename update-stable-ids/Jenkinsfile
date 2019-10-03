@@ -1,9 +1,9 @@
 import groovy.json.JsonSlurper
 
 pipeline {
-  agent any
-    stages {
-		
+	agent any
+	
+	stages {
 		stage('Check upstream builds succeeded'){
 			steps{
 				script{
@@ -12,9 +12,9 @@ pipeline {
 					if(configStatusJson['result'] != "SUCCESS"){
 						error("Most recent ConfirmReleaseConfigs build status: " + configStatusJson['result'] + ". Please complete a successful build.")
 					}
-			    }	
-		    }
-	    }
+				}	
+			}
+		}
 		stage('Setup: Rotate slice DBs'){
 			steps{
 				script{
@@ -31,11 +31,11 @@ pipeline {
 				}
 			}
 		}
-	    stage('Setup: Back up gk_central'){
-		    steps{
-			    script{
-				    dir('update-stable-ids'){
-					    withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
+		stage('Setup: Back up gk_central'){
+			steps{
+				script{
+					dir('update-stable-ids'){
+						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
 							sh "mysqldump -u$user -p$pass -h${env.CURATOR_SERVER} ${env.GK_CENTRAL} > ${env.GK_CENTRAL}_${env.RELEASE_NUMBER}_before_st_id.dump"
 							sh "gzip -f ${env.GK_CENTRAL}_${env.RELEASE_NUMBER}_before_st_id.dump"
 						}

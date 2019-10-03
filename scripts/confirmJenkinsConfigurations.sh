@@ -22,7 +22,7 @@ done < $configFile
 
 if [[ $userInputReleaseNumber != $environmentalReleaseNumber ]] ; then #|| [[ $userInputReleaseNumber != $configFileReleaseNumber ]]; then
   echo "User input release number ($userInputReleaseNumber) does not match Jenkins environmental release number ($environmentalReleaseNumber)."
-  exit 1
+  exit 2
 fi
 
 if  [[ $userInputReleaseNumber != $configFileReleaseNumber ]]; then

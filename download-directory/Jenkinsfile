@@ -20,7 +20,7 @@ pipeline {
 			steps{
 				script{
 					dir('download-directory'){
-						sh './build_pathway_exchange.sh'
+						sh "./build_pathway_exchange.sh"
 					}
 				}
 			}
@@ -29,9 +29,9 @@ pipeline {
             		steps{
 				script{
                     			dir('download-directory'){
-						sh 'mvn clean package -DskipTests'
-			    			sh 'rm -rf downloadDirectory'
-						sh 'unzip -o target/downloadDirectory-distr.zip'
+						sh "mvn clean package -DskipTests"
+			    			sh "rm -rf downloadDirectory"
+						sh "unzip -o target/downloadDirectory-distr.zip"
                 			}
           			}
             		}

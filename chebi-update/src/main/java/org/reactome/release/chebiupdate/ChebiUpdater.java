@@ -387,7 +387,7 @@ public class ChebiUpdater
 							GKInstance creator = ChebiUpdater.getCreator(referrer);
 
 							@SuppressWarnings("unchecked")
-							String message = referrer.getDBID()+"\t"+(creator != null ? creator.toString() : "AUTHOR UNKNOWN")+"\t"+referrer.toString()+"\t"+chebiName+"\t"+((List<String>)referrer.getAttributeValuesList(ReactomeJavaConstants.name)).toString();
+							String message = referrer.getDBID() + "\t" + cleanCreatorName(creator) + "\t"+referrer.toString() + "\t" + chebiName + "\t" + ((List<String>)referrer.getAttributeValuesList(ReactomeJavaConstants.name)).toString();
 							// Add the message to the map of messages, keyed by the creator.
 							if (this.referenceEntityChanges.containsKey(creator))
 							{
@@ -528,7 +528,7 @@ public class ChebiUpdater
 		}
 	}
 
-	private String cleanCreatorName(GKInstance creator)
+	private static String cleanCreatorName(GKInstance creator)
 	{
 		return creator != null ? creator.toString() : "AUTHOR UNKNOWN";
 	}

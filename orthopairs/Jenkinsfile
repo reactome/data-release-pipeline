@@ -20,7 +20,7 @@ pipeline{
 				script {
                     			dir ('orthopairs') {
 						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]) {
-                  	    				sh 'mvn clean compile assembly:single'
+                  	    				sh "mvn clean compile assembly:single"
 						}
                     			}
           			}

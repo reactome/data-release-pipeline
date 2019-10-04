@@ -48,7 +48,7 @@ public class ChebiUpdater
 	private long personID;
 	private boolean useCache;
 	private Comparator<GKInstance> personComparator;
-	
+
 	/**
 	 * Create a ChebiUpdater
 	 * @param adaptor - The database adaptor
@@ -63,7 +63,7 @@ public class ChebiUpdater
 		this.personID = personID;
 		this.useCache = useCache;
 
-		// A Comparator object that will compare GKInstances, assuming that they are of the "Person" type, with a surname and firstname.		
+		// A Comparator object that will compare GKInstances, assuming that they are of the "Person" type, with a surname and firstname.
 		this.personComparator = new Comparator<GKInstance>()
 		{
 			@Override
@@ -104,7 +104,7 @@ public class ChebiUpdater
 	 * <li>Update the identifiers of ReferenceMolecules</li>
 	 * <li>Update the formulae of ReferenceMolecules</li>
 	 * </ul>
-	 * 
+	 *
 	 * @throws SQLException
 	 * @throws Exception
 	 */
@@ -117,7 +117,7 @@ public class ChebiUpdater
 		{
 			throw new RuntimeException("No ReferenceDatabase instance could be found for the name \"ChEBI\"! This program REQUIRES a ReferenceDatabase object with the name \"ChEBI\". Exiting now.");
 		}
-		
+
 		@SuppressWarnings("unchecked")
 		Collection<GKInstance> refMolecules = (Collection<GKInstance>) adaptor.fetchInstanceByAttribute("ReferenceMolecule", "referenceDatabase", "=", chebiRefDBID);
 
@@ -139,16 +139,16 @@ public class ChebiUpdater
 		for (GKInstance molecule : failedEntitiesMap.keySet())
 		{
 			GKInstance creator = ChebiUpdater.getCreator(molecule);
-			failedChebiLookupsLog.info("{}\t{}\t{}\t{}", molecule.getDBID(), creator.toString(), molecule.toString(), failedEntitiesMap.get(molecule));
+			failedChebiLookupsLog.info("{}\t{}\t{}\t{}", molecule.getDBID(), creator != null ? creator.toString() : "AUTHOR UNKNOWN", molecule.toString(), failedEntitiesMap.get(molecule));
 		}
-		
+
 		// print headers for log files
 		refMolIdentChangeLog.info("# DB_ID\tCreator\tReference Molecule\tDeprecated Identifier\tReplacement Identifier\tAffected referenceEntity DB_IDs\tDB_ID of Molecule with Replacement Identifier\tDB_IDs of referenceEntities of Molecule with Replacement Identifier");
 		refMolNameChangeLog.info("# DB_ID\tCreator\tReference Molecule\tOld Name\tNew Name");
 		// Begin the transaction (all database-write activities in this process should take place within a single transaction).
 		adaptor.startTransaction();
 		GKInstance instanceEdit = InstanceEditUtils.createInstanceEdit(this.adaptor, this.personID, this.getClass().getCanonicalName());
-		// Process the results that we got back from querying the ChEBI web service. Each key in the map is the DB ID of a molecule 
+		// Process the results that we got back from querying the ChEBI web service. Each key in the map is the DB ID of a molecule
 		// whose ChEBI Identifier was sent as a query to the ChEBI web service.
 		for (Long moleculeDBID : entityMap.keySet())
 		{
@@ -157,11 +157,11 @@ public class ChebiUpdater
 
 			// Not sure why the old Perl code stripped
 			// out "CHEBI:", but I'll do it here for consistency.
-			String chebiID = entity.getChebiId().replaceAll("CHEBI:", ""); 
+			String chebiID = entity.getChebiId().replaceAll("CHEBI:", "");
 
 			String chebiName = entity.getChebiAsciiName();
 			List<DataItem> chebiFormulae = entity.getFormulae();
-			
+
 			reportIfMoleculeIdentifierChanged(molecule, chebiID);
 			boolean nameUpdated = updateMoleculeName(molecule, chebiName);
 			boolean formulaUpdated = updateMoleculeFormula(molecule, chebiFormulae);
@@ -187,12 +187,12 @@ public class ChebiUpdater
 		{
 			adaptor.rollback();
 		}
-		
+
 		logger.info("*** Formula-fill changes ***");
 		logger.info(this.formulaFillSB.toString());
 		logger.info("*** Formula update changes ***");
 		logger.info(this.formulaUpdateSB.toString());
-		
+
 		reportReferenceEntityChanges();
 	}
 
@@ -214,7 +214,7 @@ public class ChebiUpdater
 
 	/**
 	 * Update a molecule's formula. Should always update (set to the ChEBI formula) if the current formula and the formula from ChEBI differ.
-	 * 
+	 *
 	 * @param molecule
 	 * @param chebiFormulae
 	 * @return true if the formula was updated, or if the field was populated (i.e. was NULL before). False, otherwise.
@@ -270,7 +270,7 @@ public class ChebiUpdater
 
 	/**
 	 * Updates a molecule's name.
-	 * 
+	 *
 	 * @param molecule
 	 * @param chebiName
 	 * @return True if the name was updated. False if not.
@@ -285,7 +285,7 @@ public class ChebiUpdater
 		{
 			molecule.setAttributeValue(ReactomeJavaConstants.name, chebiName);
 			GKInstance creator = ChebiUpdater.getCreator(molecule);
-			refMolNameChangeLog.info("{}\t{}\t{}\t{}\t{}", molecule.getDBID(), creator.toString(), molecule.toString() , moleculeName, chebiName);
+			refMolNameChangeLog.info("{}\t{}\t{}\t{}\t{}", molecule.getDBID(), creator != null ? creator.toString() : "AUTHOR UNKNOWN", molecule.toString() , moleculeName, chebiName);
 			adaptor.updateInstanceAttribute(molecule, ReactomeJavaConstants.name);
 			return true;
 		}
@@ -294,7 +294,7 @@ public class ChebiUpdater
 
 	/**
 	 * Writes report lines if a molecule's Identifier has changed, according to ChEBI.
-	 * 
+	 *
 	 * @param molecule
 	 * @param newChebiID
 	 * @return True if the identifier was updated, false otherwise.
@@ -323,7 +323,7 @@ public class ChebiUpdater
 				{
 					String newIdentifierReferrersString = referrerIDJoiner(refMol);
 					GKInstance creator = ChebiUpdater.getCreator(molecule);
-					refMolIdentChangeLog.info("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}", molecule.getDBID(), creator.toString(), molecule.toString(), oldMoleculeIdentifier, newChebiID, refMol.getDBID(), oldIdentifierReferrersString, newIdentifierReferrersString);
+					refMolIdentChangeLog.info("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}", molecule.getDBID(), creator != null ? creator.toString() : "AUTHOR UNKNOWN", molecule.toString(), oldMoleculeIdentifier, newChebiID, refMol.getDBID(), oldIdentifierReferrersString, newIdentifierReferrersString);
 				}
 			}
 			else // the report line will have and Empty String for the DB_ID of the existing molecule and referrers to that molecule.
@@ -334,7 +334,7 @@ public class ChebiUpdater
 		}
 	}
 
-	
+
 	/**
 	 * Returns the DB_IDs of the referrers of a ReferenceMolecule, all joined by "|".
 	 * @param molecule
@@ -387,7 +387,7 @@ public class ChebiUpdater
 							GKInstance creator = ChebiUpdater.getCreator(referrer);
 
 							@SuppressWarnings("unchecked")
-							String message = referrer.getDBID()+"\t"+creator.toString()+"\t"+referrer.toString()+"\t"+chebiName+"\t"+((List<String>)referrer.getAttributeValuesList(ReactomeJavaConstants.name)).toString();
+							String message = referrer.getDBID()+"\t"+(creator != null ? creator.toString() : "AUTHOR UNKNOWN")+"\t"+referrer.toString()+"\t"+chebiName+"\t"+((List<String>)referrer.getAttributeValuesList(ReactomeJavaConstants.name)).toString();
 							// Add the message to the map of messages, keyed by the creator.
 							if (this.referenceEntityChanges.containsKey(creator))
 							{
@@ -395,7 +395,7 @@ public class ChebiUpdater
 							}
 							else
 							{
-								this.referenceEntityChanges.put(creator, new ArrayList<String>(Arrays.asList(message)));
+								this.referenceEntityChanges.put(creator, new ArrayList<>(Arrays.asList(message)));
 							}
 						}
 						else
@@ -416,12 +416,18 @@ public class ChebiUpdater
 	 * Gets the Creator of some instance.
 	 * @param inst - the Instance to get the creator of.
 	 * @return A GKInstance. It is the value in the "author" attribute (most likely, it will be a Person object) of the InstanceEdit that is associated with "created" attribute of <code>inst</code>.
+	 * If the instance does not have a "created" attribute, then NULL will be returned.
 	 * @throws InvalidAttributeException
 	 * @throws Exception
 	 */
 	private static GKInstance getCreator(GKInstance inst) throws InvalidAttributeException, Exception
 	{
 		GKInstance createdInstanceEdit = (GKInstance) inst.getAttributeValue(ReactomeJavaConstants.created);
+		if (createdInstanceEdit == null)
+		{
+			logger.error("Instance {} does not have a value for \"created\" attribute!", inst.toString());
+			return null;
+		}
 		GKInstance creator = (GKInstance) createdInstanceEdit.getAttributeValue(ReactomeJavaConstants.author);
 		return creator;
 	}
@@ -448,7 +454,7 @@ public class ChebiUpdater
 	 * results. A duplicate ChEBI ReferenceMolecule is defined as a
 	 * ReferenceMolecule with the same ChEBI Identifier as a different
 	 * ReferenceMolecule. No two ReferenceMolecules should share a ChEBI Identifier.
-	 * 
+	 *
 	 * @throws SQLException
 	 * @throws Exception
 	 */
@@ -468,7 +474,7 @@ public class ChebiUpdater
 		{
 			// write the header for the Duplicates report.
 			duplicatesLog.info("# DB_ID\tCreator\tDuplicated Identifier\tReferenceMolecule");
-	
+
 			// Should only be one, but API returns collection.
 			@SuppressWarnings("unchecked")
 			Collection<GKInstance> chebiDBInsts = (Collection<GKInstance>)adaptor.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceDatabase, ReactomeJavaConstants.name, "=", "ChEBI");
@@ -479,7 +485,7 @@ public class ChebiUpdater
 			{
 				throw new RuntimeException("No ReferenceDatabase instance could be found for the name \"ChEBI\"! This program REQUIRES a ReferenceDatabase object with the name \"ChEBI\". Exiting now.");
 			}
-			
+
 			// Create an AQR to query for ReferenceMolecules associated with the ChEBI ReferenceDatabase
 			AttributeQueryRequest chebiAQR = adaptor.new AttributeQueryRequest(ReactomeJavaConstants.ReferenceMolecule, ReactomeJavaConstants.referenceDatabase, "=", chebiDBInst);
 			// for each duplicate that was found...
@@ -495,20 +501,20 @@ public class ChebiUpdater
 				// with a NULL identifier, this logic should catch them in the report. NULL
 				// identifiers were observed in the initial runs of this application.
 				String operator = identifier == null ? "IS NULL" : "=";
-				
+
 				// Create an AQR for ReferenceMolecules with an identifier (that is based on the current loop).
 				AttributeQueryRequest identifierAQR = adaptor.new AttributeQueryRequest(ReactomeJavaConstants.ReferenceMolecule, ReactomeJavaConstants.identifier, operator, identifier);
-				
+
 				// Query using two AQRs: One for making sure the object is associated with the ChEBI ReferenceDatabase, the other for checking that
 				// the identifier matches the one from the duplicate OR that the identifier is null.
 				@SuppressWarnings("unchecked")
 				Collection<GKInstance> dupesOfIdentifier = (Collection<GKInstance>) adaptor._fetchInstance(Arrays.asList(chebiAQR, identifierAQR));
-				
+
 				// Log information about the duplicate instances for the identifier.
 				for (GKInstance duplicate : dupesOfIdentifier)
 				{
 					GKInstance creator = ChebiUpdater.getCreator(duplicate);
-					duplicatesLog.info("{}\t{}\t{}\t{}", duplicate.getDBID(), creator.toString(), identifier, duplicate.toString());
+					duplicatesLog.info("{}\t{}\t{}\t{}", duplicate.getDBID(), creator != null ? creator.toString() : "AUTHOR UNKNOWN", identifier, duplicate.toString());
 				}
 			}
 		}

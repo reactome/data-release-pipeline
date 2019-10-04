@@ -57,7 +57,7 @@ pipeline {
 				script{
 					dir('update-stable-ids'){
 						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/updateStableIds-0.0.1-SNAPSHOT-jar-with-dependencies.jar $FILE"
+							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/updateStableIds-${env.UPDATE_STABLE_IDS_VERSION}-jar-with-dependencies.jar $FILE"
 						}
 					}
 				}

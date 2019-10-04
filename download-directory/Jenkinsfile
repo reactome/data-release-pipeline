@@ -1,7 +1,21 @@
-pipeline {
-    agent any
+import groovy.json.JsonSlurper
 
-    stages {
+pipeline {
+    	agent any
+
+	stages {
+		stage('Check upstream builds succeeded'){
+			steps{
+				script{
+					def addLinksInsertionStatusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}/job/${env.RELEASE_NUMBER}/job/AddLinks-Insertion/lastBuild/api/json"
+					def addLinksInsertionJson = new JsonSlurper().parseText(addLinksInsertionUrl.getContent())
+					if(addLinksInsertionJson['result'] != "SUCCESS"){
+						error("Most recent AddLinks-Insertion build status: " + addLinksInsertionJson['result'] + ". Please complete a successful build.")
+					}
+			    	}
+			}
+		}
+	    
 		stage('Setup: Install Pathway Exchange artifact'){
 			steps{
 				script{
@@ -11,17 +25,17 @@ pipeline {
 				}
 			}
 		}
-        stage('Setup: Build DownloadDirectory archive'){
-            steps{
+        	stage('Setup: Build DownloadDirectory archive'){
+            		steps{
 				script{
-                    dir('download-directory'){
+                    			dir('download-directory'){
 						sh 'mvn clean package -DskipTests'
-			    		sh 'rm -rf downloadDirectory'
+			    			sh 'rm -rf downloadDirectory'
 						sh 'unzip -o target/downloadDirectory-distr.zip'
-                	}
-          		}
-            }
-        }
+                			}
+          			}
+            		}
+        	}
 		stage('Main: Run DownloadDirectory'){
 			steps{
 				script{
@@ -47,5 +61,5 @@ pipeline {
 				}
 			}
 		}					
-    }
+    	}
 }

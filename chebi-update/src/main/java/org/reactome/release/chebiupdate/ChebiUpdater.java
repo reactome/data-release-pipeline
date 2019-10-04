@@ -139,7 +139,7 @@ public class ChebiUpdater
 		for (GKInstance molecule : failedEntitiesMap.keySet())
 		{
 			GKInstance creator = ChebiUpdater.getCreator(molecule);
-			failedChebiLookupsLog.info("{}\t{}\t{}\t{}", molecule.getDBID(), creator != null ? creator.toString() : "AUTHOR UNKNOWN", molecule.toString(), failedEntitiesMap.get(molecule));
+			failedChebiLookupsLog.info("{}\t{}\t{}\t{}", molecule.getDBID(), cleanCreatorName(creator), molecule.toString(), failedEntitiesMap.get(molecule));
 		}
 
 		// print headers for log files
@@ -285,7 +285,7 @@ public class ChebiUpdater
 		{
 			molecule.setAttributeValue(ReactomeJavaConstants.name, chebiName);
 			GKInstance creator = ChebiUpdater.getCreator(molecule);
-			refMolNameChangeLog.info("{}\t{}\t{}\t{}\t{}", molecule.getDBID(), creator != null ? creator.toString() : "AUTHOR UNKNOWN", molecule.toString() , moleculeName, chebiName);
+			refMolNameChangeLog.info("{}\t{}\t{}\t{}\t{}", molecule.getDBID(), cleanCreatorName(creator), molecule.toString() , moleculeName, chebiName);
 			adaptor.updateInstanceAttribute(molecule, ReactomeJavaConstants.name);
 			return true;
 		}
@@ -323,7 +323,7 @@ public class ChebiUpdater
 				{
 					String newIdentifierReferrersString = referrerIDJoiner(refMol);
 					GKInstance creator = ChebiUpdater.getCreator(molecule);
-					refMolIdentChangeLog.info("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}", molecule.getDBID(), creator != null ? creator.toString() : "AUTHOR UNKNOWN", molecule.toString(), oldMoleculeIdentifier, newChebiID, refMol.getDBID(), oldIdentifierReferrersString, newIdentifierReferrersString);
+					refMolIdentChangeLog.info("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}", molecule.getDBID(), cleanCreatorName(creator), molecule.toString(), oldMoleculeIdentifier, newChebiID, refMol.getDBID(), oldIdentifierReferrersString, newIdentifierReferrersString);
 				}
 			}
 			else // the report line will have and Empty String for the DB_ID of the existing molecule and referrers to that molecule.
@@ -514,7 +514,7 @@ public class ChebiUpdater
 				for (GKInstance duplicate : dupesOfIdentifier)
 				{
 					GKInstance creator = ChebiUpdater.getCreator(duplicate);
-					duplicatesLog.info("{}\t{}\t{}\t{}", duplicate.getDBID(), creator != null ? creator.toString() : "AUTHOR UNKNOWN", identifier, duplicate.toString());
+					duplicatesLog.info("{}\t{}\t{}\t{}", duplicate.getDBID(), cleanCreatorName(creator), identifier, duplicate.toString());
 				}
 			}
 		}
@@ -526,5 +526,10 @@ public class ChebiUpdater
 		{
 			logger.info("No duplicate ChEBI ReferenceMolecules detected.");
 		}
+	}
+
+	private String cleanCreatorName(GKInstance creator)
+	{
+		return creator != null ? creator.toString() : "AUTHOR UNKNOWN";
 	}
 }

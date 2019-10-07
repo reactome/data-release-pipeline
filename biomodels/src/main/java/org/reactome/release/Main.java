@@ -23,6 +23,8 @@ import java.util.stream.Collectors;
  *
  */
 public class Main {
+
+    private static Map<String, GKInstance> biomodelsInstances = new HashMap<>();
     private static final Logger logger = LogManager.getLogger();
 
     /**
@@ -98,29 +100,36 @@ public class Main {
 
     private static List<GKInstance> createBiomodelsDatabaseIdentifiers(List<String> biomodelsIds,
                                                               GKInstance instanceEdit, MySQLAdaptor dba) {
+
         List<GKInstance> biomodelsDatabaseIdentifiers = new ArrayList<>();
 
         for (String biomodelsId : biomodelsIds) {
-            logger.info("Creating database identifier for BioModels id " + biomodelsId);
 
-            GKInstance biomodelsDatabaseIdentifier = new GKInstance();
-            biomodelsDatabaseIdentifier.setDbAdaptor(dba);
-            SchemaClass databaseIdentifierSchemaClass =
-                dba.getSchema().getClassByName(ReactomeJavaConstants.DatabaseIdentifier);
-            biomodelsDatabaseIdentifier.setSchemaClass(databaseIdentifierSchemaClass);
+            if (biomodelsInstances.get(biomodelsId) != null) {
+                biomodelsDatabaseIdentifiers.add(biomodelsInstances.get(biomodelsId));
+            } else {
+                logger.info("Creating database identifier for BioModels id " + biomodelsId);
 
-            try {
-                biomodelsDatabaseIdentifier.addAttributeValue(ReactomeJavaConstants.created, instanceEdit);
-                biomodelsDatabaseIdentifier.addAttributeValue(ReactomeJavaConstants.identifier, biomodelsId);
-                biomodelsDatabaseIdentifier.addAttributeValue(ReactomeJavaConstants.referenceDatabase,
-                        BioModelsUtilities.fetchBiomodelsReferenceDatabase(dba, instanceEdit));
-                InstanceDisplayNameGenerator.setDisplayName(biomodelsDatabaseIdentifier);
-            } catch (Exception e) {
-                BioModelsUtilities.logAndThrow("Unable to create BioModels database identifier for " + biomodelsId, e);
+                GKInstance biomodelsDatabaseIdentifier = new GKInstance();
+                biomodelsDatabaseIdentifier.setDbAdaptor(dba);
+                SchemaClass databaseIdentifierSchemaClass =
+                        dba.getSchema().getClassByName(ReactomeJavaConstants.DatabaseIdentifier);
+                biomodelsDatabaseIdentifier.setSchemaClass(databaseIdentifierSchemaClass);
+
+                try {
+                    biomodelsDatabaseIdentifier.addAttributeValue(ReactomeJavaConstants.created, instanceEdit);
+                    biomodelsDatabaseIdentifier.addAttributeValue(ReactomeJavaConstants.identifier, biomodelsId);
+                    biomodelsDatabaseIdentifier.addAttributeValue(ReactomeJavaConstants.referenceDatabase,
+                            BioModelsUtilities.fetchBiomodelsReferenceDatabase(dba, instanceEdit));
+                    InstanceDisplayNameGenerator.setDisplayName(biomodelsDatabaseIdentifier);
+                } catch (Exception e) {
+                    BioModelsUtilities.logAndThrow("Unable to create BioModels database identifier for " + biomodelsId, e);
+                }
+
+                biomodelsDatabaseIdentifiers.add(biomodelsDatabaseIdentifier);
+                biomodelsInstances.put(biomodelsId, biomodelsDatabaseIdentifier);
+                logger.info("Successfully created database identifier for BioModels id " + biomodelsId);
             }
-
-            biomodelsDatabaseIdentifiers.add(biomodelsDatabaseIdentifier);
-            logger.info("Successfully created database identifier for BioModels id " + biomodelsId);
         }
 
         return biomodelsDatabaseIdentifiers;

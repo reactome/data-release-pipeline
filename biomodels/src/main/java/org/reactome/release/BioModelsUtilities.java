@@ -6,8 +6,11 @@ import org.gk.model.GKInstance;
 import org.gk.model.ReactomeJavaConstants;
 import org.gk.persistence.MySQLAdaptor;
 import org.gk.schema.SchemaClass;
+import org.springframework.util.CollectionUtils;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 public class BioModelsUtilities {
 
@@ -18,12 +21,17 @@ public class BioModelsUtilities {
         GKInstance biomodelsReferenceDatabase = null;
         logger.info("Attempting to fetch an existing BioModels reference database");
         try {
-            biomodelsReferenceDatabase = (GKInstance) dba.fetchInstanceByAttribute(
-                    ReactomeJavaConstants.ReferenceDatabase,
-                    ReactomeJavaConstants.name,
-                    "=",
-                    "BioModels"
-            ).toArray()[0];
+           Collection<GKInstance> biomodelsReferenceDatabaseCollection = dba.fetchInstanceByAttribute(
+                   ReactomeJavaConstants.ReferenceDatabase,
+                   ReactomeJavaConstants.name,
+                   "=",
+                   "BioModels");
+           // TODO: Once merged into develop, this collection null check can be handled by 'safeList' in CollectionUtils
+           if (biomodelsReferenceDatabaseCollection != null && biomodelsReferenceDatabaseCollection.size()  != 0) {
+               biomodelsReferenceDatabase = biomodelsReferenceDatabaseCollection.iterator().next();
+           } else {
+               biomodelsReferenceDatabase = null;
+           }
         } catch (Exception e) {
             logAndThrow("Unable to retrieve BioModels reference database", e);
         }
@@ -37,9 +45,11 @@ public class BioModelsUtilities {
 
             try {
                 biomodelsReferenceDatabase.addAttributeValue(ReactomeJavaConstants.created, instanceEdit);
+                String bioModelsDatabaseName = "BioModels Database";
                 biomodelsReferenceDatabase.addAttributeValue(
-                        ReactomeJavaConstants.name, Arrays.asList("BioModels Database", "BioModels")
+                        ReactomeJavaConstants.name, Arrays.asList(bioModelsDatabaseName, "BioModels")
                 );
+                biomodelsReferenceDatabase.setDisplayName(bioModelsDatabaseName);
 
                 //TODO Check if both accessUrl and Url should be using https
                 biomodelsReferenceDatabase.addAttributeValue(
@@ -52,9 +62,9 @@ public class BioModelsUtilities {
             } catch (Exception e) {
                 logger.error("Unable to create BioModels reference database", e);
             }
+            logger.info("Successfully created BioModels reference database with db id of " +
+                    biomodelsReferenceDatabase.getDBID());
         }
-        logger.info("Successfully created BioModels reference database with db id of " +
-                biomodelsReferenceDatabase.getDBID());
 
         return biomodelsReferenceDatabase;
     }

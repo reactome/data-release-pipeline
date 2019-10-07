@@ -33,6 +33,7 @@ public class Main {
         logger.info("Running BioModels insertion");
 
         String pathToResources = args.length > 0 ? args[0] : "biomodels/src/main/resources/config.properties";
+        String pathToModels2Pathways = args.length > 1 ? args[1] : "biomodels/src/main/resources/models2pathways.tsv";
 
         Properties props = new Properties();
         try {
@@ -48,7 +49,7 @@ public class Main {
         GKInstance instanceEdit = createInstanceEdit(dba, personId, "BioModels reference database creation");
 
         Map<String, List<String>> pathwayStableIdToBiomodelsIds =
-            ModelsTSVParser.parse("biomodels/src/main/resources/models2pathways.tsv");
+            ModelsTSVParser.parse(pathToModels2Pathways);
 
         for (GKInstance pathway: getPathwaysWithBiomodelsIds(dba, pathwayStableIdToBiomodelsIds.keySet())) {
             logger.info("Adding BioModels ids to pathway " + pathway.getExtendedDisplayName());
@@ -73,11 +74,11 @@ public class Main {
     }
 
     private static MySQLAdaptor getDBA(Properties props) throws SQLException {
-        String host = props.getProperty("host");
-        String database = props.getProperty("db");
-        String user = props.getProperty("user");
-        String password = props.getProperty("pass");
-        int port = Integer.parseInt(props.getProperty("port"));
+        String host = props.getProperty("release.database.host");
+        String database = props.getProperty("release_current.name");
+        String user = props.getProperty("release.database.user");
+        String password = props.getProperty("release.database.password");
+        int port = Integer.parseInt(props.getProperty("release.database.port"));
 
         return new MySQLAdaptor(host, database, user, password, port);
     }

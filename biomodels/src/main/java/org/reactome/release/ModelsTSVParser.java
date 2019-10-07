@@ -16,6 +16,11 @@ public class ModelsTSVParser {
 
     private ModelsTSVParser() { }
 
+    /**
+     * Parses the contents of the models2pathways.tsv file, returning a Map of ReactomePathwayIds=[BioModelsIdentifiers,...]
+     * @param tsvFile -- String, path/to/models2pathways.tsv
+     * @return Map of ReactomePathwayIds and a List of BioModelsIdentifiers
+     */
     public static Map<String, List<String>> parse(String tsvFile) {
         Map<String, List<String>> pathwayToBiomodelsIds = new HashMap<>();
 

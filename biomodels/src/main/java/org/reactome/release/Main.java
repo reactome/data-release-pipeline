@@ -98,6 +98,13 @@ public class Main {
         return pathways;
     }
 
+    /**
+     * Creates a DatabaseIdentifier instance for the biomodel identifier, if it hasn't already been created during the current run.
+     * @param biomodelsIds -- List of BioModels IDs
+     * @param instanceEdit -- GKInstance instanceEdit attached to the person Id that is executing this program
+     * @param dba -- MySQLAdaptor
+     * @return -- Returns a list of DatabaseIdentifier objects pertaining to the BioModel identifier
+     */
     private static List<GKInstance> createBiomodelsDatabaseIdentifiers(List<String> biomodelsIds,
                                                               GKInstance instanceEdit, MySQLAdaptor dba) {
 
@@ -105,6 +112,7 @@ public class Main {
 
         for (String biomodelsId : biomodelsIds) {
 
+            // If the identifier already had an object created during this run, use that. Otherwise create one.
             if (biomodelsInstances.get(biomodelsId) != null) {
                 biomodelsDatabaseIdentifiers.add(biomodelsInstances.get(biomodelsId));
             } else {

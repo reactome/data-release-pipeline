@@ -425,7 +425,9 @@ public class ChebiUpdater
 		GKInstance createdInstanceEdit = (GKInstance) inst.getAttributeValue(ReactomeJavaConstants.created);
 		if (createdInstanceEdit == null)
 		{
-			logger.error("Instance {} does not have a value for \"created\" attribute!", inst.toString());
+			// User should probably be warned that the object has no "creator" attribute value
+			// so they can explain to the curators why there is no author name in the report.
+			logger.warn("Instance {} does not have a value for \"created\" attribute!", inst.toString());
 			return null;
 		}
 		GKInstance creator = (GKInstance) createdInstanceEdit.getAttributeValue(ReactomeJavaConstants.author);

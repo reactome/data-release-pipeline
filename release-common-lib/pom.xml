@@ -1,22 +1,26 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.reactome.release</groupId>
 	<artifactId>release-common-lib</artifactId>
-	<version>1.1.0</version>
+	<version>1.1.1-SNAPSHOT</version>
 	<description>Common components used throughout the Release process.</description>
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<mockito.version>2.18.3</mockito.version>
 	</properties>
+
 	<dependencies>
+		<!-- Main dependencies -->
 		<dependency>
 			<groupId>org.reactome.base</groupId>
 			<artifactId>reactome-base</artifactId>
-			<version>1.2.21</version>
+			<version>1.2.22-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
@@ -29,7 +33,7 @@
 			<version>4.3.6</version>
 		</dependency>
 
-
+		<!-- Test dependencies -->
 		<dependency>
 			<groupId>org.hamcrest</groupId>
 			<artifactId>hamcrest</artifactId>
@@ -79,75 +83,41 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
 	<distributionManagement>
 		<repository>
 			<id>oicr-central</id>
 			<name>artifacts.oicr.on.ca-releases</name>
 			<url>https://artifacts.oicr.on.ca/artifactory/reactome</url>
 		</repository>
+
 		<snapshotRepository>
 			<id>oicr-snapshots</id>
 			<name>artifacts.oicr.on.ca-snapshots</name>
 			<url>https://artifacts.oicr.on.ca/artifactory/reactome</url>
 		</snapshotRepository>
 	</distributionManagement>
-	<!-- This repo is necessary for the chebiWS-client -->
+
 	<repositories>
 		<repository>
-			<id>EBI_m2repo</id>
-			<url>https://www.ebi.ac.uk/~maven/m2repo/</url>
+			<id>sonatype-snapshots</id>
+			<name>Sonatype snapshot repository</name>
+			<url>https://oss.sonatype.org/content/groups/public</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
 		</repository>
 
 		<repository>
-			<id>nexus-ebi-repo</id>
-			<name>The EBI internal repository</name>
-			<url>http://www.ebi.ac.uk/Tools/maven/repos/content/groups/ebi-repo/</url>
+			<id>sonatype-releases</id>
+			<name>Sonatype release repository</name>
+			<url>https://oss.sonatype.org/content/groups/staging</url>
 			<releases>
 				<enabled>true</enabled>
 			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-		<!-- EBI SNAPSHOT repo -->
-		<repository>
-			<id>nexus-ebi-snapshot-repo</id>
-			<name>The EBI internal snapshot repository</name>
-			<url>http://www.ebi.ac.uk/Tools/maven/repos/content/groups/ebi-snapshots/</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<name>EBI</name>
-			<url>http://www.ebi.ac.uk/Tools/maven/repos/content/repositories/releases/</url>
-			<id>EBI</id>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-		</repository>
-		<!-- OICR respository for Reactome artefacts -->
-		<repository>
-			<id>oicr-central</id>
-			<name>artifacts.oicr.on.ca-releases</name>
-			<url>https://artifacts.oicr.on.ca/artifactory/reactome</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-		</repository>
-		<repository>
-			<id>oicr-snapshots</id>
-			<name>artifacts.oicr.on.ca-snapshots</name>
-			<url>https://artifacts.oicr.on.ca/artifactory/reactome</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
 		</repository>
 	</repositories>
 </project>

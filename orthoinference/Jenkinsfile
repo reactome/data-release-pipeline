@@ -48,7 +48,7 @@ pipeline{
 				script{
 					speciesList = ['mmus', 'rnor', 'cfam', 'btau', 'sscr', 'drer', 'xtro', 'ggal', 'dmel', 'cele', 'ddis', 'spom', 'scer', 'pfal']
 					for (species in speciesList) {
-						stage('Main: Run species inference'){
+						stage("Main: Infer ${species}"){
 							script{
 								dir('orthoinference'){
 									withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){

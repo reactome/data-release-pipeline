@@ -1,3 +1,8 @@
+#!/bin/bash
+set -e
+
+DIR=$(dirname "$(readlink -f "$0")") # Directory of the script -- allows the script to invoked from anywhere
+cd $DIR
 
 releaseNumber=
 configFilepath=src/main/resources/config.properties

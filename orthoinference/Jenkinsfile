@@ -12,7 +12,7 @@ pipeline{
 					if(orthopairsStatusJson['result'] != "SUCCESS"){
 						error("Most recent Orthopairs build status: " + orthopairsStatusJson['result'])
 					}
-			    	}
+			    }
 				script{
 					def updateStIdsStatusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}/job/${env.RELEASE_NUMBER}/job/UpdateStableIdentifiers/lastBuild/api/json"
 					def updateStIdsStatusJson = new JsonSlurper().parseText(updateStIdsStatusUrl.getContent())
@@ -20,18 +20,8 @@ pipeline{
 						error("Most recent UpdateStableIdentifiers build status: " + updateStIdsStatusJson['result'])
 					}
 				}
-				script{
-					stage('Test stage'){
-						steps{
-							script{
-								sh 'touch thing.txt'
-							}
-						}
-					}
-				}
-				
-		    	}
 	    	}
+		}
 		stage('Setup: Backup release_current'){
 			steps{
 				script{
@@ -53,13 +43,12 @@ pipeline{
 				}
 			}
 		}
-		stage('Main: Infer mmus'){
+		stage('Main: Run Orthoinference){
 			steps {
 				script{
-					dir('orthoinference'){
-						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-${env.ORTHOINFERENCE_VERSION}-jar-with-dependencies.jar $FILE mmus"
-						}
+					speciesList = ['mmus', 'rnor', 'cfam', 'btau', 'sscr', 'drer', 'xtro', 'ggal', 'dmel', 'cele', 'ddis', 'spom', 'scer', 'pfal']
+					for (species in speciesList) {
+						echo "Hellooo ${species}"
 					}
 				}
 			}

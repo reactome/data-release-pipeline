@@ -43,7 +43,7 @@ pipeline{
 				}
 			}
 		}
-		stage('Main: Run Orthoinference){
+		stage('Main: Run Orthoinference'){
 			steps {
 				script{
 					speciesList = ['mmus', 'rnor', 'cfam', 'btau', 'sscr', 'drer', 'xtro', 'ggal', 'dmel', 'cele', 'ddis', 'spom', 'scer', 'pfal']

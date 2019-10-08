@@ -48,154 +48,20 @@ pipeline{
 				script{
 					speciesList = ['mmus', 'rnor', 'cfam', 'btau', 'sscr', 'drer', 'xtro', 'ggal', 'dmel', 'cele', 'ddis', 'spom', 'scer', 'pfal']
 					for (species in speciesList) {
-						echo "Hellooo ${species}"
-					}
-				}
-			}
-		}
-		stage('Main: Infer rnor'){
-			steps {
-				script{
-					dir('orthoinference'){
-						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-${env.ORTHOINFERENCE_VERSION}-jar-with-dependencies.jar $FILE rnor"
+						stage('Main: Run species inference'){
+							script{
+								dir('orthoinference'){
+									withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
+										sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-${env.ORTHOINFERENCE_VERSION}-jar-with-dependencies.jar $FILE ${species}"
+									}
+								}
+							}
 						}
 					}
 				}
 			}
 		}
-		stage('Main: Infer cfam'){
-			steps {
-				script{
-					dir('orthoinference'){
-						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-${env.ORTHOINFERENCE_VERSION}-jar-with-dependencies.jar $FILE cfam"
-						}
-					}
-				}
-			}
-		}
-		stage('Main: Infer btau'){
-			steps {
-				script{
-					dir('orthoinference'){
-						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-${env.ORTHOINFERENCE_VERSION}-jar-with-dependencies.jar $FILE btau"
-						}
-					}
-				}
-			}
-		}
-		stage('Main: Infer sscr'){
-			steps {
-				script{
-					dir('orthoinference'){
-						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-${env.ORTHOINFERENCE_VERSION}-jar-with-dependencies.jar $FILE sscr"
-						}
-					}
-				}
-			}
-		}
-		stage('Main: Infer drer'){
-			steps {
-				script{
-					dir('orthoinference'){
-						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-${env.ORTHOINFERENCE_VERSION}-jar-with-dependencies.jar $FILE drer"
-						}
-					}
-				}
-			}
-		}
-		stage('Main: Infer xtro'){
-			steps {
-				script{
-					dir('orthoinference'){
-						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-${env.ORTHOINFERENCE_VERSION}-jar-with-dependencies.jar $FILE xtro"
-						}
-					}
-				}
-			}
-		}
-		stage('Main: Infer ggal'){
-			steps {
-				script{
-					dir('orthoinference'){
-						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-${env.ORTHOINFERENCE_VERSION}-jar-with-dependencies.jar $FILE ggal"
-						}
-					}
-				}
-			}
-		}
-		stage('Main: Infer dmel'){
-			steps {
-				script{
-					dir('orthoinference'){
-						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-${env.ORTHOINFERENCE_VERSION}-jar-with-dependencies.jar $FILE dmel"
-						}
-					}
-				}
-			}
-		}
-		stage('Main: Infer cele'){
-			steps {
-				script{
-					dir('orthoinference'){
-						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-${env.ORTHOINFERENCE_VERSION}-jar-with-dependencies.jar $FILE cele"
-						}
-					}
-				}
-			}
-		}
-		stage('Main: Infer ddis'){
-			steps {
-				script{
-					dir('orthoinference'){
-						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-${env.ORTHOINFERENCE_VERSION}-jar-with-dependencies.jar $FILE ddis"
-						}
-					}
-				}
-			}
-		}
-		stage('Main: Infer spom'){
-			steps {
-				script{
-					dir('orthoinference'){
-						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-${env.ORTHOINFERENCE_VERSION}-jar-with-dependencies.jar $FILE spom"
-						}
-					}
-				}
-			}
-		}
-		stage('Main: Infer scer'){
-			steps {
-				script{
-					dir('orthoinference'){
-						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-${env.ORTHOINFERENCE_VERSION}-jar-with-dependencies.jar $FILE scer"
-						}
-					}
-				}
-			}
-		}
-		stage('Main: Infer pfal'){
-			steps {
-				script{
-					dir('orthoinference'){
-						withCredentials([file(credentialsId: 'Config', variable: 'FILE')]){
-							sh "java -Xmx${env.JAVA_MEM_MAX}m -jar target/orthoinference-${env.ORTHOINFERENCE_VERSION}-jar-with-dependencies.jar $FILE pfal"
-						}
-					}
-				}
-			}
-		}
+
 	    	stage('Post: Backup DB'){
 			steps{
 				script{

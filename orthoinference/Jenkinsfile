@@ -19,7 +19,17 @@ pipeline{
 					if(updateStIdsStatusJson['result'] != "SUCCESS"){
 						error("Most recent UpdateStableIdentifiers build status: " + updateStIdsStatusJson['result'])
 					}
-				}	
+				}
+				script{
+					stage('Test stage'){
+						steps{
+							script{
+								sh 'touch thing.txt'
+							}
+						}
+					}
+				}
+				
 		    	}
 	    	}
 		stage('Setup: Backup release_current'){

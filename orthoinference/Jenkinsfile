@@ -1,9 +1,9 @@
 import groovy.json.JsonSlurper
-// This Jenkinsfile is used by Jenkins to run the Orthoinference step of Reactome's release. 
+// This Jenkinsfile is used by Jenkins to run the Orthoinference step of Reactome's release.
 // It requires that the Orthopairs and UpdateStableIdentifiers steps have been run successfully before it can be run.
 pipeline{
 	agent any
-	
+
 	stages{
 		// This stage checks that upstream projects Orthopairs and UpdateStableIdentifier, were run successfully for their last build.
 		stage('Check if Orthopairs and UpdateStableIdentifiers builds succeeded'){
@@ -12,8 +12,8 @@ pipeline{
 					// This queries the Jenkins API to confirm that the most recent builds of Orthopairs and UpdateStableIdentifiers were successful.
 					checkUpstreamBuildsSucceeded("Orthopairs")
 					checkUpstreamBuildsSucceeded("UpdateStableIdentifiers")
-			    	}
-	    		}
+				}
+			}
 		}
 		// This stage backs up the release current database before it is modified.
 		stage('Setup: Backup release_current'){
@@ -29,7 +29,7 @@ pipeline{
 				}
 			}
 		}
-		// This stage builds the jar file using maven. It also runs the Main orthoinference process as a 'sub-stage'. 
+		// This stage builds the jar file using maven. It also runs the Main orthoinference process as a 'sub-stage'.
 		// This was due to a restriction in iterating over a list of species names. To iterate, you need to first have a 'stage > steps > script hierarchy.
 		// At the script level, you can iterate over a list and then create new stages from this iteration. The choice was between an empty stage or to do a sub-stage.
 		stage('Setup: Build jar file'){
@@ -39,9 +39,9 @@ pipeline{
 						sh "mvn clean compile assembly:single"
 					}
 				}
-				// This script block executes the main orthoinference code one species at a time. 
+				// This script block executes the main orthoinference code one species at a time.
 				// It takes all Human Reaction instances in the database and attempts to project each Reaction to each species by
-				// stripping them down to the reactio's constituent proteins, checks if the protein homolog exists for that species, and infers it in Reactome's data model. 
+				// stripping them down to the reactio's constituent proteins, checks if the protein homolog exists for that species, and infers it in Reactome's data model.
 				// If enough proteins (>= 75%) are inferrable in a Reaction, then it is created and stored in the database for this release. This is done from scratch each time.
 				script{
 					speciesList = ['mmus', 'rnor', 'cfam', 'btau', 'sscr', 'drer', 'xtro', 'ggal', 'dmel', 'cele', 'ddis', 'spom', 'scer', 'pfal']
@@ -59,8 +59,8 @@ pipeline{
 				}
 			}
 		}
-		// This stage backs up the release_current database after it is modified. 
-	    	stage('Post: Backup DB'){
+		// This stage backs up the release_current database after it is modified.
+		stage('Post: Backup DB'){
 			steps{
 				script{
 					dir('orthoinference'){
@@ -92,6 +92,7 @@ pipeline{
 	}
 }
 
+// Utility function that checks upstream builds of this project were successfully built.
 def checkUpstreamBuildsSucceeded(String stepName) {
 	def statusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}/job/${env.RELEASE_NUMBER}/job/$stepName/lastBuild/api/json"
 	def statusJson = new JsonSlurper().parseText(statusUrl.getContent())

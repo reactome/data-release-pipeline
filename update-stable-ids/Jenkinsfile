@@ -1,9 +1,9 @@
 import groovy.json.JsonSlurper
-// This Jenkinsfile is used by Jenkins to run the UpdateStableIdentifiers step of Reactome's release. 
+// This Jenkinsfile is used by Jenkins to run the UpdateStableIdentifiers step of Reactome's release.
 // It requires that the ConfirmReleaseConfigs step has been run successfully before it can be run.
 pipeline {
 	agent any
-	
+
 	stages {
 		// This stage checks that an upstream project, ConfirmReleaseConfig, was run successfully for its last build.
 		stage('Check ConfirmReleaseConfig build succeeded'){
@@ -15,11 +15,11 @@ pipeline {
 					if(configStatusJson['result'] != "SUCCESS"){
 						error("Most recent ConfirmReleaseConfigs build status: " + configStatusJson['result'] + ". Please complete a successful build.")
 					}
-				}	
+				}
 			}
 		}
-		// This stage moves 'slice_current' database to 'slice_previous', and then moves 'slice_test' to 'slice_current'. 
-		// It also saves the slice_test dump as a snapshot, to be used in the next release. 
+		// This stage moves 'slice_current' database to 'slice_previous', and then moves 'slice_test' to 'slice_current'.
+		// It also saves the slice_test dump as a snapshot, to be used in the next release.
 		stage('Setup: Rotate slice DBs'){
 			steps{
 				script{
@@ -50,7 +50,7 @@ pipeline {
 					}
 				}
 			}
-		}	
+		}
 		// This stage builds the jar file using maven.
 		stage('Setup: Build jar file'){
 			steps{
@@ -74,7 +74,7 @@ pipeline {
 				}
 			}
 		}
-		// This stage creates a new 'release_current' database from the freshly updated 'slice_current' database. 
+		// This stage creates a new 'release_current' database from the freshly updated 'slice_current' database.
 		// This will be the primary database used throughout release from here.
 		stage('Post: Create release_current from slice_current'){
 			steps{

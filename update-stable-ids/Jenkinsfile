@@ -6,7 +6,7 @@ pipeline {
 	
 	stages {
 		// This stage checks that an upstream project, ConfirmReleaseConfig, was run successfully for its last build.
-		stage('Check upstream builds succeeded'){
+		stage('Check ConfirmReleaseConfig build succeeded'){
 			steps{
 				script{
 					// This queries the Jenkins API to confirm that the most recent build of ConfirmReleaseConfigs was successful.

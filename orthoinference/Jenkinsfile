@@ -9,17 +9,10 @@ pipeline{
 		stage('Check if Orthopairs and UpdateStableIdentifiers builds succeeded'){
 			steps{
 				script{
-					// This queries the Jenkins API to confirm that the most recent build of Orthopairs was successful.
+					// This queries the Jenkins API to confirm that the most recent builds of Orthopairs and UpdateStableIdentifiers were successful.
 					checkUpstreamBuildsSucceeded("Orthopairs")
+					checkUpstreamBuildsSucceeded("UpdateStableIdentifiers")
 			    	}
-				script{
-					// This queries the Jenkins API to confirm that the most recent build of UpdateStableIdentifiers was successful.
-					def updateStIdsStatusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}/job/${env.RELEASE_NUMBER}/job/UpdateStableIdentifiers/lastBuild/api/json"
-					def updateStIdsStatusJson = new JsonSlurper().parseText(updateStIdsStatusUrl.getContent())
-					if(updateStIdsStatusJson['result'] != "SUCCESS"){
-						error("Most recent UpdateStableIdentifiers build status: " + updateStIdsStatusJson['result'])
-					}
-				}
 	    		}
 		}
 		// This stage backs up the release current database before it is modified.

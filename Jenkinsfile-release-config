@@ -1,9 +1,15 @@
+// This Jenkinsfile is used by Jenkins to run the ConfirmReleaseConfigs step, now a part of Reactome's release.
+// This is the first step of release now. It is an attempt to ensure that all configurations for release have been set, and that they match.
 pipeline{
 	agent any
 	
 	stages{
+		// This takes user inputs in to confirm that the configuration file and environmental variables used be Jenkins have been updated for this release.
+		// After the user inputs, it executes a bash script that checks the values to confirm that they all match. 
 		stage('Confirm configurations'){
 			steps{
+				// This asks for confirmation the configuration file has been updated for this release.
+				// This is a locally-scoped secret file accessed at Jenkins -> Releases -> ## (release number) -> Credentials -> Config
 				script{
           				def userInput = input(
           				id: 'userInput', message: "Has the Config file credentials been updated for this release?",
@@ -15,6 +21,8 @@ pipeline{
 						error("Please update the config file for this release and upload it in Jenkins as a secret file credential. Please have the credential scoped to this folder.")
 					}
 				}
+				// This asks for confirmation the environmental variables have been updated for this release.
+				// These are global variables that are accessed at Jenkins -> Manage Jenkins -> Configure System -> Global properties
 				script{
 				       	def userInput = input(
           				id: 'userInput', message: "Have the release-specific Jenkins environmental variables been updated for this release?",
@@ -28,6 +36,8 @@ pipeline{
 				}
 				dir('scripts'){
 					script{
+						// This asks for the release number. Afterwards this input, along with the config file and environmental variables for 
+						// release and previous release numbers are checked in a bash file to confirm they all match. 
 						def userReleaseNumber = input(
 						id: 'userInput', message: "Enter release version number.",
 						parameters: [

@@ -50,7 +50,7 @@ public class Main
        String gkCentralUsername = props.getProperty("curator.database.user");
        String gkCentralPassword = props.getProperty("curator.database.password");
        String gkCentralHost = props.getProperty("curator.database.host");
-       String gkCentralDatabase = props.getProperty("gk_central.name");
+       String gkCentralDatabase = props.getProperty("curator.database.name");
        
        MySQLAdaptor dbaGkCentral = new MySQLAdaptor(gkCentralHost, gkCentralDatabase, gkCentralUsername, gkCentralPassword, port);
        

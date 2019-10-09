@@ -26,19 +26,10 @@ public class Main {
 	public static void main(String[] args) throws Exception {
 
 		logger.info("Beginning Download Directory step");
-		String pathToConfig = "";
-		String pathToStepConfig = "";
-		if (args.length > 0) {
-			pathToConfig = args[0];
-			if (args.length > 1) {
-				pathToStepConfig = args[1];
-			} else {
-				pathToStepConfig = "src/main/resources/stepsToRun.config";
-			}
-		} else {
-			pathToConfig = "src/main/resources/config.properties";
-			pathToStepConfig = "src/main/resources/stepsToRun.config";
-		}
+
+		String pathToConfig = args.length > 0 ? args[0] : Paths.get("src/main/resources/config.properties").toString();
+		String pathToStepConfig = args.length > 1 ? args[1] : Paths.get("src/main/resources/stepsToRun.config").toString();
+
 		Properties props = new Properties();
 		props.load(new FileInputStream(pathToConfig));
 
@@ -65,7 +56,7 @@ public class Main {
 			releaseDir.mkdir();
 		}
 
-		String pathToSpeciesConfig = "src/main/resources/Species.json";
+		String pathToSpeciesConfig = Paths.get("src/main/resources/Species.json").toString();
 
 		// Determine which steps will be run via stepsToRun.config file
 		

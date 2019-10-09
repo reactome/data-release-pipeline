@@ -75,7 +75,7 @@ public class EventsInferrer
 		setDbAdaptors(dbAdaptor);
 
 		releaseVersion = props.getProperty("releaseNumber");
-		String pathToOrthopairs = props.getProperty("pathToOrthopairs") + releaseVersion + "/";
+		String pathToOrthopairs = Paths.get(props.getProperty("pathToOrthopairs") + releaseVersion).toString();
 		String pathToSpeciesConfig = props.getProperty("pathToSpeciesConfig");
 		String dateOfRelease = props.getProperty("dateOfRelease");
 		int personId = Integer.valueOf(props.getProperty("personId"));

@@ -43,25 +43,13 @@ public class Main
 
     public static void main( String[] args ) throws IOException, ParseException {
 
-        String pathToConfig = "";
-        String sourceMappingSpecies = "";
-        // If using an alternative source species, specify the 4-letter code as the second argument
-        //TODO: Better solution for this. What if user wants default config but to change source species?
-        if (args.length > 0) {
-            if (args.length > 1) {
-                pathToConfig = args[0];
-                sourceMappingSpecies = args[1];
-            } else {
-                pathToConfig = args[0];
-                sourceMappingSpecies = "hsap";
-            }
-        } else {
-            pathToConfig = "src/main/resources/config.properties";
-            sourceMappingSpecies = "hsap";
-        }
 
+        // If using an alternative source species, specify the 4-letter code as the second argument
+        String pathToConfig = args.length > 0 ? args[0] : Paths.get("src/main/resources/config.properties").toString();
+        String sourceMappingSpecies = args.length > 1 ? args[1] : "hsap";
         Properties props = new Properties();
         props.load(new FileInputStream(pathToConfig));
+
         // Load all config properties
         String releaseNumber = props.get("releaseNumber").toString();
         String pathToSpeciesConfig = props.get("pathToSpeciesConfig").toString();

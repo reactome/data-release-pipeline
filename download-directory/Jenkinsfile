@@ -1,10 +1,12 @@
 import groovy.json.JsonSlurper
-
+// This Jenkinsfile is used by Jenkins to run the DownloadDirectory step of Reactome's release. 
+// It requires that the AddLinks-Insertion step has been run successfully before it can be run.
 pipeline {
     	agent any
 
 	stages {
-		stage('Check upstream builds succeeded'){
+		// This stage checks that an upstream project, AddLinks-Insertion, was run successfully for its last build.
+		stage('Check AddLinks-Insertion build succeeded'){
 			steps{
 				script{
 					def addLinksInsertionStatusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}/job/${env.RELEASE_NUMBER}/job/AddLinks-Insertion/lastBuild/api/json"
@@ -15,7 +17,7 @@ pipeline {
 			    	}
 			}
 		}
-	    
+	    	// This stage clones, builds, and install the Pathway-Exchange dependency needed for DownloadDirectory.
 		stage('Setup: Install Pathway Exchange artifact'){
 			steps{
 				script{
@@ -25,6 +27,8 @@ pipeline {
 				}
 			}
 		}
+		// This stage builds an archive containing the download directory jar and its dependencies.
+		// It also unpacks that archive to be used in the following stage. 
         	stage('Setup: Build DownloadDirectory archive'){
             		steps{
 				script{
@@ -36,6 +40,8 @@ pipeline {
           			}
             		}
         	}
+		// This stage executes the DownloadDirectory code. It generates various files that are downloadable from the reactome website.
+		// The files that are produced are configurable. See the 'Running specific modules of Download Directory' section in the README.
 		stage('Main: Run DownloadDirectory'){
 			steps{
 				script{
@@ -49,6 +55,7 @@ pipeline {
 				}
 			}
 		}
+		// This stage archives all logs and other outputs produced by DownloadDirectory.
 		stage('Post: Archive logs and validation files'){
 			steps{
 				script{

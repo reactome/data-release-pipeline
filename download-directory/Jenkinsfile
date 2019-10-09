@@ -6,7 +6,7 @@ pipeline {
 
 	stages {
 		// This stage checks that an upstream project, AddLinks-Insertion, was run successfully for its last build.
-		stage('Check upstream builds succeeded'){
+		stage('Check AddLinks-Insertion build succeeded'){
 			steps{
 				script{
 					def addLinksInsertionStatusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}/job/${env.RELEASE_NUMBER}/job/AddLinks-Insertion/lastBuild/api/json"

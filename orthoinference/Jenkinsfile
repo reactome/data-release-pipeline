@@ -10,12 +10,8 @@ pipeline{
 			steps{
 				script{
 					// This queries the Jenkins API to confirm that the most recent build of Orthopairs was successful.
-					def orthopairsStatusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}/job/${env.RELEASE_NUMBER}/job/Orthopairs/lastBuild/api/json"
-					def orthopairsStatusJson = new JsonSlurper().parseText(orthopairsStatusUrl.getContent())
-					if(orthopairsStatusJson['result'] != "SUCCESS"){
-						error("Most recent Orthopairs build status: " + orthopairsStatusJson['result'])
-					}
-			    }
+					checkUpstreamBuildsSucceeded("Orthopairs")
+			    	}
 				script{
 					// This queries the Jenkins API to confirm that the most recent build of UpdateStableIdentifiers was successful.
 					def updateStIdsStatusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}/job/${env.RELEASE_NUMBER}/job/UpdateStableIdentifiers/lastBuild/api/json"
@@ -24,7 +20,7 @@ pipeline{
 						error("Most recent UpdateStableIdentifiers build status: " + updateStIdsStatusJson['result'])
 					}
 				}
-	    	}
+	    		}
 		}
 		// This stage backs up the release current database before it is modified.
 		stage('Setup: Backup release_current'){
@@ -103,3 +99,10 @@ pipeline{
 	}
 }
 
+def checkUpstreamBuildsSucceeded(String stepName) {
+	def statusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}/job/${env.RELEASE_NUMBER}/job/$stepName/lastBuild/api/json"
+	def statusJson = new JsonSlurper().parseText(statusUrl.getContent())
+	if(statusJson['result'] != "SUCCESS"){
+		error("Most recent $stepName build status: " + statusJson['result'])
+	}
+}

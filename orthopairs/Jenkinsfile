@@ -9,12 +9,11 @@ pipeline{
 		stage('Check ConfirmReleaseConfig build succeeded'){
 			steps{
 				script{
-					def currentDirectory = pwd();
-					def currentReleaseMatcher = currentDirectory =~ (/Releases\/(\d+)\//);
+					def currentReleaseMatcher = pwd() =~ (/Releases\/(\d+)\//);
 					def currentRelease = currentReleaseMatcher[0][1];
-					echo currentRelease
+					echo currentRelease;
 					// This queries the Jenkins API to confirm that the most recent build of ConfirmReleaseConfigs was successful.
-					def configStatusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}/job/${env.RELEASE_NUMBER}/job/ConfirmReleaseConfigs/lastBuild/api/json"
+					def configStatusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}/job/$currentRelease/job/ConfirmReleaseConfigs/lastBuild/api/json"
 					def configStatusJson = new JsonSlurper().parseText(configStatusUrl.getContent())
 					if(configStatusJson['result'] != "SUCCESS"){
 						error("Most recent ConfirmReleaseConfigs build status: " + configStatusJson['result'] + ". Please complete a successful build.")

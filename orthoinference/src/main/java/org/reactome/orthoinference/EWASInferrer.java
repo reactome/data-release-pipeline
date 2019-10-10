@@ -273,7 +273,7 @@ public class EWASInferrer {
 	public static void readENSGMappingFile(String toSpecies, String pathToOrthopairs) throws IOException
 	{
 		String mappingFileName = toSpecies + "_gene_protein_mapping.txt";
-		String mappingFilePath = pathToOrthopairs + mappingFileName;
+		String mappingFilePath = pathToOrthopairs + "/" + mappingFileName;
 		logger.info("Reading in " + mappingFilePath);
 		FileReader fr = new FileReader(mappingFilePath);
 		BufferedReader br = new BufferedReader(fr);

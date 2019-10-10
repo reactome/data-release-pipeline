@@ -18,7 +18,8 @@ pipeline{
 						def configStatusJson = new JsonSlurper().parseText(configStatusUrl.getContent())
 						echo configStatusJson;
 						if (configStatusJson['result'] != "SUCCESS"){
-						error("Most recent ConfirmReleaseConfigs build status: " + configStatusJson['result'] + ". Please complete a successful build.")
+							error("Most recent ConfirmReleaseConfigs build status: " + configStatusJson['result'] + ". Please complete a successful build.")
+						}
 					}
 				}
 			}

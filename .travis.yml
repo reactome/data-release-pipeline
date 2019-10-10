@@ -1,3 +1,6 @@
+languague: java
 script:
-  - cd data-exporter
+  - cd release-common-lib
+  - mvn clean install
+  - cd ../data-exporter
   - mvn clean test

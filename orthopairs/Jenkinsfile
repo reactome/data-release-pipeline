@@ -11,13 +11,8 @@ pipeline{
 				script{
 					def currentDirectory = pwd();
 					def currentReleaseMatcher = currentDirectory =~ (/Releases\/(\d+)\//);
-					echo currentDirectory;
-					println currentReleaseMatcher[0][0]
-					println currentReleaseMatcher[0][1]
-					echo currentRelease;
-					if (currentRelease) {
-						echo "WOOOOO!!!";
-					}
+					def currentRelease = currentReleaseMatcher[0][1];
+					echo currentRelease
 					// This queries the Jenkins API to confirm that the most recent build of ConfirmReleaseConfigs was successful.
 					def configStatusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}/job/${env.RELEASE_NUMBER}/job/ConfirmReleaseConfigs/lastBuild/api/json"
 					def configStatusJson = new JsonSlurper().parseText(configStatusUrl.getContent())

@@ -16,6 +16,7 @@ pipeline{
 						error("Most recent ConfirmReleaseConfigs build status: " + configStatusJson['result'] + ". Please complete a successful build.")
 					} else {
 						echo configStatusJson['result'] + "   WOOO"
+					}
 				}
 			}
 		}

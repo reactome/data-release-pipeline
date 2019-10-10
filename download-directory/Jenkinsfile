@@ -9,10 +9,16 @@ pipeline {
 		stage('Check AddLinks-Insertion build succeeded'){
 			steps{
 				script{
-					def addLinksInsertionStatusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}/job/${env.RELEASE_NUMBER}/job/AddLinks-Insertion/lastBuild/api/json"
-					def addLinksInsertionJson = new JsonSlurper().parseText(addLinksInsertionUrl.getContent())
-					if(addLinksInsertionJson['result'] != "SUCCESS"){
-						error("Most recent AddLinks-Insertion build status: " + addLinksInsertionJson['result'] + ". Please complete a successful build.")
+					def currentRelease = (pwd() =~ /Releases\/(\d+)\//)[0][1];
+					// This queries the Jenkins API to confirm that the most recent build of AddLinks-Insertion was successful.
+					def addLinksInsertionStatusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}/job/$currentRelease/job/AddLinks-Insertion/lastBuild/api/json"
+					if (addLinksInsertionStatusUrl.getStatus() == 404) {
+						error("AddLinks-Insertion has not yet been run. Please complete a successful build.")
+					} else {
+						def addLinksInsertionJson = new JsonSlurper().parseText(addLinksInsertionUrl.getContent())
+						if(addLinksInsertionJson['result'] != "SUCCESS"){
+							error("Most recent AddLinks-Insertion build status: " + addLinksInsertionJson['result'] + ". Please complete a successful build.")
+						}
 					}
 				}
 			}

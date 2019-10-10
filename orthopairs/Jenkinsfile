@@ -10,7 +10,7 @@ pipeline{
 			steps{
 				script{
 					def currentDirectory = pwd();
-					def currentRelease = currentDirectory =~ /Releases\/(\d+)\//;
+					def currentRelease = currentDirectory =~ (/Releases\/(\d+)\//)[0][1];
 					echo currentDirectory;
 					echo currentRelease;
 					if (currentRelease) {

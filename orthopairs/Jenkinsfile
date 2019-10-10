@@ -10,8 +10,10 @@ pipeline{
 			steps{
 				script{
 					def currentDirectory = pwd();
-					def currentRelease = currentDirectory =~ (/Releases\/(\d+)\//)[0];
+					def currentReleaseMatcher = currentDirectory =~ (/Releases\/(\d+)\//);
 					echo currentDirectory;
+					println currentReleaseMatcher[0][0]
+					println currentReleaseMatcher[0][1]
 					echo currentRelease;
 					if (currentRelease) {
 						echo "WOOOOO!!!";

@@ -11,8 +11,8 @@ pipeline{
 				script{
 					def currentRelease = (pwd() =~ /Releases\/(\d+)\//)[0][1];
 					// This queries the Jenkins API to confirm that the most recent builds of Orthopairs and UpdateStableIdentifiers were successful.
-					checkUpstreamBuildsSucceeded("Orthopairs", $currentRelease)
-					checkUpstreamBuildsSucceeded("UpdateStableIdentifiers", $currentRelease)
+					checkUpstreamBuildsSucceeded("Orthopairs", "$currentRelease")
+					checkUpstreamBuildsSucceeded("UpdateStableIdentifiers", "$currentRelease")
 				}
 			}
 		}

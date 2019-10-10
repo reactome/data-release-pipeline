@@ -9,9 +9,10 @@ pipeline{
 		stage('Check if Orthopairs and UpdateStableIdentifiers builds succeeded'){
 			steps{
 				script{
+					def currentRelease = (pwd() =~ /Releases\/(\d+)\//)[0][1];
 					// This queries the Jenkins API to confirm that the most recent builds of Orthopairs and UpdateStableIdentifiers were successful.
-					checkUpstreamBuildsSucceeded("Orthopairs")
-					checkUpstreamBuildsSucceeded("UpdateStableIdentifiers")
+					checkUpstreamBuildsSucceeded("Orthopairs", $currentRelease)
+					checkUpstreamBuildsSucceeded("UpdateStableIdentifiers", $currentRelease)
 				}
 			}
 		}
@@ -93,10 +94,14 @@ pipeline{
 }
 
 // Utility function that checks upstream builds of this project were successfully built.
-def checkUpstreamBuildsSucceeded(String stepName) {
-	def statusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}/job/${env.RELEASE_NUMBER}/job/$stepName/lastBuild/api/json"
-	def statusJson = new JsonSlurper().parseText(statusUrl.getContent())
-	if(statusJson['result'] != "SUCCESS"){
-		error("Most recent $stepName build status: " + statusJson['result'])
+def checkUpstreamBuildsSucceeded(String stepName, String currentRelease) {
+	def statusUrl = httpRequest authentication: 'jenkinsKey', validResponseCodes: '200:404', url: "${env.JENKINS_JOB_URL}/job/$currentRelease/job/$stepName/lastBuild/api/json"
+	if (statusUrl.getStatus() == 404) {
+		error("$stepName has not yet been run. Please complete a successful build.")
+	} else {
+		def statusJson = new JsonSlurper().parseText(statusUrl.getContent())
+		if(statusJson['result'] != "SUCCESS"){
+			error("Most recent $stepName build status: " + statusJson['result'] + ". Please complete a successful build.")
+		}
 	}
 }

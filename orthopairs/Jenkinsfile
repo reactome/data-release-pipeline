@@ -10,7 +10,7 @@ pipeline{
 			steps{
 				script{
 					def currentDirectory = pwd();
-					def currentRelease = (currentDirectory =~ /.+Releases.+/);
+					def currentRelease = currentDirectory =~ /Releases/
 					echo currentRelease;
 					// This queries the Jenkins API to confirm that the most recent build of ConfirmReleaseConfigs was successful.
 					def configStatusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}/job/${env.RELEASE_NUMBER}/job/ConfirmReleaseConfigs/lastBuild/api/json"

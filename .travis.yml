@@ -1,4 +1,4 @@
-languague: java
+language: java
 script:
   - cd release-common-lib
   - mvn clean install

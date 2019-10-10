@@ -12,7 +12,7 @@ pipeline{
 					def currentRelease = (pwd() =~ /Releases\/(\d+)\//)[0][1];
 					// This queries the Jenkins API to confirm that the most recent build of ConfirmReleaseConfigs was successful.
 					def configStatusUrl = httpRequest authentication: 'jenkinsKey', validResponseCodes: '200:404', url: "${env.JENKINS_JOB_URL}/job/$currentRelease/job/ConfirmReleaseConfigs/lastBuild/api/json"
-					if (configStatusUrl.getStatus() == 404) {
+					if (configStatusUrl.getStatus().toString() == "404") {
 						error("ConfirmReleaseConfigs has not yet been run. Please complete a successful build.")
 					} else {
 						def configStatusJson = new JsonSlurper().parseText(configStatusUrl.getContent())

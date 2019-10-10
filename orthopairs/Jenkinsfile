@@ -10,15 +10,15 @@ pipeline{
 			steps{
 				script{
 					def currentDirectory = pwd();
-					def currentRelease = currentDirectory =~ /Releases/
-					echo currentRelease;
+					def currentRelease = currentDirectory =~ /Releases/;
+					if (currentRelease) {
+						echo "WOOOOO!!!";
+					}
 					// This queries the Jenkins API to confirm that the most recent build of ConfirmReleaseConfigs was successful.
 					def configStatusUrl = httpRequest authentication: 'jenkinsKey', url: "${env.JENKINS_JOB_URL}/job/${env.RELEASE_NUMBER}/job/ConfirmReleaseConfigs/lastBuild/api/json"
 					def configStatusJson = new JsonSlurper().parseText(configStatusUrl.getContent())
 					if(configStatusJson['result'] != "SUCCESS"){
 						error("Most recent ConfirmReleaseConfigs build status: " + configStatusJson['result'] + ". Please complete a successful build.")
-					} else {
-						echo configStatusJson['result'] + "   WOOO"
 					}
 				}
 			}

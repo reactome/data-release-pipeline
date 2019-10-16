@@ -113,6 +113,7 @@ public class EventsInferrer
 			Map<String,String[]> homologueMappings = readHomologueMappingFile(species, "hsap", pathToOrthopairs);
 			ProteinCountUtility.setHomologueMappingFile(homologueMappings);
 			EWASInferrer.setHomologueMappingFile(homologueMappings);
+			SkipInstanceChecker.setHomologueMappingFile(homologueMappings);
 		} catch (FileNotFoundException e) {
 			logger.fatal("Unable to locate " + speciesName +" mapping file: hsap_" + species + "_mapping.txt. Orthology prediction not possible.");
 			return;
@@ -168,11 +169,9 @@ public class EventsInferrer
 			List<GKInstance> previouslyInferredInstances = new ArrayList<GKInstance>();
 			previouslyInferredInstances = checkIfPreviouslyInferred(reactionInst, orthologousEvent, previouslyInferredInstances);
 			previouslyInferredInstances = checkIfPreviouslyInferred(reactionInst, inferredFrom, previouslyInferredInstances);
-			if (previouslyInferredInstances.size() > 0)
-			{
+			if (previouslyInferredInstances.size() > 0) {
 				GKInstance prevInfInst = previouslyInferredInstances.get(0);
-				if (prevInfInst.getAttributeValue(disease) == null)
-				{
+				if (prevInfInst.getAttributeValue(disease) == null) {
 					logger.info("Inferred RlE already exists, skipping inference");
 					manualEventToNonHumanSource.put(reactionInst, prevInfInst);
 					manualHumanEvents.add(reactionInst);

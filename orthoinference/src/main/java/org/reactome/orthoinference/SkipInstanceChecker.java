@@ -23,6 +23,7 @@ public class SkipInstanceChecker {
 	private static final Logger logger = LogManager.getLogger();
 	private static MySQLAdaptor dba;
 	private static Set<String> skipList = new HashSet<>();
+	private static Map<String, String[]> homologueMappings = new HashMap<>();
 	
 	// Skiplist was traditionally provided in a file, but since it's currently just 3 instances, I've just hard-coded them here.
 	public static void getSkipList(String skipListFilename) throws NumberFormatException, Exception
@@ -101,9 +102,43 @@ public class SkipInstanceChecker {
 			logger.info(reactionInst + " has multiple species -- skipping");
 			return true;
 		}
+		if (!reactionComponentsAreInferrable(reactionInst)) {
+			return true;
+		}
 		return false;
 	}
-	
+
+	private static boolean reactionComponentsAreInferrable(GKInstance reactionInst) throws Exception {
+		Collection<GKInstance> reactionComponents = reactionInst.getAttributeValuesList(input);
+		reactionComponents.addAll(reactionInst.getAttributeValuesList(output));
+		for (GKInstance reactionComponent : reactionComponents) {
+			if (!SpeciesCheckUtility.checkForSpeciesAttribute(reactionComponent)) {
+				return true;
+			} else if (reactionComponent.getSchemClass().toString().contains(EntityWithAccessionedSequence)) {
+				String referenceEntityId = ((GKInstance) reactionComponent.getAttributeValue(referenceEntity)).getAttributeValue(identifier).toString();
+				if (homologueMappings.get(referenceEntityId) == null) {
+					return false;
+				}
+			} else if (reactionComponent.getSchemClass().isa(Complex) || reactionComponent.getSchemClass().isa(Polymer)) {
+				System.out.println(reactionComponent);
+				List<Integer> complexProteinCounts = ProteinCountUtility.getDistinctProteinCounts(reactionComponent);
+				int complexTotalProteinCounts = complexProteinCounts.get(0);
+				int complexInferrableProteinCounts = complexProteinCounts.get(1);
+				int percent = 0;
+				if (complexTotalProteinCounts > 0)
+				{
+					percent = (complexInferrableProteinCounts * 100)/complexTotalProteinCounts;
+				}
+				if (percent < 75)
+				{
+					logger.info("Complex/Polymer protein count is below 75% threshold (" + percent + "%) -- terminating inference");
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
 	// Goes through all input/output/catalystActivity/regulatedBy attribute instances, and captures all species associates with them. Returns a collection of species instances.
 	@SuppressWarnings("unchecked")
 	private static Collection<GKInstance> checkIfEntitiesContainMultipleSpecies(GKInstance reactionInst) throws Exception
@@ -219,4 +254,6 @@ public class SkipInstanceChecker {
 	{
 		dba = dbAdaptor;
 	}
+
+	public static void setHomologueMappingFile(Map<String, String[]> homologueMappingsCopy) { homologueMappings = homologueMappingsCopy; }
 }

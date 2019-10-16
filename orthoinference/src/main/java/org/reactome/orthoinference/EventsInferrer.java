@@ -49,8 +49,8 @@ public class EventsInferrer
 	private static String releaseVersion;
 	private static GKInstance instanceEditInst;
 	private static GKInstance speciesInst;
-	private static Map<GKInstance,GKInstance> manualEventToNonHumanSource = new HashMap<>();
-	private static List<GKInstance> manualHumanEvents = new ArrayList<>();
+	private static Map<GKInstance, GKInstance> eventsAlreadyInferredMap = new HashMap<>();
+	private static List<GKInstance> eventsAlreadyInferred = new ArrayList<>();
 	private static StableIdentifierGenerator stableIdentifierGenerator;
 	private static OrthologousPathwayDiagramGenerator orthologousPathwayDiagramGenerator;
 
@@ -166,15 +166,15 @@ public class EventsInferrer
 			logger.info("Attempting RlE inference: " + reactionInst);
 			// Check if the current Reaction already exists for this species, that it is a valid instance (passes some filters), and that it doesn't have a Disease attribute.
 			// Adds to manualHumanEvents array if it passes conditions. This code block allows you to re-run the code without re-inferring instances.
-			List<GKInstance> previouslyInferredInstances = new ArrayList<GKInstance>();
+			List<GKInstance> previouslyInferredInstances = new ArrayList<>();
 			previouslyInferredInstances = checkIfPreviouslyInferred(reactionInst, orthologousEvent, previouslyInferredInstances);
-			previouslyInferredInstances = checkIfPreviouslyInferred(reactionInst, inferredFrom, previouslyInferredInstances);
+			previouslyInferredInstances.addAll(checkIfPreviouslyInferred(reactionInst, inferredFrom, previouslyInferredInstances));
 			if (previouslyInferredInstances.size() > 0) {
 				GKInstance prevInfInst = previouslyInferredInstances.get(0);
 				if (prevInfInst.getAttributeValue(disease) == null) {
 					logger.info("Inferred RlE already exists, skipping inference");
-					manualEventToNonHumanSource.put(reactionInst, prevInfInst);
-					manualHumanEvents.add(reactionInst);
+					eventsAlreadyInferredMap.put(reactionInst, prevInfInst);
+					eventsAlreadyInferred.add(reactionInst);
 				} else {
 					logger.info("Disease reaction, skipping inference");
 				}
@@ -190,8 +190,11 @@ public class EventsInferrer
 				return;
 			}
 		}
-		PathwaysInferrer.setInferredEvent(ReactionInferrer.getInferredEvent());
-		PathwaysInferrer.inferPathways(ReactionInferrer.getInferrableHumanEvents());
+		// Retrieve events inferred from this run, and any that were already inferred. Combine them and then begin Pathway inference.
+		// The two methods below perform this for a map, containing the original RlE and the inferred RlE, and a List of just the inferred RlEs.
+		// The latter will be iterated through when building Pathway hierarchies, the former when information from original RlE is needed during this build.
+		PathwaysInferrer.setInferredEvent(ReactionInferrer.getInferredEvent(eventsAlreadyInferredMap));
+		PathwaysInferrer.inferPathways(ReactionInferrer.getInferrableHumanEvents(eventsAlreadyInferred));
 		orthologousPathwayDiagramGenerator.generateOrthologousPathwayDiagrams();
 		outputReport(species);
 		logger.info("Finished orthoinference of " + speciesName);
@@ -217,7 +220,7 @@ public class EventsInferrer
 	}
 
 	@SuppressWarnings("unchecked")
-	private static List<GKInstance> checkIfPreviouslyInferred(GKInstance reactionInst, String attribute, List<GKInstance> previouslyInferredInstances) throws InvalidAttributeException, Exception 
+	private static List<GKInstance> checkIfPreviouslyInferred(GKInstance reactionInst, String attribute, List<GKInstance> previouslyInferredInstances) throws Exception
 	{
 		for (GKInstance attributeInst : (Collection<GKInstance>) reactionInst.getAttributeValuesList(attribute))
 		{

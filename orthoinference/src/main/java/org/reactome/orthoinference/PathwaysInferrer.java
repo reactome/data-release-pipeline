@@ -47,8 +47,6 @@ public class PathwaysInferrer {
 		addInferredEventsToInferredPathways();
 		logger.info("Finished populating inferred Pathways with inferred Events");
 
-		//TODO: LOG starting HERE
-
 		// Connect preceding events to RlEs, if they have any in the source species.
 		logger.info("Adding preceding events to inferred Events");
 		inferPrecedingEvents();
@@ -168,40 +166,31 @@ public class PathwaysInferrer {
 	private static void inferPrecedingEvents() throws Exception
 	{
 		Set<GKInstance> seenPrecedingEvent = new HashSet<>();
-		for (GKInstance inferrableEventInst : updatedInferrableHumanEvents)
-		{
-			if (!seenPrecedingEvent.contains(inferrableEventInst))
-			{
-				if (inferrableEventInst.getAttributeValue(precedingEvent)!= null)
-				{
+		for (GKInstance inferrableEventInst : updatedInferrableHumanEvents) {
+			if (!seenPrecedingEvent.contains(inferrableEventInst)) {
+				if (inferrableEventInst.getAttributeValue(precedingEvent) != null) {
 					logger.info("Adding preceding event to " + inferrableEventInst);
 					List<GKInstance> precedingEventInstances = new ArrayList<>();
 					// Find all preceding events for source instance that have an inferred counterpart
-					for (GKInstance precedingEventInst : (Collection<GKInstance>) inferrableEventInst.getAttributeValuesList(precedingEvent))
-					{
-						if (inferredEventIdenticals.get(precedingEventInst) != null)
-						{
+					for (GKInstance precedingEventInst : (Collection<GKInstance>) inferrableEventInst.getAttributeValuesList(precedingEvent)) {
+						if (inferredEventIdenticals.get(precedingEventInst) != null) {
 							precedingEventInstances.add(inferredEventIdenticals.get(precedingEventInst));
 						}
 					}
 					Set<String> inferredPrecedingEvents = new HashSet<>();
 					// Find any inferred preceding events that already exist for the inferred instance (don't want to add any redundant preceding events)
-					for (GKInstance precedingEventInst : (Collection<GKInstance>) inferredEventIdenticals.get(inferrableEventInst).getAttributeValuesList(precedingEvent))
-					{
+					for (GKInstance precedingEventInst : (Collection<GKInstance>) inferredEventIdenticals.get(inferrableEventInst).getAttributeValuesList(precedingEvent)) {
 						inferredPrecedingEvents.add(precedingEventInst.getDBID().toString());
 					}
 					List<GKInstance> updatedPrecedingEventInstances = new ArrayList<>();
 					// Find existing preceding events that haven't already been attached to the inferred instance
-					for (GKInstance precedingEventInst : precedingEventInstances)
-					{
-						if (!inferredPrecedingEvents.contains(precedingEventInst.getDBID().toString()))
-						{
+					for (GKInstance precedingEventInst : precedingEventInstances) {
+						if (!inferredPrecedingEvents.contains(precedingEventInst.getDBID().toString())) {
 							updatedPrecedingEventInstances.add(precedingEventInst);
 						}
 					}
 					// Add preceding event to inferred instance
-					if (updatedPrecedingEventInstances != null && updatedPrecedingEventInstances.size() > 0)
-					{
+					if (updatedPrecedingEventInstances != null && updatedPrecedingEventInstances.size() > 0) {
 						inferredEventIdenticals.get(inferrableEventInst).addAttributeValue(precedingEvent, updatedPrecedingEventInstances);
 						dba.updateInstanceAttribute(inferredEventIdenticals.get(inferrableEventInst), precedingEvent);
 					}

@@ -293,13 +293,15 @@ public class ReactionInferrer {
 		summationInst = summationInstCopy;
 	}
 	
-	public static Map<GKInstance, GKInstance> getInferredEvent()
+	public static Map<GKInstance, GKInstance> getInferredEvent(Map<GKInstance, GKInstance> eventsAlreadyInferredMap)
 	{
+		inferredEvent.putAll(eventsAlreadyInferredMap);
 		return inferredEvent;
 	}
 	
-	public static List<GKInstance> getInferrableHumanEvents()
+	public static List<GKInstance> getInferrableHumanEvents(List<GKInstance> eventsAlreadyInferred)
 	{
+		inferrableHumanEvents.addAll(eventsAlreadyInferred);
 		return inferrableHumanEvents;
 	}
 

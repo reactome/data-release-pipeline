@@ -109,46 +109,63 @@ public class SkipInstanceChecker {
 	}
 
 	private static boolean reactionComponentsAreInferrable(GKInstance reactionInst) throws Exception {
-		Collection<GKInstance> reactionComponents = reactionInst.getAttributeValuesList(input);
-		reactionComponents.addAll(reactionInst.getAttributeValuesList(output));
+		Collection<GKInstance> reactionInputs = reactionInst.getAttributeValuesList(input);
+		Collection<GKInstance> reactionOutputs = reactionInst.getAttributeValuesList(output);
+		Collection<GKInstance> reactionCatalystPEs = new ArrayList<>();
 		Collection<GKInstance> reactionCatalysts = reactionInst.getAttributeValuesList(catalystActivity);
 		for (GKInstance reactionCatalyst : reactionCatalysts) {
 			GKInstance catalystPE = (GKInstance) reactionCatalyst.getAttributeValue(physicalEntity);
 			if (catalystPE != null) {
-				reactionComponents.add(catalystPE);
+				reactionCatalystPEs.add(catalystPE);
 			}
 		}
-		for (GKInstance reactionComponent : reactionComponents) {
-			if (!SpeciesCheckUtility.checkForSpeciesAttribute(reactionComponent)) {
+		for (GKInstance reactionInput : reactionInputs) {
+			if (!componentIsInferrable(reactionInput)) {
+				return false;
+			}
+		}
+		for (GKInstance reactionOutput : reactionOutputs) {
+			if (!componentIsInferrable(reactionOutput)) {
+				return false;
+			}
+		}
+		for (GKInstance reactionCatalystPE : reactionCatalystPEs) {
+			if (!componentIsInferrable(reactionCatalystPE)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private static boolean componentIsInferrable(GKInstance reactionComponent) throws Exception {
+		if (!SpeciesCheckUtility.checkForSpeciesAttribute(reactionComponent)) {
 //				return true;
-			} else if (reactionComponent.getSchemClass().isa(GenomeEncodedEntity))
-			{
-				if (reactionComponent.getSchemClass().toString().contains(EntityWithAccessionedSequence)) {
-					String referenceEntityId = ((GKInstance) reactionComponent.getAttributeValue(referenceEntity)).getAttributeValue(identifier).toString();
-					if (homologueMappings.get(referenceEntityId) == null) {
-						return false;
-					}
-				} else {
+		} else if (reactionComponent.getSchemClass().isa(GenomeEncodedEntity))
+		{
+			if (reactionComponent.getSchemClass().toString().contains(EntityWithAccessionedSequence)) {
+				String referenceEntityId = ((GKInstance) reactionComponent.getAttributeValue(referenceEntity)).getAttributeValue(identifier).toString();
+				if (homologueMappings.get(referenceEntityId) == null) {
 					return false;
 				}
-			} else if (reactionComponent.getSchemClass().isa(Complex) || reactionComponent.getSchemClass().isa(Polymer) || reactionComponent.getSchemClass().isa(EntitySet)) {
-				System.out.println(reactionComponent);
-				List<Integer> complexProteinCounts = ProteinCountUtility.getDistinctProteinCounts(reactionComponent);
-				int totalProteinCounts = complexProteinCounts.get(0);
-				int inferrableProteinCounts = complexProteinCounts.get(1);
-				if (reactionComponent.getSchemClass().isa(Complex) || reactionComponent.getSchemClass().isa(Polymer)) {
-					int percent = 0;
-					if (totalProteinCounts > 0) {
-						percent = (inferrableProteinCounts * 100) / totalProteinCounts;
-					}
-					if (percent < 75) {
-						logger.info("Complex/Polymer protein count is below 75% threshold (" + percent + "%) -- terminating inference");
-						return false;
-					}
-				} else if (totalProteinCounts > 0 && inferrableProteinCounts == 0) {
-					logger.info("No distinct proteins found in EntitySet -- terminating inference");
+			} else {
+				return false;
+			}
+		} else if (reactionComponent.getSchemClass().isa(Complex) || reactionComponent.getSchemClass().isa(Polymer) || reactionComponent.getSchemClass().isa(EntitySet)) {
+			List<Integer> complexProteinCounts = ProteinCountUtility.getDistinctProteinCounts(reactionComponent);
+			int totalProteinCounts = complexProteinCounts.get(0);
+			int inferrableProteinCounts = complexProteinCounts.get(1);
+			if (reactionComponent.getSchemClass().isa(Complex) || reactionComponent.getSchemClass().isa(Polymer)) {
+				int percent = 0;
+				if (totalProteinCounts > 0) {
+					percent = (inferrableProteinCounts * 100) / totalProteinCounts;
+				}
+				if (percent < 75) {
+					logger.info("Complex/Polymer protein count is below 75% threshold (" + percent + "%) -- terminating inference");
 					return false;
 				}
+			} else if (totalProteinCounts > 0 && inferrableProteinCounts == 0) {
+				logger.info("No distinct proteins found in EntitySet -- terminating inference");
+				return false;
 			}
 		}
 		return true;

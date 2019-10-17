@@ -105,7 +105,7 @@ public class EventsInferrer
 		String inferredFilename = "inferred_" + species + "_75.txt";
 		createNewFile(eligibleFilename);
 		createNewFile(inferredFilename);
-		ReactionInferrer.setEligibleFilename(eligibleFilename);
+		SkipInstanceChecker.setEligibleFilename(eligibleFilename);
 		ReactionInferrer.setInferredFilename(inferredFilename);
 
 		stableIdentifierGenerator = new StableIdentifierGenerator(dbAdaptor, (String) speciesObject.get("abbreviation"));
@@ -239,7 +239,7 @@ public class EventsInferrer
 
 	private static void outputReport(String species) throws IOException
 	{
-		int eligibleCount = ReactionInferrer.getEligibleCount();
+		int eligibleCount = SkipInstanceChecker.getEligibleCount();
 		int inferredCount = ReactionInferrer.getInferredCount();
 		float percentInferred = (float) 100*inferredCount/eligibleCount;
 		// Create file if it doesn't exist
@@ -247,8 +247,10 @@ public class EventsInferrer
 		logger.info("Updating " + reportFilename);
 		if (!Files.exists(Paths.get(reportFilename))) {
 			createNewFile(reportFilename);
+			String reportHeader = "## Number of inferred reactions by species for Reactome Release " + releaseVersion;
+			Files.write(Paths.get(reportFilename), reportHeader.getBytes(), StandardOpenOption.APPEND);
 		}
-		String results = "hsap to " + species + ":\t" + inferredCount + " out of " + eligibleCount + " eligible reactions (" + String.format("%.2f", percentInferred) + "%)\n";
+		String results = "hsap to " + species + ":\tInferred " + inferredCount + " out of " + eligibleCount + " eligible reactions (" + String.format("%.2f", percentInferred) + "%)\n";
 		Files.write(Paths.get(reportFilename), results.getBytes(), StandardOpenOption.APPEND);
 	}
 	

@@ -2,6 +2,9 @@ package org.reactome.orthoinference;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -24,6 +27,8 @@ public class SkipInstanceChecker {
 	private static MySQLAdaptor dba;
 	private static Set<String> skipList = new HashSet<>();
 	private static Map<String, String[]> homologueMappings = new HashMap<>();
+	private static String eligibleFilehandle;
+	private static Integer eligibleCount = 0;
 	
 	// Skiplist was traditionally provided in a file, but since it's currently just 3 instances, I've just hard-coded them here.
 	public static void getSkipList(String skipListFilename) throws NumberFormatException, Exception
@@ -102,10 +107,27 @@ public class SkipInstanceChecker {
 			logger.info(reactionInst + " has multiple species -- skipping");
 			return true;
 		}
-		// Checks that ReactionlikeEvents will be fully inferrable before attempting inference
-		if (!reactionComponentsAreInferrable(reactionInst)) {
-			return true;
-		}
+
+		// Since we want to keep the eligibility counts the same for posterity, this is where eligibility will be determined, instead of in ReactionInferrer.
+
+		// This function finds the total number of distinct proteins associated with an instance, as well as the number that can be inferred.
+		// Total proteins are stored in reactionProteinCounts[0], inferrable proteins in [1], and the maximum number of homologues for any entity involved in index [2].
+		// Reactions with no proteins/EWAS (Total = 0) are not inferred.
+		List<Integer> reactionProteinCounts = ProteinCountUtility.getDistinctProteinCounts(reactionInst);
+		int reactionTotalProteinCounts = reactionProteinCounts.get(0);
+		if (reactionTotalProteinCounts > 0) {
+			logger.info("Total protein count for RlE: " + reactionTotalProteinCounts);
+			eligibleCount++;
+			String eligibleEventName = reactionInst.getAttributeValue(DB_ID).toString() + "\t" + reactionInst.getDisplayName() + "\n";
+			Files.write(Paths.get(eligibleFilehandle), eligibleEventName.getBytes(), StandardOpenOption.APPEND);
+			// Checks that ReactionlikeEvents will be fully inferrable before attempting inference
+			if (!reactionComponentsAreInferrable(reactionInst)) {
+				return true;
+			}
+		} else {
+				logger.info("No distinct proteins found in instance -- terminating inference for " + reactionInst);
+				return true;
+			}
 		return false;
 	}
 
@@ -307,4 +329,14 @@ public class SkipInstanceChecker {
 	}
 
 	public static void setHomologueMappingFile(Map<String, String[]> homologueMappingsCopy) { homologueMappings = homologueMappingsCopy; }
+
+	public static void setEligibleFilename(String eligibleFilename)
+	{
+		eligibleFilehandle = eligibleFilename;
+	}
+
+	public static int getEligibleCount()
+	{
+		return eligibleCount;
+	}
 }

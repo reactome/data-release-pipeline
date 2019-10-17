@@ -102,13 +102,25 @@ public class SkipInstanceChecker {
 			logger.info(reactionInst + " has multiple species -- skipping");
 			return true;
 		}
+		// Checks that ReactionlikeEvents will be fully inferrable before attempting inference
 		if (!reactionComponentsAreInferrable(reactionInst)) {
 			return true;
 		}
 		return false;
 	}
 
+	/**
+	 * 	Each input, output, and catalyst is screened to verify that the Reaction will be inferred.
+	 * 	This prevents the majority of orphan PEs that were being created during orthoinference.
+	 * 	Only some EntitySets are still orphaned due to the complexity behind attempting to screen them
+	 * @param reactionInst -- GKInstance that will be screened
+	 * @return -- Boolean is returned that indicates if Reaction is fully inferrable or not
+	 * @throws Exception
+	 */
 	private static boolean reactionComponentsAreInferrable(GKInstance reactionInst) throws Exception {
+		// First gather all inputs, outputs and the PEs in catalyst activities
+		// Inputs/Outputs/CatalystPEs need to be stored in seperate collections. At time of writing, having it all stored in
+		// the same collection causes outputs to be inferred in both inputs and outputs during the actual inference -- not ideal
 		Collection<GKInstance> reactionInputs = reactionInst.getAttributeValuesList(input);
 		Collection<GKInstance> reactionOutputs = reactionInst.getAttributeValuesList(output);
 		Collection<GKInstance> reactionCatalystPEs = new ArrayList<>();
@@ -119,16 +131,19 @@ public class SkipInstanceChecker {
 				reactionCatalystPEs.add(catalystPE);
 			}
 		}
+		// Screen inputs
 		for (GKInstance reactionInput : reactionInputs) {
 			if (!componentIsInferrable(reactionInput)) {
 				return false;
 			}
 		}
+		// Screen outputs
 		for (GKInstance reactionOutput : reactionOutputs) {
 			if (!componentIsInferrable(reactionOutput)) {
 				return false;
 			}
 		}
+		// Screen catalyst PhysicalEntities
 		for (GKInstance reactionCatalystPE : reactionCatalystPEs) {
 			if (!componentIsInferrable(reactionCatalystPE)) {
 				return false;
@@ -137,7 +152,11 @@ public class SkipInstanceChecker {
 		return true;
 	}
 
+	// This looks a lot like the code structure found in OrthologousEntityGenerator, just without the actual inference code or override functionality
+	// This will screen all instance types except for some EntitySets, which are complex to screen ahead of time.
 	private static boolean componentIsInferrable(GKInstance reactionComponent) throws Exception {
+		// This block doesn't do anything aside from prevent non-species-containing instances from going through other screening.
+		// During actual inference, a non-species-containing instance would be returned without any inference.
 		if (!SpeciesCheckUtility.checkForSpeciesAttribute(reactionComponent)) {
 //				return true;
 		} else if (reactionComponent.getSchemClass().isa(GenomeEncodedEntity))

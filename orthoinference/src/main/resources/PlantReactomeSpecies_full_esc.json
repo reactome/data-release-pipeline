@@ -13,7 +13,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "ACH"
    },
    "adur" : {
       "refdb" : {
@@ -42,7 +42,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "AHA"
    },
    "aipa" : {
       "refdb" : {
@@ -55,7 +55,7 @@
       "name" : [
          "Arachis ipaensis"
       ],
-      "abbreviation": ""
+      "abbreviation": "AIP"
    },
    "alyr" : {
       "name" : [
@@ -71,7 +71,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "ALY"
    },
    "atau" : {
       "name" : [
@@ -87,7 +87,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "ATA"
    },
    "atha" : {
       "alt_refdb" : {
@@ -126,7 +126,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "ATR"
    },
    "bdis" : {
       "name" : [
@@ -142,7 +142,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "BDI"
    },
    "bnap" : {
       "name" : [
@@ -158,7 +158,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "BNA"
    },
    "bole" : {
       "name" : [
@@ -174,7 +174,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "BOL"
    },
    "brap" : {
       "name" : [
@@ -190,7 +190,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "BRA"
    },
    "bvul" : {
       "name" : [
@@ -206,24 +206,27 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "BVU"
    },
    "cann" : {
       "refdb" : {
-         "access" : "\/pages\/content\/release-summary\/",
+         "access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "dbname" : [
-            "Jaiswal"
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Capsicum_annuum_PROTEIN"
          ],
-         "url" : "http:\/\/jaiswallab.cgrb.oregonstate.edu\/"
+         "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
+         "url" : "http:\/\/ensembl.gramene.org"
       },
       "name" : [
          "Capsicum annuum"
       ],
-      "abbreviation": ""
+      "abbreviation": "CAN"
    },
    "cari" : {
       "refdb" : {
-         "access" : "http:\/\/www.ncbi.nlm.nih.gov\/protein\/###ID###",
+         "access" : "https:\/\/phytozome.jgi.doe.gov\/pz\/portal.html#!results?search=0&crown=1&star=1&method=5236&searchText=###ID###",
          "dbname" : [
             "NCBI"
          ],
@@ -232,7 +235,7 @@
       "name" : [
          "Cicer arietinum"
       ],
-      "abbreviation": ""
+      "abbreviation": "CAR"
    },
    "ccaj" : {
       "refdb" : {
@@ -245,20 +248,23 @@
       "name" : [
          "Cajanus cajan"
       ],
-      "abbreviation": ""
+      "abbreviation": "CCA"
    },
    "ccan" : {
       "refdb" : {
-         "access" : "\/pages\/content\/release-summary\/",
+         "access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "dbname" : [
-            "Jaiswal"
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Coffea_canephora_PROTEIN"
          ],
-         "url" : "http:\/\/jaiswallab.cgrb.oregonstate.edu\/"
+         "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
+         "url" : "http:\/\/ensembl.gramene.org"
       },
       "name" : [
          "Coffea canephora"
       ],
-      "abbreviation": ""
+      "abbreviation": "CCN"
    },
    "ccap" : {
       "name" : [
@@ -274,7 +280,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "CCP"
    },
    "ccri" : {
       "name" : [
@@ -290,7 +296,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "CCR"
    },
    "cmer" : {
       "name" : [
@@ -306,7 +312,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "CME"
    },
    "crei" : {
       "name" : [
@@ -322,7 +328,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "CRE"
    },
    "csat" : {
       "name" : [
@@ -338,7 +344,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "CSA"
    },
    "csin" : {
       "refdb" : {
@@ -351,7 +357,7 @@
       "name" : [
          "Citrus sinensis"
       ],
-      "abbreviation": ""
+      "abbreviation": "CSI"
    },
    "dcar" : {
       "name" : [
@@ -367,7 +373,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "DCA"
    },
    "drot" : {
       "name" : [
@@ -383,7 +389,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "DRO"
    },
    "egra" : {
       "refdb" : {
@@ -396,7 +402,7 @@
       "name" : [
          "Eucalyptus grandis"
       ],
-      "abbreviation": ""
+      "abbreviation": "EGR"
    },
    "fves" : {
       "refdb" : {
@@ -409,7 +415,7 @@
       "name" : [
          "Fragaria vesca"
       ],
-      "abbreviation": ""
+      "abbreviation": "FVE"
    },
    "gmax" : {
       "name" : [
@@ -425,7 +431,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "GMA"
    },
    "grai" : {
       "name" : [
@@ -441,7 +447,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "GRA"
    },
    "gsul" : {
       "name" : [
@@ -457,7 +463,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "GSU"
    },
    "hann" : {
       "name" : [
@@ -473,7 +479,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "ENSEMBL_Panicum_hallii_fil2_PROTEIN"
    },
    "hvul" : {
       "name" : [
@@ -489,7 +495,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "HVU"
    },
    "jcur" : {
       "refdb" : {
@@ -502,7 +508,7 @@
       "name" : [
          "Jatropha curcas"
       ],
-      "abbreviation": ""
+      "abbreviation": "JCU"
    },
    "lang" : {
       "name" : [
@@ -518,7 +524,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "LAN"
    },
    "lper" : {
       "name" : [
@@ -534,7 +540,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "LPE"
    },
    "macu" : {
       "name" : [
@@ -550,7 +556,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "MAC"
    },
    "mdom" : {
       "refdb" : {
@@ -563,7 +569,7 @@
       "name" : [
          "Malus domestica"
       ],
-      "abbreviation": ""
+      "abbreviation": "MDO"
    },
    "mesc" : {
       "name" : [
@@ -579,7 +585,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "MES"
    },
    "mgut" : {
       "refdb" : {
@@ -592,7 +598,7 @@
       "name" : [
          "Mimulus guttatus"
       ],
-      "abbreviation": ""
+      "abbreviation": "MGU"
    },
    "mtru" : {
       "name" : [
@@ -608,7 +614,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "MTR"
    },
    "natt" : {
       "name" : [
@@ -624,7 +630,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "NAT"
    },
    "oaus" : {
       "refdb" : {
@@ -637,7 +643,7 @@
       "name" : [
          "Oryza australiensis"
       ],
-      "abbreviation": ""
+      "abbreviation": "OAU"
    },
    "obar" : {
       "name" : [
@@ -653,7 +659,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "OBA"
    },
    "obra" : {
       "name" : [
@@ -669,7 +675,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "OBR"
    },
    "ogla" : {
       "name" : [
@@ -685,7 +691,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "OGL"
    },
    "oglu" : {
       "name" : [
@@ -701,7 +707,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "OGU"
    },
    "ogra" : {
       "refdb" : {
@@ -714,7 +720,7 @@
       "name" : [
          "Oryza granulata"
       ],
-      "abbreviation": ""
+      "abbreviation": "OGR"
    },
    "okas" : {
       "refdb" : {
@@ -727,7 +733,7 @@
       "name" : [
          "Oryza kasalath"
       ],
-      "abbreviation": ""
+      "abbreviation": "OKA"
    },
    "olon" : {
       "name" : [
@@ -743,7 +749,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "OLO"
    },
    "oluc" : {
       "name" : [
@@ -759,7 +765,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "OLU"
    },
    "omer" : {
       "name" : [
@@ -775,7 +781,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "OME"
    },
    "omin" : {
       "refdb" : {
@@ -788,7 +794,7 @@
       "name" : [
          "Oryza minuta"
       ],
-      "abbreviation": ""
+      "abbreviation": "OMI"
    },
    "oniv" : {
       "name" : [
@@ -804,7 +810,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "ONI"
    },
    "ooff" : {
       "refdb" : {
@@ -817,7 +823,7 @@
       "name" : [
          "Oryza officinalis"
       ],
-      "abbreviation": ""
+      "abbreviation": "OOF"
    },
    "opun" : {
       "name" : [
@@ -833,7 +839,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "OPU"
    },
    "oruf" : {
       "name" : [
@@ -849,7 +855,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "ORU"
    },
    "osai" : {
       "name" : [
@@ -865,7 +871,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "OSI"
    },
    "osat" : {
       "name" : [
@@ -894,7 +900,7 @@
       "name" : [
          "Picea abies"
       ],
-      "abbreviation": ""
+      "abbreviation": "PAB"
    },
    "pdac" : {
       "refdb" : {
@@ -907,7 +913,7 @@
       "name" : [
          "Phoenix dactylifera"
       ],
-      "abbreviation": ""
+      "abbreviation": "PDA"
    },
    "phal" : {
       "name" : [
@@ -923,7 +929,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "PHA"
    },
    "phvh" : {
       "name" : [
@@ -939,7 +945,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "PHH"
    },
    "ppat" : {
       "name" : [
@@ -955,7 +961,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "PPA"
    },
    "pper" : {
       "name" : [
@@ -971,7 +977,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "PPE"
    },
    "ptae" : {
       "refdb" : {
@@ -984,7 +990,7 @@
       "name" : [
          "Pinus taeda"
       ],
-      "abbreviation": ""
+      "abbreviation": "PTA"
    },
    "ptri" : {
       "name" : [
@@ -1000,7 +1006,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "PTI"
    },
    "pvul" : {
       "name" : [
@@ -1016,7 +1022,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "PVU"
    },
    "sbic" : {
       "name" : [
@@ -1032,7 +1038,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "SBI"
    },
    "sita" : {
       "name" : [
@@ -1048,7 +1054,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "SIT"
    },
    "slyc" : {
       "name" : [
@@ -1064,7 +1070,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "SLY"
    },
    "smoe" : {
       "name" : [
@@ -1080,7 +1086,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "SMO"
    },
    "spcc" : {
       "refdb" : {
@@ -1093,7 +1099,7 @@
       "name" : [
          "Synechocystis pcc6803"
       ],
-      "abbreviation": ""
+      "abbreviation": "SPC"
    },
    "stub" : {
       "name" : [
@@ -1109,7 +1115,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "STU"
    },
    "taes" : {
       "name" : [
@@ -1125,7 +1131,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "TAE"
    },
    "tcac" : {
       "name" : [
@@ -1141,7 +1147,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "TCA"
    },
    "tdic" : {
       "name" : [
@@ -1157,7 +1163,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "TDI"
    },
    "tpra" : {
       "name" : [
@@ -1173,20 +1179,23 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "TPR"
    },
    "ttur" : {
       "refdb" : {
-         "access" : "\/pages\/content\/release-summary\/",
+         "access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "dbname" : [
-            "Jaiswal"
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Triticum_turgidum_PROTEIN"
          ],
-         "url" : "http:\/\/jaiswallab.cgrb.oregonstate.edu\/"
+         "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
+         "url" : "http:\/\/ensembl.gramene.org"
       },
       "name" : [
          "Triticum turgidum"
       ],
-      "abbreviation": ""
+      "abbreviation": "TTU"
    },
    "tura" : {
       "name" : [
@@ -1202,7 +1211,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "TUR"
    },
    "vang" : {
       "name" : [
@@ -1218,7 +1227,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "VAN"
    },
    "vrad" : {
       "name" : [
@@ -1234,7 +1243,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "VRA"
    },
    "vvin" : {
       "name" : [
@@ -1250,7 +1259,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "VVN"
    },
    "zmay" : {
       "alt_refdb" : {
@@ -1273,6 +1282,210 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": ""
+      "abbreviation": "ZMA"
+   },
+   "ccar" : {
+      "name" : [
+         "Cynara cardunculus var. scolymus"
+      ],
+      "refdb" : {
+         "access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Cynara_cardunculus_PROTEIN"
+         ],
+         "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
+         "url" : "http:\/\/ensembl.gramene.org"
+      },
+      "abbreviation": "CCD"
+   },
+   "etef" : {
+      "name" : [
+         "Eragrostis tef"
+      ],
+      "refdb" : {
+         "access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Eragrostis_tef_PROTEIN"
+         ],
+         "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
+         "url" : "http:\/\/ensembl.gramene.org"
+      },
+      "abbreviation": "ETE"
+   },
+   "mpol" : {
+      "name" : [
+         "Marchantia polymorpha"
+      ],
+      "refdb" : {
+         "access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Marchantia_polymorpha_PROTEIN"
+         ],
+         "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
+         "url" : "http:\/\/ensembl.gramene.org"
+      },
+      "abbreviation": "MPO"
+   },
+   "aoff" : {
+      "refdb" : {
+         "access" : "https:\/\/phytozome.jgi.doe.gov\/pz\/portal.html#!results?search=0&crown=1&star=1&method=5244&searchText=###ID###",
+         "dbname" : [
+            "Phytozome_Ao"
+         ],
+         "url" : "https:\/\/phytozome.jgi.doe.gov\/"
+      },
+      "name" : [
+         "Asparagus officinalis"
+      ],
+      "abbreviation": "AOF"
+   },
+   "crub" : {
+      "refdb" : {
+         "access" : "https:\/\/phytozome.jgi.doe.gov\/pz\/portal.html#!results?search=0&crown=1&star=1&method=3123&searchText=###ID###",
+         "dbname" : [
+            "Phytozome_Cru"
+         ],
+         "url" : "https:\/\/phytozome.jgi.doe.gov\/"
+      },
+      "name" : [
+         "Capsella rubella"
+      ],
+      "abbreviation": "CRU"
+   },
+   "zjap" : {
+      "refdb" : {
+         "access" : "http:\/\/zoysia.kazusa.or.jp\/cgi-bin\/info.cgi?id=###ID###",
+         "dbname" : [
+            "KDRI_Zj"
+         ],
+         "url" : "http:\/\/www.kazusa.or.jp\/jatropha\/"
+      },
+      "name" : [
+         "Zoysia japonica"
+      ],
+      "abbreviation": "ZJA"
+   },
+   "shis" : {
+      "refdb" : {
+         "access" : "\/pages\/content\/release-summary\/",
+         "dbname" : [
+            "Jaiswal"
+         ],
+         "url" : "http:\/\/jaiswallab.cgrb.oregonstate.edu\/"
+      },
+      "name" : [
+         "Salvia hispanica"
+      ],
+      "abbreviation": "SHI"
+   },
+   "hlup" : {
+      "refdb" : {
+         "access" : "\/pages\/content\/release-summary\/",
+         "dbname" : [
+            "Hendrix"
+         ],
+         "url" : "http:\/\/hendrixlab.cgrb.oregonstate.edu\/"
+      },
+      "name" : [
+         "Humulus lupulus primary"
+      ],
+      "abbreviation": "HLP"
+   },
+   "hluh" : {
+      "refdb" : {
+         "access" : "\/pages\/content\/release-summary\/",
+         "dbname" : [
+            "Hendrix"
+         ],
+         "url" : "http:\/\/hendrixlab.cgrb.oregonstate.edu\/"
+      },
+      "name" : [
+         "Humulus lupulus haplotig"
+      ],
+      "abbreviation": "HLH"
+   },
+   "pedu" : {
+      "refdb" : {
+         "access" : "https:\/\/bioinformatics.psb.ugent.be\/plaza\/versions\/plaza_v4_monocots\/genes\/view\/###ID###",
+         "dbname" : [
+            "NCGR"
+         ],
+         "url" : "https:\/\/bioinformatics.psb.ugent.be\/plaza\/"
+      },
+      "name" : [
+         "Phyllostachys edulis"
+      ],
+      "abbreviation": "PED"
+   },
+   "nnuc" : {
+      "refdb" : {
+         "access" : "https:\/\/bioinformatics.psb.ugent.be\/plaza\/versions\/plaza_v4_dicots\/genes\/view\/###ID###",
+         "dbname" : [
+            "iPlant"
+         ],
+         "url" : "https:\/\/bioinformatics.psb.ugent.be\/plaza\/"
+      },
+      "name" : [
+         "Nelumbo nucifera"
+      ],
+      "abbreviation": "NNU"
+   },
+   "coli" : {
+      "refdb" : {
+         "access" : "https:\/\/www.uniprot.org\/uniprot\/###ID###",
+         "dbname" : [
+            "UniProt"
+         ],
+         "url" : "https:\/\/www.uniprot.org"
+      },
+      "name" : [
+         "Corchorus olitorius"
+      ],
+      "abbreviation": "COL"
+   },
+   "clan" : {
+      "refdb" : {
+         "access" : "http:\/\/cucurbitgenomics.org\/feature\/gene\/###ID###",
+         "dbname" : [
+            "CuGenDB"
+         ],
+         "url" : "http:\/\/cucurbitgenomics.org"
+      },
+      "name" : [
+         "Citrullus lanatus"
+      ],
+      "abbreviation": "CLA"
+   },
+   "csti" : {
+      "refdb" : {
+         "access" : "http:\/\/genome.ccbr.utoronto.ca\/cgi-bin\/hgTracks?hgsid=228053&clade=plant&org=C.+sativa&db=canSat3&position=###ID###",
+         "dbname" : [
+            "CCBR-UToronto"
+         ],
+         "url" : "http:\/\/genome.ccbr.utoronto.ca\/"
+      },
+      "name" : [
+         "Cannabis sativa subsp. Indica"
+      ],
+      "abbreviation": "CSK"
+   },
+   "csat" : {
+      "refdb" : {
+         "access" : "\/pages\/content\/release-summary\/",
+         "dbname" : [
+            "JCVI"
+         ],
+         "url" : "http:\/\/jaiswallab.cgrb.oregonstate.edu\/"
+      },
+      "name" : [
+         "Cannabis sativa"
+      ],
+      "abbreviation": "CSC"
    }
 }

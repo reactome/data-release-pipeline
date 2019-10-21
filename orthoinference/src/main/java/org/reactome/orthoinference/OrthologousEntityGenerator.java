@@ -126,18 +126,23 @@ public class OrthologousEntityGenerator {
 				infDefinedSetInst.addAttributeValue(created, instanceEditInst);
 				String definedSetName = "Homologues of " + ewasInst.getAttributeValue(name);
 				infDefinedSetInst.addAttributeValue(name, definedSetName);
-				
-				GKInstance compartmentInstGk = (GKInstance) ewasInst.getAttributeValue(compartment);
-				if (compartmentInstGk.getSchemClass().isa(Compartment)) {
-					infDefinedSetInst.addAttributeValue(compartment, ewasInst.getAttributeValue(compartment));
-				} else {
-					GKInstance newCompartmentInst = InstanceUtilities.createCompartmentInstance(compartmentInstGk);
-					infDefinedSetInst.addAttributeValue(compartment, newCompartmentInst);
+
+				String cmpt = null;
+				if (ewasInst.getSchemClass().isValidAttribute(compartment) && ewasInst.getAttributeValue(compartment) != null) {
+					GKInstance compartmentInstGk = (GKInstance) ewasInst.getAttributeValue(compartment);
+					if (compartmentInstGk.getSchemClass().isa(Compartment)) {
+						infDefinedSetInst.addAttributeValue(compartment, ewasInst.getAttributeValue(compartment));
+					} else {
+						GKInstance newCompartmentInst = InstanceUtilities.createCompartmentInstance(compartmentInstGk);
+						infDefinedSetInst.addAttributeValue(compartment, newCompartmentInst);
+					}
+					cmpt = compartmentInstGk.getDisplayName();
 				}
 				
 				infDefinedSetInst.addAttributeValue(species, speciesInst);
 				infDefinedSetInst.addAttributeValue(hasMember, infEWASInstances);
-				String definedSetDisplayName = (String) infDefinedSetInst.getAttributeValue(name) + " [" +((GKInstance) ewasInst.getAttributeValue(compartment)).getDisplayName() + "]";
+				String definedSetDisplayName = (String) infDefinedSetInst.getAttributeValue(name) + ((cmpt != null) ? " [" + cmpt + "]" : "");
+				cmpt = null;
 				infDefinedSetInst.setAttributeValue(_displayName, definedSetDisplayName);
 				// Caching based on an instance's defining attributes. This reduces the number of 'checkForIdenticalInstance' calls, which is slow.
 				String cacheKey = InstanceUtilities.getCacheKey((GKSchemaClass) infDefinedSetInst.getSchemClass(), infDefinedSetInst);

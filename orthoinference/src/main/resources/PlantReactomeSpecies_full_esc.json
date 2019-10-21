@@ -228,7 +228,7 @@
       "refdb" : {
          "access" : "https:\/\/phytozome.jgi.doe.gov\/pz\/portal.html#!results?search=0&crown=1&star=1&method=5236&searchText=###ID###",
          "dbname" : [
-            "NCBI"
+            "NCBI_Ca"
          ],
          "url" : "http:\/\/www.ncbi.nlm.nih.gov\/"
       },
@@ -479,7 +479,7 @@
          "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
          "url" : "http:\/\/ensembl.gramene.org"
       },
-      "abbreviation": "ENSEMBL_Panicum_hallii_fil2_PROTEIN"
+      "abbreviation": "HAN"
    },
    "hvul" : {
       "name" : [
@@ -1440,7 +1440,7 @@
       "refdb" : {
          "access" : "https:\/\/www.uniprot.org\/uniprot\/###ID###",
          "dbname" : [
-            "UniProt"
+            "NCBI_Co"
          ],
          "url" : "https:\/\/www.uniprot.org"
       },

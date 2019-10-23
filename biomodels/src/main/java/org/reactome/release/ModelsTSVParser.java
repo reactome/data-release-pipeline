@@ -35,8 +35,12 @@ public class ModelsTSVParser {
                 String biomodelsId = fields[0];
                 String pathwayStableId = fields[1];
 
-                if (!matchBioModelsPattern(biomodelsId) || !matchStableIdPattern(pathwayStableId)) {
-                    logger.warn("Line has improperly formatted BioModel ID or Stable ID -- skipping");
+                if (!matchBioModelsPattern(biomodelsId)) {
+                    logger.warn("Line has improperly formatted BioModel ID -- skipping");
+                    continue;
+                }
+                if (!matchStableIdPattern(pathwayStableId)) {
+                    logger.warn("Line has improperly formatted or Stable ID -- skipping");
                     continue;
                 }
 

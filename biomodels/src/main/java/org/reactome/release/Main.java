@@ -34,8 +34,8 @@ public class Main {
     public static void main(String[] args) throws SQLException {
         logger.info("Running BioModels insertion");
 
-        String pathToResources = args.length > 0 ? args[0] : "biomodels/src/main/resources/config.properties";
-        String pathToModels2Pathways = args.length > 1 ? args[1] : "biomodels/src/main/resources/models2pathways.tsv";
+        String pathToResources = args.length > 0 ? args[0] : "src/main/resources/config.properties";
+        String pathToModels2Pathways = args.length > 1 ? args[1] : "src/main/resources/models2pathways.tsv";
 
         Properties props = new Properties();
         try {
@@ -61,6 +61,7 @@ public class Main {
 
             try {
                 pathway.addAttributeValue(ReactomeJavaConstants.crossReference, biomodelsDatabaseIdentifiers);
+                Collection<GKInstance> modifiedInstances = pathway.getAttributeValuesList(ReactomeJavaConstants.modified);
                 pathway.addAttributeValue(ReactomeJavaConstants.modified, instanceEdit);
                 dba.updateInstanceAttribute(pathway, ReactomeJavaConstants.crossReference);
                 dba.updateInstanceAttribute(pathway, ReactomeJavaConstants.modified);

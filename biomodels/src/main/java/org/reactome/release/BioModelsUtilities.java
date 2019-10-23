@@ -30,7 +30,6 @@ public class BioModelsUtilities {
             logger.info("Creating BioModels reference database - no existing one was found");
             biomodelsReferenceDatabase = createBioModelsDatabaseInstance(dba, instanceEdit);
         }
-
         return biomodelsReferenceDatabase;
     }
 
@@ -83,7 +82,7 @@ public class BioModelsUtilities {
 
             //TODO Check if both accessUrl and Url should be using https
             biomodelsReferenceDatabase.addAttributeValue(
-                    ReactomeJavaConstants.accessUrl, "http://www.ebi.ac.uk/biomodels-main/publ-model.do?mid=###ID###"
+                    ReactomeJavaConstants.accessUrl, "https://www.ebi.ac.uk/biomodels/###ID###"
             );
             biomodelsReferenceDatabase.addAttributeValue(
                     ReactomeJavaConstants.url, "https://www.ebi.ac.uk/biomodels/"

@@ -7,6 +7,10 @@ import java.util.*;
 import static org.junit.Assert.*;
 
 public class ModelsTSVParserTester {
+
+    private final int correctPathwayCount = 3;
+    private final int correctNumberPathwaysInTestFile = 745;
+    private final int correctNumberBioModelsIdsInTestFile = 153;
     @Test
     public void emptyMapFromEmptyFileName() {
         Map<String, List<String>> pathwayToBioModelsIds =  ModelsTSVParser.parse("");
@@ -28,7 +32,7 @@ public class ModelsTSVParserTester {
     @Test
     public void populatedMapFromPartiallyCorrectFile() {
         Map<String, List<String>> pathwayToBioModelsIds = ModelsTSVParser.parse("src/test/resources/partiallycorrect_models2pathways.tsv");
-        assertEquals(pathwayToBioModelsIds.keySet().size(), 3);
+        assertEquals(pathwayToBioModelsIds.keySet().size(), correctPathwayCount);
         assertTrue(pathwayToBioModelsIds.get("R-MMU-1169091").contains("BIOMD0000000226"));
     }
 
@@ -36,7 +40,7 @@ public class ModelsTSVParserTester {
     public void testModels2PathwaysCorrectlyParsed() {
         Map<String, List<String>> pathwayToBioModelsIds =
             ModelsTSVParser.parse("src/test/resources/models2pathways.tsv");
-        assertEquals(pathwayToBioModelsIds.keySet().size(), 745); // Number of pathways in test input file
+        assertEquals(pathwayToBioModelsIds.keySet().size(), correctNumberPathwaysInTestFile);
 
         long bioModelsIdsCount =
             pathwayToBioModelsIds.keySet().stream().map(
@@ -44,7 +48,7 @@ public class ModelsTSVParserTester {
             ).flatMap(
                 Collection::stream
             ).distinct().count();
-        assertEquals(bioModelsIdsCount, 153); // Number of distinct BioModels Ids in test input file
+        assertEquals(bioModelsIdsCount, correctNumberBioModelsIdsInTestFile); // Number of distinct BioModels Ids in test input file
 
         // Tests pathway contains correct BioModels id
         assertTrue(pathwayToBioModelsIds.get("R-HSA-199418").contains("BIOMD0000000175"));

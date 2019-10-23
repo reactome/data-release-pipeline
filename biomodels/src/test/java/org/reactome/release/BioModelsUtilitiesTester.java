@@ -46,7 +46,7 @@ public class BioModelsUtilitiesTester {
 
         Mockito.when(mockAdaptor.fetchInstanceByAttribute("ReferenceDatabase", "name", "=", "BioModels")).thenReturn(collectionWithoutMockDatabaseInstance);
         GKInstance returnedDbInstance = BioModelsUtilities.retrieveBioModelsDatabaseInstance(mockAdaptor);
-        assertThat(returnedDbInstance, is(equalTo(null)));
+        assertThat(returnedDbInstance, is(nullValue()));
     }
 
 }

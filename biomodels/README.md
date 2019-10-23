@@ -1,6 +1,6 @@
 # BioModels Data Insertion Release Step
 
-The BioModels step is run following the <a href="https://github.com/reactome/analysis-core">analysis-core</a> and before UpdateGKCurrent (link needed) in Reactome's quarterly data release. It consists of two parts: (1) running the <a href="https://github.com/reactome/biomodels-mapper">biomodels-mapper</a> to generate `models2pathways.tsv` and than (2) running the code found in this repository to perform database updates. This is a rewrite of <a href="https://github.com/reactome/Release/blob/master/scripts/release/biomodels/add_links_to_biomodels_resource.pl">add_links_to_biomodels_resource.pl</a>
+The BioModels step is run following the <a href="https://github.com/reactome/analysis-core">analysis-core</a> and before UpdateGKCurrent (link needed) in Reactome's quarterly data release. It consists of two parts: (1) running the <a href="https://github.com/reactome/biomodels-mapper">biomodels-mapper</a> to generate `models2pathways.tsv` and then (2) running the code found in this repository to perform database updates. This is a rewrite of <a href="https://github.com/reactome/Release/blob/master/scripts/release/biomodels/add_links_to_biomodels_resource.pl">add_links_to_biomodels_resource.pl</a>
 
 This tool will insert the cross-references for the BioModels Reference Database into the appropriate pathway instances of the release database.
 
@@ -17,7 +17,7 @@ BIOMD0000000287 R-HSA-69563     6.066213418698396E-6    https://reactome.org/Pat
 BIOMD0000000287 R-HSA-2559586   6.066213418698396E-6    https://reactome.org/PathwayBrowser/#/R-HSA-2559586     DNA Damage/Telomere Stress Induced Senescence   IEA     Homo sapiens
 ```
 
-For the purposes of this module, the first two columns are the most important. The first column contains BioModels identifiers, and the second column contains Reactome Pathway identifiers that have have been connected to them by biomodels-mapper. For each line in `models2pathways.tsv`, the corresponding Pathway instance in Reactome's relationship database will receive a CrossReference that points to the biomodel identifier. If the biomodel identifier does not already have a database instance, it will be created before being slotted into the Pathway instance as an instance of type `DatabaseIdentifier`. All biomodels identifier instances are connected to the sole 'BioModels Database' `ReferenceDatabase` object. 
+For the purposes of this module, the first two columns are the most important. The first column contains BioModels identifiers, and the second column contains Reactome Pathway identifiers that have have been connected to them by <a href="https://github.com/reactome/biomodels-mapper">biomodels-mapper</a>. For each line in `models2pathways.tsv`, the corresponding Pathway instance in Reactome's relationship database will receive a CrossReference that points to the biomodel identifier. If the biomodel identifier does not already have a database instance, it will be created before being slotted into the Pathway instance as an instance of type `DatabaseIdentifier`. All biomodels identifier instances are connected to the sole 'BioModels Database' `ReferenceDatabase` object.
  
 ## Logging
  
@@ -45,18 +45,21 @@ This is a Java application which requries a Java 8+ environment. You will need m
 To compile the application, run this command:
 
 ```
-$ mvn clean compile package
+$ mvn clean package
 ```
 
 If this is successful, you should see a JAR file in the `target` directory, with a name like `biomodels-VERSION_NUMBER-jar-with-dependencies.jar`. This is the file you will run.
 
 For example, for version "1.0-SNAPSHOT", execute this command to run the program:
 ```
-$ java -jar target/biomodels-1.0-SNAPSHOT-jar-with-dependencies.jar ./config.properties path/to/models2pathways.tsv
+$ java -jar target/biomodels-1.0-SNAPSHOT.jar ./config.properties path/to/models2pathways.tsv
 ```
 
+The biomodels script can take two arguments, the configuration properties filepath and `models2pathways.tsv` filepath. If arguments are specified, the first argument must be the properties file and the second the `models2pathways.tsv` filepath.
 If no properties file is specified as the first argument, the program will look in src/main/resources/ for config.properties. Similarly for models2pathways.tsv, unless otherwise specified it will assume it exists in src/main/resources.
 
 ## Validating BioModels Insertion </h3>
 
-The insertion step generally takes a few minutes. Once it has completed, the simplest way to verify that it ran correctly is through Reactome's <a href="https://reactome.org/download-data/reactome-curator-tool">Curator Tool</a>. Once you have loaded up the database, first confirm that a 'BioModels Database' instance exists in the `ReferenceDatabase` class. This should have been created during the insertion step, if it didn't exist already. By right-clicking on the BioModels Database instance, you are able to 'Display Referrers'. This should bring up a list of `DatabaseIdentifier` objects that look like 'BioModels Database:BIOMD########'. Confirm that there are no duplicates in this list and compare the count in this release to the previous release. The numbers should be similar, if not a bit higher for the most recent one. That is everything that needs to be done for validation! Next up is the UpdateGKCurrent (link needed) step. 
+The insertion step generally takes a few minutes. Once it has completed, the simplest way to verify that it ran correctly is through Reactome's <a href="https://reactome.org/download-data/reactome-curator-tool">Curator Tool</a>. Once you have loaded up the database, first confirm that a 'BioModels Database' instance exists in the `ReferenceDatabase` class. This should have been created during the insertion step, if it didn't exist already. By right-clicking on the BioModels Database instance, you are able to 'Display Referrers'. This should bring up a list of `DatabaseIdentifier` objects that look like 'BioModels Database:BIOMD########'. Confirm that there are no duplicates in this list and compare the count in this release to the previous release. The numbers should be similar, if not a bit higher for the most recent one.
+
+That is everything that needs to be done for validation! Next up is the UpdateGKCurrent (link needed) step.

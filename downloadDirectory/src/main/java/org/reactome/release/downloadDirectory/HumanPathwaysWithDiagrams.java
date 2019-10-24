@@ -38,7 +38,7 @@ public class HumanPathwaysWithDiagrams {
             boolean isDisease = false;
 
             // If returned value from 'disease' query is not null, its considered to be a disease-containing Pathway
-            if (humanPathway.getAttributeValue(ReactomeJavaConstants.disease) != null) {
+            if (isDiease(humanPathway)) {
                 isDisease = true;
             }
             Collection<GKInstance> representedPathwayInstances = humanPathway.getReferers(ReactomeJavaConstants.representedPathway);
@@ -52,5 +52,10 @@ public class HumanPathwaysWithDiagrams {
         // Move file to directory pertaining to release
         String outpathName = releaseNumber + "/" + humanPathwaysWithDiagramsFilename;
         Files.move(Paths.get(humanPathwaysWithDiagramsFilename), Paths.get(outpathName), StandardCopyOption.REPLACE_EXISTING);
+    }
+
+    // Check if disease attribute is populated
+    private static boolean isDiease(GKInstance humanPathway) throws Exception {
+        return humanPathway.getAttributeValue(ReactomeJavaConstants.disease) != null;
     }
 }

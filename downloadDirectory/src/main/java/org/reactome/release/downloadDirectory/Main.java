@@ -216,7 +216,7 @@ public class Main {
 		}
 		if (failedSteps.size() > 0) {
 			String failedStepsString = StringUtils.join(failedSteps, ", ");
-			logger.warn("\nErrors were reported in the following step(s): " + failedStepsString + "\n");
+			logger.warn("Errors were reported in the following step(s): " + failedStepsString + "\n");
 		}
 		logger.info("Finished DownloadDirectory");
 	}

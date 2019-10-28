@@ -47,19 +47,17 @@ public class HumanPathwaysWithDiagrams {
             boolean isDisease = false;
 
             // If returned value from 'disease' query is not null, its considered to be a disease-containing Pathway
-            if (isDiease(humanPathway)) {
+            if (isDisease(humanPathway)) {
                 isDisease = true;
             }
-;
+
             Collection<GKInstance> representedPathwayInstances = humanPathway.getReferers(ReactomeJavaConstants.representedPathway);
             // If returned value from 'representedPathway' referral is not null, it is considered to have a pathway diagram
 
-            if (representedPathwayInstances != null) {
-                if (!onlyGreenBoxDiagrams(representedPathwayInstances)) {
-                    // Generate line in file and append to that file
-                    String line = humanPathway.getDBID() + "\t" + humanPathway.getDisplayName() + "\t" + isDisease + "\n";
-                    Files.write(Paths.get(humanPathwaysWithDiagramsFilename), line.getBytes(), StandardOpenOption.APPEND);
-                }
+            if (representedPathwayInstances != null && !onlyGreenBoxDiagrams(representedPathwayInstances)) {
+                // Generate line in file and append to that file
+                String line = humanPathway.getDBID() + "\t" + humanPathway.getDisplayName() + "\t" + isDisease + "\n";
+                Files.write(Paths.get(humanPathwaysWithDiagramsFilename), line.getBytes(), StandardOpenOption.APPEND);
             }
         }
         // Move file to directory pertaining to release
@@ -67,7 +65,7 @@ public class HumanPathwaysWithDiagrams {
         Files.move(Paths.get(humanPathwaysWithDiagramsFilename), Paths.get(outpathName), StandardCopyOption.REPLACE_EXISTING);
     }
 
-    // Method for checking if diagrams are only comprised of GreenBoxDiagrams/Compartments, which we want to exclude
+    // Method for checking if diagrams are only comprised of GreenBoxDiagrams/Compartments, which we want to exclude.
     // Involves going through the PathwayDiagram XML and searching for particular strings that denote the green boxes and compartments.
     private static boolean onlyGreenBoxDiagrams(Collection<GKInstance> representedPathwayInstances) throws Exception {
         DocumentBuilderFactory documentBuildFactory = DocumentBuilderFactory.newInstance();
@@ -82,13 +80,8 @@ public class HumanPathwaysWithDiagrams {
                 Node node = nList.item(n);
                 NodeList nChildList = node.getChildNodes();
                 for (int c = 0; c < nChildList.getLength(); c++) {
-                    Node childNode = nChildList.item(c);
-                    if (childNode.getNodeType() == Node.ELEMENT_NODE) {
-                        if (childNode.getNodeName() != PROCESS_NODE_STRING) {
-                            if (childNode.getNodeName() != RENDERABLE_COMPARTMENT_STRING) {
-                                return false;
-                            }
-                        }
+                    if (isNotAPathwayOrCompartmentNode(nChildList.item(c))) {
+                        return false;
                     }
                 }
             }
@@ -96,8 +89,14 @@ public class HumanPathwaysWithDiagrams {
         return true;
     }
 
+    private static boolean isNotAPathwayOrCompartmentNode(Node childNode) {
+        return childNode.getNodeType() == Node.ELEMENT_NODE &&
+            !childNode.getNodeName().equals(PROCESS_NODE_STRING) &&
+            !childNode.getNodeName().equals(RENDERABLE_COMPARTMENT_STRING);
+    }
+
     // Check if disease attribute is populated
-    private static boolean isDiease(GKInstance humanPathway) throws Exception {
+    private static boolean isDisease(GKInstance humanPathway) throws Exception {
         return humanPathway.getAttributeValue(ReactomeJavaConstants.disease) != null;
     }
 }

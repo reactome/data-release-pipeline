@@ -54,7 +54,7 @@ public class Main {
 
         for (GKInstance pathway: getPathwaysWithBiomodelsIds(dba, pathwayStableIdToBiomodelsIds.keySet())) {
             logger.info("Adding BioModels ids to pathway " + pathway.getExtendedDisplayName());
-            List<String> biomodelsIds = new ArrayList<>(pathwayStableIdToBiomodelsIds.get(getStableIdentifier(pathway)));
+            Set<String> biomodelsIds = pathwayStableIdToBiomodelsIds.get(getStableIdentifier(pathway));
             List<GKInstance> biomodelsDatabaseIdentifiers =
                 createBiomodelsDatabaseIdentifiers(biomodelsIds, instanceEdit, dba);
             try {
@@ -99,12 +99,12 @@ public class Main {
 
     /**
      * Creates a DatabaseIdentifier instance for the biomodel identifier, if it hasn't already been created during the current run.
-     * @param biomodelsIds -- List of BioModels IDs
+     * @param biomodelsIds -- Set of BioModels IDs
      * @param instanceEdit -- GKInstance instanceEdit attached to the person Id that is executing this program
      * @param dba -- MySQLAdaptor
      * @return -- Returns a list of DatabaseIdentifier objects pertaining to the BioModel identifier
      */
-    private static List<GKInstance> createBiomodelsDatabaseIdentifiers(List<String> biomodelsIds,
+    private static List<GKInstance> createBiomodelsDatabaseIdentifiers(Set<String> biomodelsIds,
                                                               GKInstance instanceEdit, MySQLAdaptor dba) {
 
         List<GKInstance> biomodelsDatabaseIdentifiers = new ArrayList<>();

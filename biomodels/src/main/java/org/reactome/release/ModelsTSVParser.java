@@ -42,7 +42,7 @@ public class ModelsTSVParser {
                 }
 
                 if (pathwayToBiomodelsIds.get(pathwayStableId) == null) {
-                    Set<String> biomodelsIds = new HashSet<>();
+                    Set<String> biomodelsIds = new LinkedHashSet<>();
                     biomodelsIds.add(biomodelsId);
                     pathwayToBiomodelsIds.put(pathwayStableId, biomodelsIds);
                 } else {

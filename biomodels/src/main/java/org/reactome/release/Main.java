@@ -49,16 +49,14 @@ public class Main {
         // Create new instanceEdit in database to track modified pathways
         long personId = Long.parseLong(props.getProperty("personId"));
         GKInstance instanceEdit = createInstanceEdit(dba, personId, "BioModels reference database creation");
-
-        Map<String, List<String>> pathwayStableIdToBiomodelsIds =
+        Map<String, Set<String>> pathwayStableIdToBiomodelsIds =
             ModelsTSVParser.parse(pathToModels2Pathways);
 
         for (GKInstance pathway: getPathwaysWithBiomodelsIds(dba, pathwayStableIdToBiomodelsIds.keySet())) {
             logger.info("Adding BioModels ids to pathway " + pathway.getExtendedDisplayName());
-            List<String> biomodelsIds = pathwayStableIdToBiomodelsIds.get(getStableIdentifier(pathway));
+            List<String> biomodelsIds = new ArrayList<>(pathwayStableIdToBiomodelsIds.get(getStableIdentifier(pathway)));
             List<GKInstance> biomodelsDatabaseIdentifiers =
                 createBiomodelsDatabaseIdentifiers(biomodelsIds, instanceEdit, dba);
-
             try {
                 pathway.addAttributeValue(ReactomeJavaConstants.crossReference, biomodelsDatabaseIdentifiers);
                 Collection<GKInstance> modifiedInstances = pathway.getAttributeValuesList(ReactomeJavaConstants.modified);

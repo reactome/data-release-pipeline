@@ -6,10 +6,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ModelsTSVParser {
     private static final Logger logger = LogManager.getLogger();
@@ -21,8 +18,8 @@ public class ModelsTSVParser {
      * @param tsvFile -- String, path/to/models2pathways.tsv
      * @return Map of ReactomePathwayIds and a List of BioModelsIdentifiers
      */
-    public static Map<String, List<String>> parse(String tsvFile) {
-        Map<String, List<String>> pathwayToBiomodelsIds = new HashMap<>();
+    public static Map<String, Set<String>> parse(String tsvFile) {
+        Map<String, Set<String>> pathwayToBiomodelsIds = new HashMap<>();
 
         if (tsvFile == null || tsvFile.isEmpty()) {
             return pathwayToBiomodelsIds;
@@ -45,7 +42,7 @@ public class ModelsTSVParser {
                 }
 
                 if (pathwayToBiomodelsIds.get(pathwayStableId) == null) {
-                    List<String> biomodelsIds = new ArrayList<>();
+                    Set<String> biomodelsIds = new HashSet<>();
                     biomodelsIds.add(biomodelsId);
                     pathwayToBiomodelsIds.put(pathwayStableId, biomodelsIds);
                 } else {

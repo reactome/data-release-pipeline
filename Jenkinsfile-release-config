@@ -14,7 +14,7 @@ pipeline{
 					def userInput = input(
 					id: 'userInput', message: "Has the Config file credentials been updated for this release?",
 					parameters: [
-												[$class: 'TextParameterDefinition', defaultValue: '', description: '', name: 'response']
+												[$class: 'TextParameterDefinition', defaultValue: '', name: 'response']
 											])
 
 					if (!userInput.toLowerCase().startsWith("y")){

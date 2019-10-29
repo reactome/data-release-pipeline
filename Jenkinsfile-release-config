@@ -27,7 +27,7 @@ pipeline{
 				def userInput = input(
 					id: 'userInput', message: "Have the release-specific Jenkins environmental variables been updated for this release?",
 					parameters: [
-												[$class: 'TextParameterDefinition', defaultValue: '', description: '', name: 'response']
+												[$class: 'TextParameterDefinition', defaultValue: '', name: 'response']
 											])
 
 					if (!userInput.toLowerCase().startsWith("y")){
@@ -41,7 +41,7 @@ pipeline{
 						def userReleaseNumber = input(
 						id: 'userInput', message: "Enter release version number.",
 						parameters: [
-													[$class: 'TextParameterDefinition', defaultValue: '', description: '', name: 'response']
+													[$class: 'TextParameterDefinition', defaultValue: '', name: 'response']
 												])
 						withCredentials([file(credentialsId: 'Config', variable: 'ConfigFile')]){
 							sh "bash confirmJenkinsConfigurations.sh --config $ConfigFile --env-release-current ${env.RELEASE_NUMBER} --env-release-previous ${env.PREV_RELEASE_NUMBER} --user-release $userReleaseNumber"

@@ -95,7 +95,7 @@ pipeline{
 
 // Utility function that checks upstream builds of this project were successfully built.
 def checkUpstreamBuildsSucceeded(String stepName, String currentRelease) {
-	def statusUrl = httpRequest authentication: 'jenkinsKey', validResponseCodes: '200:404', url: "${env.JENKINS_JOB_URL}/job/$currentRelease/job/$stepName/lastBuild/api/json"
+	def statusUrl = httpRequest authentication: 'jenkinsKey', validResponseCodes: "${env.VALID_RESPONSE_CODES}", url: "${env.JENKINS_JOB_URL}/job/$currentRelease/job/$stepName/lastBuild/api/json"
 	if (statusUrl.getStatus() == 404) {
 		error("$stepName has not yet been run. Please complete a successful build.")
 	} else {

@@ -11,7 +11,7 @@ pipeline {
 				script{
 					def currentRelease = (pwd() =~ /Releases\/(\d+)\//)[0][1];
 					// This queries the Jenkins API to confirm that the most recent build of AddLinks-Insertion was successful.
-					def addLinksInsertionStatusUrl = httpRequest authentication: 'jenkinsKey', validResponseCodes: '200:404', url: "${env.JENKINS_JOB_URL}/job/$currentRelease/job/AddLinks-Insertion/lastBuild/api/json"
+					def addLinksInsertionStatusUrl = httpRequest authentication: 'jenkinsKey', validResponseCodes: "${env.VALID_RESPONSE_CODES}", url: "${env.JENKINS_JOB_URL}/job/$currentRelease/job/AddLinks-Insertion/lastBuild/api/json"
 					if (addLinksInsertionStatusUrl.getStatus() == 404) {
 						error("AddLinks-Insertion has not yet been run. Please complete a successful build.")
 					} else {

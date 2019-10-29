@@ -263,7 +263,7 @@ public class EventsInferrer
 	private static Map<String, String[]> readHomologueMappingFile(String toSpecies, String fromSpecies, String pathToOrthopairs) throws IOException
 	{
 		String orthopairsFileName = fromSpecies + "_" + toSpecies + "_mapping.txt";
-		String orthopairsFilePath = pathToOrthopairs + "/" + orthopairsFileName;
+		String orthopairsFilePath = Paths.get(pathToOrthopairs, orthopairsFileName).toString();
 		logger.info("Reading in " + orthopairsFilePath);
 		FileReader fr = new FileReader(orthopairsFilePath);
 		BufferedReader br = new BufferedReader(fr);

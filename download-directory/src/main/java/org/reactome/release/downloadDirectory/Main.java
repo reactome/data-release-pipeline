@@ -22,13 +22,13 @@ import org.reactome.release.downloadDirectory.GenerateGOAnnotationFile.CreateGOA
 
 public class Main {
 	private static final Logger logger = LogManager.getLogger();
-
+	private static final String RESOURCES_DIR = Paths.get("src", "main", "resources").toString();
 	public static void main(String[] args) throws Exception {
 
 		logger.info("Beginning Download Directory step");
 
-		String pathToConfig = args.length > 0 ? args[0] : Paths.get("src/main/resources/config.properties").toString();
-		String pathToStepConfig = args.length > 1 ? args[1] : Paths.get("src/main/resources/stepsToRun.config").toString();
+		String pathToConfig = args.length > 0 ? args[0] : Paths.get(RESOURCES_DIR ,"config.properties").toString();
+		String pathToStepConfig = args.length > 1 ? args[1] : Paths.get(RESOURCES_DIR,"stepsToRun.config").toString();
 
 		Properties props = new Properties();
 		props.load(new FileInputStream(pathToConfig));

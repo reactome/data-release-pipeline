@@ -41,11 +41,12 @@ public class Main
 
     private static final Logger logger = LogManager.getLogger();
 
+
     public static void main( String[] args ) throws IOException, ParseException {
 
 
         // If using an alternative source species, specify the 4-letter code as the second argument
-        String pathToConfig = args.length > 0 ? args[0] : Paths.get("src/main/resources/config.properties").toString();
+        String pathToConfig = args.length > 0 ? args[0] : Paths.get("src", "main", "resources", "config.properties").toString();
         String sourceMappingSpecies = args.length > 1 ? args[1] : "hsap";
         Properties props = new Properties();
         props.load(new FileInputStream(pathToConfig));

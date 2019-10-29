@@ -43,7 +43,7 @@ pipeline {
 			}
 		}
 		// This stage backs up the gk_central database before it is modified.
-		stage('Setup: Back up gk_central'){
+		stage('Setup: Back up Curator gk_central DB'){
 			steps{
 				script{
 					dir('update-stable-ids'){

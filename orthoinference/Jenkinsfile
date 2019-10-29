@@ -31,7 +31,7 @@ pipeline{
 			}
 		}
 		// This stage builds the jar file using maven. It also runs the Main orthoinference process as a 'sub-stage'.
-		// This was due to a restriction in iterating over a list of species names. To iterate, you need to first have a 'stage > steps > script hierarchy.
+		// This was due to a restriction in iterating over a list of species names. To iterate, you need to first have a 'stage > steps > script' hierarchy.
 		// At the script level, you can iterate over a list and then create new stages from this iteration. The choice was between an empty stage or to do a sub-stage.
 		stage('Setup: Build jar file'){
 			steps{
@@ -42,7 +42,7 @@ pipeline{
 				}
 				// This script block executes the main orthoinference code one species at a time.
 				// It takes all Human Reaction instances in the database and attempts to project each Reaction to each species by
-				// stripping them down to the reactio's constituent proteins, checks if the protein homolog exists for that species, and infers it in Reactome's data model.
+				// stripping them down to the reaction's constituent proteins, checks if the protein homolog exists for that species, and infers it in Reactome's data model.
 				// If enough proteins (>= 75%) are inferrable in a Reaction, then it is created and stored in the database for this release. This is done from scratch each time.
 				script{
 					speciesList = ['mmus', 'rnor', 'cfam', 'btau', 'sscr', 'drer', 'xtro', 'ggal', 'dmel', 'cele', 'ddis', 'spom', 'scer', 'pfal']

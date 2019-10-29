@@ -15,7 +15,7 @@ public class Main {
 	
 	public static void main(String[] args) throws Exception {
 
-		String pathToConfig = "src/main/resources/config.properties";
+		String pathToConfig = Paths.get("src","main","resources","config.properties").toString();
 		String speciesCode = "";
 		if (args.length == 2) {
 			pathToConfig = args[0];

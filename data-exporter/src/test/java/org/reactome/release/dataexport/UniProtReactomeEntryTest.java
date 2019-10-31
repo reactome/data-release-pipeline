@@ -8,6 +8,7 @@ import java.util.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.reactome.release.dataexport.UniProtDbIdGenerator.getNextUniProtDBID;
 
 public class UniProtReactomeEntryTest {
 	private UniProtReactomeEntry uniProtReactomeEntry;
@@ -16,7 +17,7 @@ public class UniProtReactomeEntryTest {
 
 	@BeforeEach
 	public void createUniProtReactomeEntry() {
-		final long UNIPROT_DB_ID = 3L;
+		final long UNIPROT_DB_ID = getNextUniProtDBID();
 		final String UNIPROT_ACCESSION = "P12345";
 		final String UNIPROT_DISPLAY_NAME = "UniProt:" + UNIPROT_ACCESSION;
 
@@ -44,7 +45,9 @@ public class UniProtReactomeEntryTest {
 
 		assertThat(
 			uniProtReactomeEntry,
-			is(not(equalTo(UniProtReactomeEntry.get(4L, DIFFERENT_ACCESSION, DIFFERENT_DISPLAY_NAME))))
+			is(not(equalTo(
+				UniProtReactomeEntry.get(getNextUniProtDBID(), DIFFERENT_ACCESSION, DIFFERENT_DISPLAY_NAME))
+			))
 		);
 	}
 
@@ -55,7 +58,7 @@ public class UniProtReactomeEntryTest {
 		List<UniProtReactomeEntry> uniProtReactomeEntries = new ArrayList<>();
 		uniProtReactomeEntries.add(uniProtReactomeEntry);
 		UniProtReactomeEntry uniProtReactomeEntry2 = UniProtReactomeEntry.get(
-			5L,
+			getNextUniProtDBID(),
 			ACCESSION_THAT_SHOULD_BE_FIRST,
 			DUMMY_UNIPROT_DISPLAY_NAME
 		);
@@ -69,7 +72,9 @@ public class UniProtReactomeEntryTest {
 	@Test
 	public void tenCharacterAccessionIsAccepted() {
 		final String ACCESSION = "P123456789";
-		UniProtReactomeEntry uniprot = UniProtReactomeEntry.get(6L, ACCESSION, DUMMY_UNIPROT_DISPLAY_NAME);
+		UniProtReactomeEntry uniprot = UniProtReactomeEntry.get(
+			getNextUniProtDBID(), ACCESSION, DUMMY_UNIPROT_DISPLAY_NAME
+		);
 
 		assertThat(uniprot.getAccession() , equalTo(ACCESSION));
 	}
@@ -80,7 +85,9 @@ public class UniProtReactomeEntryTest {
 
 		IllegalArgumentException thrown = assertThrows(
 			IllegalArgumentException.class,
-			() -> UniProtReactomeEntry.get(7L, INCORRECT_ACCESSION, DUMMY_UNIPROT_DISPLAY_NAME),
+			() -> UniProtReactomeEntry.get(
+				getNextUniProtDBID(), INCORRECT_ACCESSION, DUMMY_UNIPROT_DISPLAY_NAME
+			),
 			"Expected call to 'UniProtReactomeEntry.get' to throw due to improper UniProt accession, but it didn't"
 		);
 
@@ -93,13 +100,14 @@ public class UniProtReactomeEntryTest {
 
 		IllegalArgumentException thrown = assertThrows(
 			IllegalArgumentException.class,
-			() -> UniProtReactomeEntry.get(8L, DUMMY_UNIPROT_ACCESSION, INCORRECT_DISPLAY_NAME),
+			() -> UniProtReactomeEntry.get(
+				getNextUniProtDBID(), DUMMY_UNIPROT_ACCESSION, INCORRECT_DISPLAY_NAME
+			),
 			"Expected call to 'UniProtReactomeEntry.get' to throw due to improper UniProt display name, but it didn't"
 		);
 
 		assertThat(thrown.getMessage(), containsString("not a proper UniProt Display Name"));
 	}
-
 
 	@Test
 	public void emptyUniProtToReactomeEventsMapFromEmptyDatabase() {

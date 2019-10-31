@@ -6,6 +6,7 @@ import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.reactome.release.dataexport.UniProtDbIdGenerator.getNextUniProtDBID;
 
 public class NCBIEntryTest {
 
@@ -19,13 +20,13 @@ public class NCBIEntryTest {
 	@BeforeEach
 	public void createFixtures() {
 		entry1 = new NCBIEntry(
-			1L,
+			getNextUniProtDBID(),
 			uniprotAccessions[0],
 			"UniProt:" + uniprotAccessions[0],
 			new HashSet<>(Arrays.asList("1", "2"))
 		);
 		entry2 = new NCBIEntry(
-			2L,
+			getNextUniProtDBID(),
 			uniprotAccessions[1],
 			"UniProt:" + uniprotAccessions[1],
 			new HashSet<>(Arrays.asList("3", "4")));

@@ -117,7 +117,7 @@ public class UniProtReactomeEntryTest {
 			"Expected call to 'UniProtReactomeEntry.get' to throw due to improper UniProt accession, but it didn't"
 		);
 
-		assertThat(thrown.getMessage(), containsString("not a proper UniProt Accession"));
+		assertThat(thrown.getMessage(), containsString("not a proper UniProt accession"));
 	}
 
 	@Test

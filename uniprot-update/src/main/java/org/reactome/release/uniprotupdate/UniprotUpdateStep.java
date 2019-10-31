@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.gk.model.GKInstance;
 import org.gk.model.ReactomeJavaConstants;
 import org.gk.persistence.MySQLAdaptor;
+import org.gk.persistence.TransactionsNotSupportedException;
 import org.gk.schema.InvalidAttributeException;
 import org.reactome.release.common.ReleaseStep;
 import org.reactome.release.common.database.InstanceEditUtils;
@@ -18,30 +19,33 @@ import java.util.*;
  * @author sshorser
  *
  */
-public class UniprotUpdateStep extends ReleaseStep
-{
-
+public class UniprotUpdateStep extends ReleaseStep {
 	private static final String SAVEPOINT_NAME = "PRE_UNIPROT_UPDATE";
 
 	private static final Logger logger = LogManager.getLogger();
 
 	@Override
-	public void executeStep(Properties props) throws Exception
-	{
+	public void executeStep(Properties props) throws Exception {
+		this.setTestModeFromProperties(props);
+
+		// Extract property values
 		String pathToUniprotFile = props.getProperty("pathToUniprotFile");
 		String pathToUnreviewedUniprotIDsFile = props.getProperty("pathToUnreviewedUniprotIDsFile");
 		MySQLAdaptor adaptor = getMySQLAdaptorFromProperties(props);
-		String personID = props.getProperty("person.id");
+		long personID = Long.parseLong(props.getProperty("person.id"));
 
-		this.loadTestModeFromProperties(props);
+		// Start UniProt Update database transaction
+		startTransaction(adaptor, SAVEPOINT_NAME);
 
-		adaptor.executeQuery("SAVEPOINT " + SAVEPOINT_NAME , null);
-		adaptor.startTransaction();
-
+		// Create instance edit
 		String creatorName = this.getClass().getName();
-		GKInstance instanceEdit = InstanceEditUtils.createInstanceEdit(adaptor, Long.valueOf(personID), creatorName);
+		GKInstance instanceEdit = InstanceEditUtils.createInstanceEdit(adaptor, personID, creatorName);
+
 		UniprotUpdater updater = new UniprotUpdater();
+		// Extract data from UniProt XML
 		List<UniprotData> uniprotData = ProcessUniprotXML.getDataFromUniprotFile(pathToUniprotFile, debugXML(props));
+
+		// Update UniProt ReferenceGeneProduct instances
 		updater.updateUniprotInstances(
 			adaptor,
 			uniprotData,
@@ -50,37 +54,31 @@ public class UniprotUpdateStep extends ReleaseStep
 			getReferenceIsoforms(adaptor),
 			instanceEdit
 		);
-		// commit changes so far - deletion will be multithreaded, so each adaptor will need its own transaction.
+
+		// Commit changes so far - deletion will be multithreaded, so each adaptor will need its own transaction.
 		adaptor.commit();
+
+		// Delete obsolete instances
 		InstancesDeleter deleter = new InstancesDeleter();
 		deleter.deleteObsoleteInstances(adaptor, pathToUnreviewedUniprotIDsFile);
 
-		if (testMode)
-		{
-			logger.info("Test mode is set - Rolling back transaction...");
-			//adaptor.rollback();
-			adaptor.executeQuery("ROLLBACK TO " + SAVEPOINT_NAME , null);
-		}
-		else
-		{
-			logger.info("Test mode is NOT set - Committing transaction...");
-			adaptor.commit();
+		if (testMode) {
+			rollbackTransaction(adaptor, SAVEPOINT_NAME);
+		} else {
+			commitTransaction(adaptor);
 		}
 		logger.info("Done.");
 	}
 
-	private Map<String, GKInstance> getReferenceDNASequences(MySQLAdaptor adaptor)
-			throws Exception, InvalidAttributeException {
+	private Map<String, GKInstance> getReferenceDNASequences(MySQLAdaptor adaptor) throws Exception {
 		return getIdentifierMappedCollectionOfType(adaptor, ReactomeJavaConstants.ReferenceDNASequence, null);
 	}
 
-	private Map<String, GKInstance> getReferenceGeneProducts(MySQLAdaptor adaptor)
-			throws Exception, InvalidAttributeException {
+	private Map<String, GKInstance> getReferenceGeneProducts(MySQLAdaptor adaptor) throws Exception {
 		return getIdentifierMappedCollectionOfType(adaptor, ReactomeJavaConstants.ReferenceGeneProduct, "UniProt");
 	}
 
-	private Map<String, GKInstance> getReferenceIsoforms(MySQLAdaptor adaptor)
-			throws Exception, InvalidAttributeException {
+	private Map<String, GKInstance> getReferenceIsoforms(MySQLAdaptor adaptor) throws Exception {
 		return getIdentifierMappedCollectionOfType(adaptor, ReactomeJavaConstants.ReferenceIsoform, "UniProt");
 	}
 
@@ -143,8 +141,7 @@ public class UniprotUpdateStep extends ReleaseStep
 		});
 
 		// Clean up other adaptors.
-		for (String k : adaptorPool.keySet())
-		{
+		for (String k : adaptorPool.keySet()) {
 			adaptorPool.get(k).cleanUp();
 		}
 
@@ -154,7 +151,7 @@ public class UniprotUpdateStep extends ReleaseStep
 	}
 
 	private boolean debugXML(Properties props) {
-		return Boolean.valueOf(props.getProperty("debugXML", "false"));
+		return Boolean.parseBoolean(props.getProperty("debugXML", "false"));
 	}
 
 	private MySQLAdaptor cloneInstanceDBAdaptor(GKInstance instance) throws SQLException {
@@ -169,9 +166,7 @@ public class UniprotUpdateStep extends ReleaseStep
 		);
 	}
 
-	private boolean instanceHasAllowedRefDB(GKInstance instance, String refDBName)
-		throws Exception, InvalidAttributeException {
-
+	private boolean instanceHasAllowedRefDB(GKInstance instance, String refDBName) throws Exception {
 		// No constraint if no reference database name is specified
 		if (refDBName == null) {
 			return true;
@@ -179,6 +174,22 @@ public class UniprotUpdateStep extends ReleaseStep
 
 		GKInstance refDB = (GKInstance) instance.getAttributeValue(ReactomeJavaConstants.referenceDatabase);
 		return (refDB != null && refDBName.equals(refDB.getAttributeValue(ReactomeJavaConstants.name)));
+	}
 
+	private void startTransaction(MySQLAdaptor adaptor, String savePoint)
+		throws TransactionsNotSupportedException, SQLException {
+		logger.info("Starting transaction with SAVEPOINT name " + savePoint);
+		adaptor.executeQuery("SAVEPOINT " + savePoint, null);
+		adaptor.startTransaction();
+	}
+
+	private void rollbackTransaction(MySQLAdaptor adaptor, String savePoint) throws SQLException {
+		logger.info("Rolling back transaction to SAVEPOINT " + savePoint);
+		adaptor.executeQuery("ROLLBACK TO " + SAVEPOINT_NAME , null);
+	}
+
+	private void commitTransaction(MySQLAdaptor adaptor) throws SQLException {
+		logger.info("Committing transaction");
+		adaptor.commit();
 	}
 }

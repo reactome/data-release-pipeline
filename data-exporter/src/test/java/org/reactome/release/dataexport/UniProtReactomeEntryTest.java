@@ -70,6 +70,32 @@ public class UniProtReactomeEntryTest {
 	}
 
 	@Test
+	public void isoformAccessionIsAccepted() {
+		final String ISOFORM_ACCESSION = "P12345-1";
+
+		UniProtReactomeEntry uniprot = UniProtReactomeEntry.get(
+			getNextUniProtDBID(), ISOFORM_ACCESSION, DUMMY_UNIPROT_DISPLAY_NAME
+		);
+
+		assertThat(uniprot.getAccession(), equalTo(ISOFORM_ACCESSION));
+	}
+
+	@Test
+	public void incorrectIsoformAccessionThrowsIllegalArgumentException() {
+		final String INCORRECT_ISOFORM_ACCESSION = "P123456-1"; // 7 character parent accession is illegal in UniProt
+
+		IllegalArgumentException thrown = assertThrows(
+			IllegalArgumentException.class,
+			() -> UniProtReactomeEntry.get(
+				getNextUniProtDBID(), INCORRECT_ISOFORM_ACCESSION, DUMMY_UNIPROT_DISPLAY_NAME
+			),
+			"Expected call to 'UniProtReactomeEntry.get' to throw due to improper UniProt accession, but it didn't"
+		);
+
+		assertThat(thrown.getMessage(), containsString("not a proper UniProt accession"));
+	}
+
+	@Test
 	public void tenCharacterAccessionIsAccepted() {
 		final String ACCESSION = "P123456789";
 		UniProtReactomeEntry uniprot = UniProtReactomeEntry.get(

@@ -68,8 +68,9 @@ public class NCBIEntry implements Comparable<NCBIEntry> {
 				"MATCH (rgp:ReferenceGeneProduct)-[:referenceDatabase]->(rd:ReferenceDatabase)",
 				"MATCH (rgp)-[:referenceGene]->(rds:ReferenceDNASequence)",
 				"WHERE rd.displayName = 'UniProt' AND rds.databaseName = 'NCBI Gene'",
-				"RETURN rgp.dbId, rgp.displayName, rgp.identifier, rds.identifier",
-				"ORDER BY rgp.identifier;"
+				"RETURN rgp.dbId, rgp.displayName, coalesce(rgp.variantIdentifier, rgp.identifier) as rgp_accession,"
+					+ " rds.identifier",
+				"ORDER BY rgp.identifier, rgp.variantIdentifier;"
 			)
 		);
 
@@ -78,7 +79,7 @@ public class NCBIEntry implements Comparable<NCBIEntry> {
 			Record record = result.next();
 			long uniprotDbId = record.get("rgp.dbId").asLong();
 			String uniprotDisplayName = record.get("rgp.displayName").asString();
-			String uniprotAccession = record.get("rgp.identifier").asString();
+			String uniprotAccession = record.get("rgp_accession").asString();
 			String ncbiGeneID = record.get("rds.identifier").asString();
 
 			UniProtReactomeEntry uniprot = UniProtReactomeEntry.get(uniprotDbId, uniprotAccession, uniprotDisplayName);

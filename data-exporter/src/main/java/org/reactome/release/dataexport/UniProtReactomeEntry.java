@@ -1,5 +1,7 @@
 package org.reactome.release.dataexport;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.neo4j.driver.v1.Record;
@@ -19,6 +21,8 @@ import java.util.stream.Collectors;
  * @author jweiser
  */
 public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
+	private final List<Integer> ACCEPTED_UNIPROT_ACCESSION_LENGTHS = Arrays.asList(6, 10);
+
 	private static Map<Long, UniProtReactomeEntry> uniProtReactomeEntryMap = new HashMap<>();
 
 	private static Map<Session, Map<String, Set<ReactomeEvent>>> uniprotAccessionToTopLevelPathwaysCache =
@@ -267,14 +271,15 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 	 * a 6 or 10 character String)
 	 */
 	private void setAccession(String accession) {
-		final List<Integer> ACCEPTED_UNIPROT_ACCESSION_LENGTHS = Arrays.asList(6, 10);
 		if (accession == null) {
 			throw new NullPointerException("UniProt Accession is null");
 		}
 
-		if (!ACCEPTED_UNIPROT_ACCESSION_LENGTHS.contains(accession.length())) {
+		if (!validCanonicalAccession(accession) && !validIsoformAccession(accession)) {
 			throw new IllegalArgumentException(
-				accession + " is not a proper UniProt Accession.  Must be of length " + ACCEPTED_UNIPROT_ACCESSION_LENGTHS
+				accession + " is not a proper UniProt accession.  Must be an alphanumeric string of length " +
+				ACCEPTED_UNIPROT_ACCESSION_LENGTHS + " (isoforms are permitted to have a dash followed by digits as" +
+				" additional characters)"
 			);
 		}
 
@@ -301,6 +306,22 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 		}
 
 		this.displayName = displayName;
+	}
+
+	private boolean validCanonicalAccession(String accession) {
+		return ACCEPTED_UNIPROT_ACCESSION_LENGTHS.contains(accession.length()) && accession.matches("^[A-Z0-9]+$");
+	}
+
+	private boolean validIsoformAccession(String accession) {
+		Pattern isoformRegex = Pattern.compile("([A-Z0-9]+)-[0-9]+");
+		Matcher accessionIsoformMatcher = isoformRegex.matcher(accession);
+
+		if (!accessionIsoformMatcher.matches()) {
+			return false;
+		}
+
+		String parentAccession = accessionIsoformMatcher.group(1);
+		return ACCEPTED_UNIPROT_ACCESSION_LENGTHS.contains(parentAccession.length());
 	}
 
 	/**

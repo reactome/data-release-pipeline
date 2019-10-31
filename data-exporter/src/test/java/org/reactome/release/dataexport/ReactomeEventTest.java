@@ -20,7 +20,6 @@ public class ReactomeEventTest {
 		assertThat(reactomeEventCache, is(anEmptyMap()));
 	}
 
-
 	@Test
 	public void retrievesNCBIEntryFromDummyGraphDB() {
 		final long EVENT_DB_ID = 69563L;

@@ -9,7 +9,6 @@ import static org.hamcrest.Matchers.*;
 import static org.reactome.release.dataexport.UniProtDbIdGenerator.getNextUniProtDBID;
 
 public class NCBIEntryTest {
-
 	private final String[] uniprotAccessions = { "Q12345", "P23456" };
 	private final String eventName = "test event";
 	private final String eventStId = "R-HSA-54321";

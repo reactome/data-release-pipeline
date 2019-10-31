@@ -10,7 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class PathwayHierarchyUtilitiesTest {
 
-
 	@Test
 	public void findTopLevelPathwayIdsWithGrandParentPathways() {
 		final long PATHWAY_ID = 1L;

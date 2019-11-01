@@ -21,7 +21,9 @@ import java.util.stream.Collectors;
  * @author jweiser
  */
 public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
-	private final List<Integer> ACCEPTED_UNIPROT_ACCESSION_LENGTHS = Arrays.asList(6, 10);
+	private final Pattern PARENT_ACCESSION_REGEX = Pattern.compile(
+		"([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})"
+	); // As defined at https://www.uniprot.org/help/accession_numbers (October 2019)
 
 	private static Map<Long, UniProtReactomeEntry> uniProtReactomeEntryMap = new HashMap<>();
 
@@ -275,11 +277,11 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 			throw new NullPointerException("UniProt Accession is null");
 		}
 
-		if (!validCanonicalAccession(accession) && !validIsoformAccession(accession)) {
+		if (!isValidCanonicalAccession(accession) && !isValidIsoformAccession(accession)) {
 			throw new IllegalArgumentException(
-				accession + " is not a proper UniProt accession.  Must be an alphanumeric string of length " +
-				ACCEPTED_UNIPROT_ACCESSION_LENGTHS + " (isoforms are permitted to have a dash followed by digits as" +
-				" additional characters)"
+				accession + " is not a proper UniProt accession.  Must be an alphanumeric string of length 6 or 10 " +
+				"optionally followed by a dash and one or more digits if the UniProt accession is representing an " +
+				"isoform"
 			);
 		}
 
@@ -308,20 +310,35 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 		this.displayName = displayName;
 	}
 
-	private boolean validCanonicalAccession(String accession) {
-		return ACCEPTED_UNIPROT_ACCESSION_LENGTHS.contains(accession.length()) && accession.matches("^[A-Z0-9]+$");
+	/**
+	 * Checks if a passed String is a valid canonical UniProt accession (i.e. 6 or 10 alphanumeric characters matching
+	 * the regular expression "[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}" as defined at
+	 * https://www.uniprot.org/help/accession_numbers as of October 2019).
+	 * E.g. P12345
+	 * @param accession UniProt accession to test for validity
+	 * @return true if the accession passed is a valid canonical (i.e. not an isoform) UniProt accession,
+	 * false otherwise
+	 */
+	private boolean isValidCanonicalAccession(String accession) {
+		final Pattern ANCHORED_PARENT_ACCESSION_REGEX = Pattern.compile("^" + PARENT_ACCESSION_REGEX.pattern() + "$");
+
+		return ANCHORED_PARENT_ACCESSION_REGEX.matcher(accession).matches();
 	}
 
-	private boolean validIsoformAccession(String accession) {
-		Pattern isoformRegex = Pattern.compile("([A-Z0-9]+)-[0-9]+");
-		Matcher accessionIsoformMatcher = isoformRegex.matcher(accession);
-
-		if (!accessionIsoformMatcher.matches()) {
-			return false;
-		}
-
-		String parentAccession = accessionIsoformMatcher.group(1);
-		return ACCEPTED_UNIPROT_ACCESSION_LENGTHS.contains(parentAccession.length());
+	/**
+	 * Checks if a passed String is a valid isoform UniProt accession (i.e. 6 or 10 alphanumeric characters matching
+	 * the regular expression "[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}" as defined at
+	 * https://www.uniprot.org/help/accession_numbers as of October 2019, and then followed by a dash and by any number
+	 * of digits).  E.g. P12345-1
+	 * @param accession UniProt accession to test for validity
+	 * @return true if the accession passed is a valid UniProt accession for an isoform, false otherwise
+	 */
+	private boolean isValidIsoformAccession(String accession) {
+		Pattern isoformSuffixRegex = Pattern.compile("-[0-9]+");
+		Pattern isoformRegex = Pattern.compile(
+			"^" + PARENT_ACCESSION_REGEX.pattern() + isoformSuffixRegex.pattern() + "$"
+		);
+		return isoformRegex.matcher(accession).matches();
 	}
 
 	/**

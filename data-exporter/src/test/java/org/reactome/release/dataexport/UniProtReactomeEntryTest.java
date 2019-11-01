@@ -159,7 +159,7 @@ public class UniProtReactomeEntryTest {
 		Map<String, Set<ReactomeEvent>> uniProtToReactomeEvents =
 			UniProtReactomeEntry.fetchUniProtAccessionToReactomeEvents(dummyGraphDBServer.getSession());
 
-		assertThat(uniProtToReactomeEvents, aMapWithSize(1));
+		assertThat(uniProtToReactomeEvents, aMapWithSize(2));
 
 		Set<ReactomeEvent> eventsAttachedToUniProtInstance = uniProtToReactomeEvents.get("P04637");
 		assertThat(eventsAttachedToUniProtInstance, hasSize(7));

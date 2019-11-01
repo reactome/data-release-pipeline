@@ -127,6 +127,6 @@ public class PathwayHierarchyUtilitiesTest {
 		Set<Long> topLevelPathwayIds =
 			PathwayHierarchyUtilities.getTopLevelPathwayIds(dummyGraphDBServer.getSession());
 
-		assertThat(topLevelPathwayIds, contains(TOP_LEVEL_PATHWAY_ID));
+		assertThat(topLevelPathwayIds, hasItem(TOP_LEVEL_PATHWAY_ID));
 	}
 }

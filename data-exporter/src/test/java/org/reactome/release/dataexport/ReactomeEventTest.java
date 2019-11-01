@@ -33,7 +33,7 @@ public class ReactomeEventTest {
 		Map<Long, ReactomeEvent> reactomeEventCache =
 			ReactomeEvent.fetchReactomeEventMap(dummyGraphDBServer.getSession());
 
-		assertThat(reactomeEventCache, is(aMapWithSize(7)));
+		assertThat(reactomeEventCache, is(aMapWithSize(15)));
 
 		ReactomeEvent expectedEvent = new ReactomeEvent(EVENT_DB_ID, EVENT_DISPLAY_NAME, EVENT_ST_ID);
 		assertThat(reactomeEventCache, hasEntry(EVENT_DB_ID, expectedEvent));

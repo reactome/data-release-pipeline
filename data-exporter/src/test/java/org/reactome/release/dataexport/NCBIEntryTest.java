@@ -64,7 +64,7 @@ public class NCBIEntryTest {
 
 		List<NCBIEntry> ncbiEntries = NCBIEntry.getUniProtToNCBIGeneEntries(dummyGraphDBServer.getSession());
 
-		assertThat(ncbiEntries, contains(expectedNCBIEntry));
+		assertThat(ncbiEntries, hasItem(expectedNCBIEntry));
 	}
 
 	@Test

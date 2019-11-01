@@ -209,14 +209,14 @@ public class UCSC {
 				"-[:referenceDatabase]->(rd:ReferenceDatabase)",
 				"WHERE ewas.speciesName IN ['Homo sapiens', 'Rattus norvegicus', 'Mus musculus'] AND rd.displayName =" +
 				" 'UniProt'",
-				"RETURN rgp.dbId, rgp.identifier, rgp.displayName",
-				"ORDER BY rgp.identifier"
+				"RETURN rgp.dbId, coalesce(rgp.variantIdentifier, rgp.identifier) as rgp_accession, rgp.displayName",
+				"ORDER BY rgp.identifier, rgp.variantIdentifier"
 			)
 		)
 		.stream()
 		.map(record -> UniProtReactomeEntry.get(
 			record.get("rgp.dbId").asLong(),
-			record.get("rgp.identifier").asString(),
+			record.get("rgp_accession").asString(),
 			record.get("rgp.displayName").asString()
 		))
 		.collect(Collectors.toCollection(LinkedHashSet::new));

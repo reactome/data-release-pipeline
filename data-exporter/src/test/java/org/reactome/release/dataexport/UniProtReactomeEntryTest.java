@@ -53,7 +53,7 @@ public class UniProtReactomeEntryTest {
 
 	@Test
 	public void sortsByUniProtAccessionAscendingly() {
-		final String ACCESSION_THAT_SHOULD_BE_FIRST = "A01234";
+		final String ACCESSION_THAT_SHOULD_BE_FIRST = "A0A234";
 
 		List<UniProtReactomeEntry> uniProtReactomeEntries = new ArrayList<>();
 		uniProtReactomeEntries.add(uniProtReactomeEntry);
@@ -97,7 +97,7 @@ public class UniProtReactomeEntryTest {
 
 	@Test
 	public void tenCharacterAccessionIsAccepted() {
-		final String ACCESSION = "P123456789";
+		final String ACCESSION = "A0A123A456";
 		UniProtReactomeEntry uniprot = UniProtReactomeEntry.get(
 			getNextUniProtDBID(), ACCESSION, DUMMY_UNIPROT_DISPLAY_NAME
 		);

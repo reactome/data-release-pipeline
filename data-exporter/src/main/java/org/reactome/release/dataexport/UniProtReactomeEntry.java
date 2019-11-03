@@ -1,6 +1,5 @@
 package org.reactome.release.dataexport;
 
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,10 +26,12 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 
 	private static Map<Long, UniProtReactomeEntry> uniProtReactomeEntryMap = new HashMap<>();
 
-	private static Map<Session, Map<String, Set<ReactomeEvent>>> uniprotAccessionToTopLevelPathwaysCache =
-		new HashMap<>();
-	private static Map<Session, Map<String, Set<ReactomeEvent>>> uniprotAccessionToReactomeEventCache = new HashMap<>();
-	private static Map<Session, Map<String, Set<Long>>> uniprotAccessionToReactionLikeEventIdCache = new HashMap<>();
+	private static Map<Session, Map<UniProtReactomeEntry, Set<ReactomeEvent>>>
+		uniprotReactomeEntryToTopLevelPathwaysCache = new HashMap<>();
+	private static Map<Session, Map<UniProtReactomeEntry, Set<ReactomeEvent>>>
+		uniprotReactomeEntryToReactomeEventCache = new HashMap<>();
+	private static Map<Session, Map<UniProtReactomeEntry, Set<Long>>>
+		uniprotReactomeEntryToReactionLikeEventIdCache = new HashMap<>();
 
 	private static Logger logger = LogManager.getLogger();
 
@@ -99,8 +100,8 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 	/**
 	 * Creates UniProtReactomeEntry object for dbId, UniProt accession, and UniProt display name
 	 * @param dbId UniProt database identifier in Reactome
-	 * @param accession UniProt accession
-	 * @param displayName UniProt display name
+	 * @param accession UniProt accession (e.g. P04367)
+	 * @param displayName UniProt display name (e.g. UniProt:P04367 TP53)
 	 */
 	private UniProtReactomeEntry(long dbId, String accession, String displayName) {
 		setDbId(dbId);
@@ -109,20 +110,23 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 	}
 
 	/**
-	 * Retrieves, from the graph database, a Map of UniProt accession to the set of Top Level Pathways in which each
-	 * UniProt accession participates
+	 * Retrieves, from the graph database, a Map of UniProtReactomeEntry objects to the set of Top Level Pathways in
+	 * which each UniProt accession participates
 	 * @param graphDBSession Neo4J Driver Session object for querying the graph database
-	 * @return Map of UniProt accession to set of Reactome Events representing top level pathways in Reactome
+	 * @return Map of UniProtReactomeEntry objects to set of Reactome Events representing top level pathways in
+	 * Reactome
 	 */
-	public static Map<String, Set<ReactomeEvent>> fetchUniProtAccessionToTopLevelPathways(Session graphDBSession) {
-		if (uniprotAccessionToTopLevelPathwaysCache.containsKey(graphDBSession)) {
-			return uniprotAccessionToTopLevelPathwaysCache.get(graphDBSession);
+	public static Map<UniProtReactomeEntry, Set<ReactomeEvent>> fetchUniProtReactomeEntryToTopLevelPathways(
+		Session graphDBSession
+	) {
+		if (uniprotReactomeEntryToTopLevelPathwaysCache.containsKey(graphDBSession)) {
+			return uniprotReactomeEntryToTopLevelPathwaysCache.get(graphDBSession);
 		}
 
 		logger.info("Computing UniProt to Top Level Pathways");
 
-		Map<String, Set<ReactomeEvent>> uniprotAccessionToTopLevelPathways =
-			fetchUniProtAccessionToReactomeEvents(graphDBSession).entrySet().stream().collect(Collectors.toMap(
+		Map<UniProtReactomeEntry, Set<ReactomeEvent>> uniprotReactomeEntryToTopLevelPathways =
+			fetchUniProtReactomeEntryToReactomeEvents(graphDBSession).entrySet().stream().collect(Collectors.toMap(
 			Map.Entry::getKey,
 			entry -> entry.getValue()
 					.stream()
@@ -133,74 +137,77 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 					)
 					.collect(Collectors.toSet())
 		));
-		uniprotAccessionToTopLevelPathwaysCache.put(graphDBSession, uniprotAccessionToTopLevelPathways);
+		uniprotReactomeEntryToTopLevelPathwaysCache.put(graphDBSession, uniprotReactomeEntryToTopLevelPathways);
 
 		logger.info("Finished computing UniProt to Top Level Pathways");
 
-		return uniprotAccessionToTopLevelPathways;
+		return uniprotReactomeEntryToTopLevelPathways;
 	}
 
 	/**
-	 * Retrieves, from the graph database, a Map of UniProt accession to the set of events (both Pathways and
-	 * Reaction Like Events in which each UniProt accession participates
+	 * Retrieves, from the graph database, a Map of UniProtReactomeEntry objects to the set of events (both Pathways
+	 * and Reaction Like Events in which each UniProt accession participates
 	 * @param graphDBSession Neo4J Driver Session object for querying the graph database
-	 * @return Map of UniProt accession to set of Reactome Events in Reactome
+	 * @return Map of UniProtReactomeEntry objects to set of Reactome Events in Reactome
 	 */
-	public static Map<String, Set<ReactomeEvent>> fetchUniProtAccessionToReactomeEvents(Session graphDBSession) {
-		if (uniprotAccessionToReactomeEventCache.containsKey(graphDBSession)) {
-			return uniprotAccessionToReactomeEventCache.get(graphDBSession);
+	public static Map<UniProtReactomeEntry, Set<ReactomeEvent>> fetchUniProtReactomeEntryToReactomeEvents(
+		Session graphDBSession
+	) {
+		if (uniprotReactomeEntryToReactomeEventCache.containsKey(graphDBSession)) {
+			return uniprotReactomeEntryToReactomeEventCache.get(graphDBSession);
 		}
 
 		logger.info("Computing UniProt to Reactome events");
 
 		Map<Long, ReactomeEvent> eventCache = ReactomeEvent.fetchReactomeEventMap(graphDBSession);
-		Map<String, Set<Long>> uniprotAccessionToReactionLikeEventId = fetchUniProtAccessionToRLEId(graphDBSession);
+		Map<UniProtReactomeEntry, Set<Long>> uniprotReactomeEntryToReactionLikeEventId =
+			fetchUniProtReactomeEntryToRLEId(graphDBSession);
 		Map<Long, Set<Long>> rleToPathwayId = PathwayHierarchyUtilities.fetchRLEIdToPathwayId(graphDBSession);
 
 		AtomicInteger count = new AtomicInteger(0);
-		Map<String, Set<ReactomeEvent>> uniprotAccessionToReactomeEvent = new ConcurrentHashMap<>();
-		uniprotAccessionToReactionLikeEventId.keySet().stream().forEach(uniprotAccession -> {
+		Map<UniProtReactomeEntry, Set<ReactomeEvent>> uniprotReactomeEntryToReactomeEvent = new ConcurrentHashMap<>();
+		uniprotReactomeEntryToReactionLikeEventId.keySet().stream().forEach(uniprotAccession -> {
 			Set<Long> reactionLikeEventIds =
-				uniprotAccessionToReactionLikeEventId.computeIfAbsent(uniprotAccession, k -> new HashSet<>());
+				uniprotReactomeEntryToReactionLikeEventId.computeIfAbsent(uniprotAccession, k -> new HashSet<>());
 
 			// Add RLEs containing UniProt accession
-			uniprotAccessionToReactomeEvent
+			uniprotReactomeEntryToReactomeEvent
 				.computeIfAbsent(uniprotAccession, k -> new HashSet<>())
 				.addAll(reactionLikeEventIds.stream().map(eventCache::get).collect(Collectors.toSet()));
 
 			for (long reactionLikeEventId : reactionLikeEventIds) {
 				Set<Long> pathwayIds = rleToPathwayId.computeIfAbsent(reactionLikeEventId, k -> new HashSet<>());
-				uniprotAccessionToReactomeEvent
+				uniprotReactomeEntryToReactomeEvent
 					.computeIfAbsent(uniprotAccession, k-> new HashSet<>())
 					.addAll(pathwayIds.stream().map(eventCache::get).collect(Collectors.toSet()));
 			}
 
 			if (count.getAndIncrement() % 10000 == 0) {
 				logger.info("Processed events for " + count.get() + " out of " +
-					uniprotAccessionToReactionLikeEventId.size() + " (" +
+					uniprotReactomeEntryToReactionLikeEventId.size() + " (" +
 					String.format(
 						"%.2f",
-						(100 * (double) count.get()) / uniprotAccessionToReactionLikeEventId.size()
+						(100 * (double) count.get()) / uniprotReactomeEntryToReactionLikeEventId.size()
 					) + "%) " + LocalTime.now()
 				);
 			}
 		});
-		uniprotAccessionToReactomeEventCache.put(graphDBSession, uniprotAccessionToReactomeEvent);
+		uniprotReactomeEntryToReactomeEventCache.put(graphDBSession, uniprotReactomeEntryToReactomeEvent);
 
 		logger.info("Finished computing UniProt to Reactome events");
 
-		return uniprotAccessionToReactomeEvent;
+		return uniprotReactomeEntryToReactomeEvent;
 	}
 
 	/**
-	 * Retrieves, from the graph database, a Map of UniProt accession to the set of identifiers for Reaction Like Events
-	 * in which each UniProt accession participates
+	 * Retrieves, from the graph database, a Map of UniProtReactomeEntry objects to the set of identifiers for
+	 * Reaction Like Events in which each UniProt accession participates
 	 * @param graphDBSession Neo4J Driver Session object for querying the graph database
-	 * @return Map of UniProt accession to set of database identifiers for Reaction Like Events in Reactome
+	 * @return Map of UniProtReactomeEntry objects to set of database identifiers for Reaction Like Events in Reactome
 	 */
-	private static Map<String, Set<Long>> fetchUniProtAccessionToRLEId(Session graphDBSession) {
-		if (uniprotAccessionToReactionLikeEventIdCache.containsKey(graphDBSession)) {
-			return uniprotAccessionToReactionLikeEventIdCache.get(graphDBSession);
+	private static Map<UniProtReactomeEntry, Set<Long>> fetchUniProtReactomeEntryToRLEId(Session graphDBSession) {
+		if (uniprotReactomeEntryToReactionLikeEventIdCache.containsKey(graphDBSession)) {
+			return uniprotReactomeEntryToReactionLikeEventIdCache.get(graphDBSession);
 		}
 
 		logger.info("Computing UniProt to RLE id");
@@ -210,27 +217,35 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 				"MATCH (rgp:ReferenceGeneProduct)<-[:referenceEntity|:referenceSequence|:hasModifiedResidue]-" +
 				"(ewas:EntityWithAccessionedSequence)<-[:hasComponent|:hasMember|:hasCandidate|:repeatedUnit" +
 				"|:input|:output|:catalystActivity|:physicalEntity*]-(rle:ReactionLikeEvent)",
-				"RETURN DISTINCT rgp.identifier, rle.dbId"
+				"RETURN rgp.dbId, coalesce(rgp.variantIdentifier, rgp.identifier) as rgp_accession, "
+					+ "rgp.displayName, rle.dbId",
+				"ORDER BY rgp.identifier, rgp.variantIdentifier"
 			)
 		);
 
-		Map<String, Set<Long>> uniprotAccessionToReactionLikeEventId = new HashMap<>();
+		Map<UniProtReactomeEntry, Set<Long>> uniprotReactomeEntryToReactionLikeEventId = new HashMap<>();
 		while (statementResult.hasNext()) {
 			Record record = statementResult.next();
 
-			String uniprotAccession = record.get("rgp.identifier").asString();
+			long uniprotDbId = record.get("rgp.dbId").asLong();
+			String uniprotAccession = record.get("rgp_accession").asString();
+			String uniprotDisplayName = record.get("rgp.displayName").asString();
+			UniProtReactomeEntry uniProtReactomeEntry = UniProtReactomeEntry.get(
+				uniprotDbId, uniprotAccession, uniprotDisplayName
+			);
+
 			long reactionLikeEventId = record.get("rle.dbId").asLong();
 
-			uniprotAccessionToReactionLikeEventId
-				.computeIfAbsent(uniprotAccession, k -> new HashSet<>())
+			uniprotReactomeEntryToReactionLikeEventId
+				.computeIfAbsent(uniProtReactomeEntry, k -> new HashSet<>())
 				.add(reactionLikeEventId);
 		}
 
-		uniprotAccessionToReactionLikeEventIdCache.put(graphDBSession, uniprotAccessionToReactionLikeEventId);
+		uniprotReactomeEntryToReactionLikeEventIdCache.put(graphDBSession, uniprotReactomeEntryToReactionLikeEventId);
 
 		logger.info("Finished computing UniProt to RLE id");
 
-		return uniprotAccessionToReactionLikeEventId;
+		return uniprotReactomeEntryToReactionLikeEventId;
 	}
 
 	/**
@@ -349,8 +364,8 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 	 */
 	public Set<ReactomeEvent> getEvents(Session graphDBSession) {
 		if (this.reactomeEvents == null) {
-			this.reactomeEvents = fetchUniProtAccessionToReactomeEvents(graphDBSession)
-				.computeIfAbsent(getAccession(), k -> new HashSet<>());
+			this.reactomeEvents = fetchUniProtReactomeEntryToReactomeEvents(graphDBSession)
+				.computeIfAbsent(this, k -> new HashSet<>());
 		}
 
 		return this.reactomeEvents;
@@ -364,8 +379,8 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 	 */
 	public Set<ReactomeEvent> getTopLevelPathways(Session graphDBSession) {
 		if (this.topLevelPathways == null) {
-			this.topLevelPathways = fetchUniProtAccessionToTopLevelPathways(graphDBSession)
-				.computeIfAbsent(getAccession(), k -> new HashSet<>());
+			this.topLevelPathways = fetchUniProtReactomeEntryToTopLevelPathways(graphDBSession)
+				.computeIfAbsent(this, k -> new HashSet<>());
 		}
 
 		return this.topLevelPathways;

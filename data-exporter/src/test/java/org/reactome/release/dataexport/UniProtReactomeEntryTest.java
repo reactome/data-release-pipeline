@@ -140,8 +140,8 @@ public class UniProtReactomeEntryTest {
 		DummyGraphDBServer dummyGraphDBServer = DummyGraphDBServer.getInstance();
 		dummyGraphDBServer.initializeNeo4j();
 
-		Map<String, Set<ReactomeEvent>> uniProtToReactomeEvents =
-			UniProtReactomeEntry.fetchUniProtAccessionToReactomeEvents(dummyGraphDBServer.getSession());
+		Map<UniProtReactomeEntry, Set<ReactomeEvent>> uniProtToReactomeEvents =
+			UniProtReactomeEntry.fetchUniProtReactomeEntryToReactomeEvents(dummyGraphDBServer.getSession());
 
 		assertThat(uniProtToReactomeEvents, is(anEmptyMap()));
 	}
@@ -152,16 +152,26 @@ public class UniProtReactomeEntryTest {
 		final String EVENT_DISPLAY_NAME = "Cell Cycle";
 		final String EVENT_STABLE_ID = "R-HSA-1640170";
 
+		final long UNIPROT_DB_ID = 69487L;
+		final String UNIPROT_ACCESSION = "P04637";
+		final String UNIPROT_DISPLAY_NAME = "UniProt:P04637 TP53";
+
+		UniProtReactomeEntry testUniProtReactomeEntry = UniProtReactomeEntry.get(
+			UNIPROT_DB_ID,
+			UNIPROT_ACCESSION,
+			UNIPROT_DISPLAY_NAME
+		);
+
 		DummyGraphDBServer dummyGraphDBServer = DummyGraphDBServer.getInstance();
 		dummyGraphDBServer.initializeNeo4j();
 		dummyGraphDBServer.populateDummyGraphDB();
 
-		Map<String, Set<ReactomeEvent>> uniProtToReactomeEvents =
-			UniProtReactomeEntry.fetchUniProtAccessionToReactomeEvents(dummyGraphDBServer.getSession());
+		Map<UniProtReactomeEntry, Set<ReactomeEvent>> uniProtToReactomeEvents =
+			UniProtReactomeEntry.fetchUniProtReactomeEntryToReactomeEvents(dummyGraphDBServer.getSession());
 
 		assertThat(uniProtToReactomeEvents, aMapWithSize(2));
 
-		Set<ReactomeEvent> eventsAttachedToUniProtInstance = uniProtToReactomeEvents.get("P04637");
+		Set<ReactomeEvent> eventsAttachedToUniProtInstance = uniProtToReactomeEvents.get(testUniProtReactomeEntry);
 		assertThat(eventsAttachedToUniProtInstance, hasSize(7));
 
 		ReactomeEvent expectedEvent = new ReactomeEvent(EVENT_DB_ID, EVENT_DISPLAY_NAME, EVENT_STABLE_ID);

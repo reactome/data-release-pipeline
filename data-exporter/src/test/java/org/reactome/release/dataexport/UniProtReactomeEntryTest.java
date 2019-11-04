@@ -11,28 +11,38 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.reactome.release.dataexport.UniProtDbIdGenerator.getNextUniProtDBID;
 
 public class UniProtReactomeEntryTest {
-	private UniProtReactomeEntry uniProtReactomeEntry;
+	private UniProtReactomeEntry canonicalUniProtReactomeEntry;
+	private UniProtReactomeEntry isoformUniProtReactomeEntry;
 	private final String DUMMY_UNIPROT_ACCESSION = "O65432";
 	private final String DUMMY_UNIPROT_DISPLAY_NAME = "UniProt:another test UniProt";
 
 	@BeforeEach
-	public void createUniProtReactomeEntry() {
-		final long UNIPROT_DB_ID = getNextUniProtDBID();
-		final String UNIPROT_ACCESSION = "P12345";
-		final String UNIPROT_DISPLAY_NAME = "UniProt:" + UNIPROT_ACCESSION;
+	public void createUniProtReactomeEntries() {
+		final long CANONICAL_UNIPROT_DB_ID = 69487L;
+		final String CANONICAL_UNIPROT_ACCESSION = "P04637";
+		final String CANONICAL_UNIPROT_DISPLAY_NAME = "UniProt:P04637 TP53";
 
-		uniProtReactomeEntry = UniProtReactomeEntry.get(UNIPROT_DB_ID, UNIPROT_ACCESSION, UNIPROT_DISPLAY_NAME);
+		final long ISOFORM_UNIPROT_DB_ID = 152926L;
+		final String ISOFORM_UNIPROT_ACCESSION = "O75916-3";
+		final String ISOFORM_UNIPROT_DISPLAY_NAME = "UniProt:O75916-3 RGS9";
+
+		canonicalUniProtReactomeEntry = UniProtReactomeEntry.get(
+			CANONICAL_UNIPROT_DB_ID, CANONICAL_UNIPROT_ACCESSION, CANONICAL_UNIPROT_DISPLAY_NAME
+		);
+		isoformUniProtReactomeEntry = UniProtReactomeEntry.get(
+			ISOFORM_UNIPROT_DB_ID, ISOFORM_UNIPROT_ACCESSION, ISOFORM_UNIPROT_DISPLAY_NAME
+		);
 	}
 
 	@Test
 	public void sameUniProtObjectIsEqual() {
 		assertThat(
-			uniProtReactomeEntry,
+			canonicalUniProtReactomeEntry,
 			sameInstance(
 				UniProtReactomeEntry.get(
-					uniProtReactomeEntry.getDbId(),
-					uniProtReactomeEntry.getAccession(),
-					uniProtReactomeEntry.getDisplayName()
+					canonicalUniProtReactomeEntry.getDbId(),
+					canonicalUniProtReactomeEntry.getAccession(),
+					canonicalUniProtReactomeEntry.getDisplayName()
 				)
 			)
 		);
@@ -44,7 +54,7 @@ public class UniProtReactomeEntryTest {
 		final String DIFFERENT_DISPLAY_NAME = "UniProt:" + DIFFERENT_ACCESSION;
 
 		assertThat(
-			uniProtReactomeEntry,
+			canonicalUniProtReactomeEntry,
 			is(not(equalTo(
 				UniProtReactomeEntry.get(getNextUniProtDBID(), DIFFERENT_ACCESSION, DIFFERENT_DISPLAY_NAME))
 			))
@@ -56,7 +66,7 @@ public class UniProtReactomeEntryTest {
 		final String ACCESSION_THAT_SHOULD_BE_FIRST = "A0A234";
 
 		List<UniProtReactomeEntry> uniProtReactomeEntries = new ArrayList<>();
-		uniProtReactomeEntries.add(uniProtReactomeEntry);
+		uniProtReactomeEntries.add(canonicalUniProtReactomeEntry);
 		UniProtReactomeEntry uniProtReactomeEntry2 = UniProtReactomeEntry.get(
 			getNextUniProtDBID(),
 			ACCESSION_THAT_SHOULD_BE_FIRST,
@@ -66,7 +76,7 @@ public class UniProtReactomeEntryTest {
 
 		Collections.sort(uniProtReactomeEntries);
 
-		assertThat(uniProtReactomeEntries, contains(uniProtReactomeEntry2, uniProtReactomeEntry));
+		assertThat(uniProtReactomeEntries, contains(uniProtReactomeEntry2, canonicalUniProtReactomeEntry));
 	}
 
 	@Test
@@ -152,29 +162,64 @@ public class UniProtReactomeEntryTest {
 		final String EVENT_DISPLAY_NAME = "Cell Cycle";
 		final String EVENT_STABLE_ID = "R-HSA-1640170";
 
-		final long UNIPROT_DB_ID = 69487L;
-		final String UNIPROT_ACCESSION = "P04637";
-		final String UNIPROT_DISPLAY_NAME = "UniProt:P04637 TP53";
+		final int NUMBER_OF_EXPECTED_UNIPROT_REACTOME_ENTRIES = 2;
+		final int NUMBER_OF_EXPECTED_REACTOME_EVENTS = 7;
 
-		UniProtReactomeEntry testUniProtReactomeEntry = UniProtReactomeEntry.get(
-			UNIPROT_DB_ID,
-			UNIPROT_ACCESSION,
-			UNIPROT_DISPLAY_NAME
+		Map<UniProtReactomeEntry, Set<ReactomeEvent>> uniProtToReactomeEvents =
+			UniProtReactomeEntry.fetchUniProtReactomeEntryToReactomeEvents(
+				getPopulatedDummyGraphDBServer().getSession()
+			);
+
+		assertThat(uniProtToReactomeEvents, is(aMapWithSize(NUMBER_OF_EXPECTED_UNIPROT_REACTOME_ENTRIES)));
+
+		Set<ReactomeEvent> eventsAttachedToUniProtInstance = uniProtToReactomeEvents.get(canonicalUniProtReactomeEntry);
+		assertThat(eventsAttachedToUniProtInstance, hasSize(NUMBER_OF_EXPECTED_REACTOME_EVENTS));
+
+		ReactomeEvent expectedEvent = new ReactomeEvent(EVENT_DB_ID, EVENT_DISPLAY_NAME, EVENT_STABLE_ID);
+		assertThat(eventsAttachedToUniProtInstance, hasItem(expectedEvent));
+	}
+
+	@Test
+	public void emptyUniProtToTopLevelPathwaysMapFromEmptyDatabase() {
+		DummyGraphDBServer dummyGraphDBServer = DummyGraphDBServer.getInstance();
+		dummyGraphDBServer.initializeNeo4j();
+
+		Map<UniProtReactomeEntry, Set<ReactomeEvent>> uniProtToTopLevelPathways =
+			UniProtReactomeEntry.fetchUniProtReactomeEntryToTopLevelPathways(dummyGraphDBServer.getSession());
+
+		assertThat(uniProtToTopLevelPathways, is(anEmptyMap()));
+	}
+
+	@Test
+	public void correctUniProtToTopLevelPathways() {
+		final long TOP_LEVEL_PATHWAY_DB_ID = 162582L;
+		final String TOP_LEVEL_PATHWAY_DISPLAY_NAME = "Signal Transduction";
+		final String TOP_LEVEL_PATHWAY_STABLE_ID = "R-HSA-162582";
+
+		final int NUMBER_OF_EXPECTED_UNIPROT_REACTOME_ENTRIES = 2;
+		final int NUMBER_OF_EXPECTED_TOP_LEVEL_PATHWAYS = 1;
+
+		Map<UniProtReactomeEntry, Set<ReactomeEvent>> uniProtToTopLevelPathways =
+			UniProtReactomeEntry.fetchUniProtReactomeEntryToTopLevelPathways(
+				getPopulatedDummyGraphDBServer().getSession()
+			);
+
+		assertThat(uniProtToTopLevelPathways, is(aMapWithSize(NUMBER_OF_EXPECTED_UNIPROT_REACTOME_ENTRIES)));
+
+		Set<ReactomeEvent> eventsAttachedToUniProtInstance = uniProtToTopLevelPathways.get(isoformUniProtReactomeEntry);
+		assertThat(eventsAttachedToUniProtInstance, hasSize(NUMBER_OF_EXPECTED_TOP_LEVEL_PATHWAYS));
+
+		ReactomeEvent expectedEvent = new ReactomeEvent(
+			TOP_LEVEL_PATHWAY_DB_ID, TOP_LEVEL_PATHWAY_DISPLAY_NAME, TOP_LEVEL_PATHWAY_STABLE_ID
 		);
+		assertThat(eventsAttachedToUniProtInstance, contains(expectedEvent));
+	}
 
+	private DummyGraphDBServer getPopulatedDummyGraphDBServer() {
 		DummyGraphDBServer dummyGraphDBServer = DummyGraphDBServer.getInstance();
 		dummyGraphDBServer.initializeNeo4j();
 		dummyGraphDBServer.populateDummyGraphDB();
 
-		Map<UniProtReactomeEntry, Set<ReactomeEvent>> uniProtToReactomeEvents =
-			UniProtReactomeEntry.fetchUniProtReactomeEntryToReactomeEvents(dummyGraphDBServer.getSession());
-
-		assertThat(uniProtToReactomeEvents, aMapWithSize(2));
-
-		Set<ReactomeEvent> eventsAttachedToUniProtInstance = uniProtToReactomeEvents.get(testUniProtReactomeEntry);
-		assertThat(eventsAttachedToUniProtInstance, hasSize(7));
-
-		ReactomeEvent expectedEvent = new ReactomeEvent(EVENT_DB_ID, EVENT_DISPLAY_NAME, EVENT_STABLE_ID);
-		assertThat(eventsAttachedToUniProtInstance, hasItem(expectedEvent));
+		return dummyGraphDBServer;
 	}
 }

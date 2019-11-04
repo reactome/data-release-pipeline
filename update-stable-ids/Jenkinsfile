@@ -1,7 +1,7 @@
 import groovy.json.JsonSlurper
 // This Jenkinsfile is used by Jenkins to run the UpdateStableIdentifiers step of Reactome's release.
 // It requires that the ConfirmReleaseConfigs step has been run successfully before it can be run.
-def currentRelease
+def currentRelease = ""
 pipeline {
 	agent any
 

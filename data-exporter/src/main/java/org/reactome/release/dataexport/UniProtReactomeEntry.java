@@ -483,6 +483,6 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 				"Db id: " + getDbId(),
 				"Accession: " + getAccession(),
 				"Display name: " + getDisplayName()
-			);
+			) + System.lineSeparator();
 	}
 }

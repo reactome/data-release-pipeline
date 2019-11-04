@@ -1,6 +1,8 @@
 import groovy.json.JsonSlurper
 // This Jenkinsfile is used by Jenkins to run the Orthoinference step of Reactome's release.
 // It requires that the Orthopairs and UpdateStableIdentifiers steps have been run successfully before it can be run.
+def currentRelease
+def previousRelease
 pipeline{
 	agent any
 
@@ -9,7 +11,8 @@ pipeline{
 		stage('Check if Orthopairs and UpdateStableIdentifiers builds succeeded'){
 			steps{
 				script{
-					def currentRelease = (pwd() =~ /Releases\/(\d+)\//)[0][1];
+					currentRelease = (pwd() =~ /Releases\/(\d+)\//)[0][1];
+					previousRelease = (pwd() =~ /Releases\/(\d+)\//)[0][1].toInteger() - 1;
 					// This queries the Jenkins API to confirm that the most recent builds of Orthopairs and UpdateStableIdentifiers were successful.
 					checkUpstreamBuildsSucceeded("Orthopairs", "$currentRelease")
 					checkUpstreamBuildsSucceeded("UpdateStableIdentifiers", "$currentRelease")
@@ -22,7 +25,7 @@ pipeline{
 				script{
 					dir('orthoinference'){
 						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
-							def release_current_before_orthoinference_dump = "${env.RELEASE_CURRENT}_${env.RELEASE_NUMBER}_before_orthoinference.dump"
+							def release_current_before_orthoinference_dump = "${env.RELEASE_CURRENT}_${currentRelease}_before_orthoinference.dump"
 							sh "mysqldump -u$user -p$pass ${env.RELEASE_CURRENT} > $release_current_before_orthoinference_dump"
 							sh "gzip -f $release_current_before_orthoinference_dump"
 						}
@@ -66,7 +69,7 @@ pipeline{
 				script{
 					dir('orthoinference'){
 						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
-							def release_current_after_orthoinference_dump = "${env.RELEASE_CURRENT}_${env.RELEASE_NUMBER}_after_orthoinference.dump"
+							def release_current_after_orthoinference_dump = "${env.RELEASE_CURRENT}_${currentRelease}_after_orthoinference.dump"
 							sh "mysqldump -u$user -p$pass ${env.RELEASE_CURRENT} > $release_current_after_orthoinference_dump"
 							sh "gzip -f $release_current_after_orthoinference_dump"
 						}
@@ -79,13 +82,13 @@ pipeline{
 			steps{
 				script{
 					dir('orthoinference'){
-						sh "mkdir -p archive/${env.RELEASE_NUMBER}/logs"
-						sh "mv --backup=numbered *_${env.RELEASE_NUMBER}_*.dump.gz archive/${env.RELEASE_NUMBER}/"
+						sh "mkdir -p archive/${currentRelease}/logs"
+						sh "mv --backup=numbered *_${currentRelease}_*.dump.gz archive/${currentRelease}/"
 						sh "gzip logs/*"
-						sh "mv logs/* archive/${env.RELEASE_NUMBER}/logs/"
-						sh "mkdir -p ${env.RELEASE_NUMBER}"
+						sh "mv logs/* archive/${currentRelease}/logs/"
+						sh "mkdir -p ${currentRelease}"
 						sh "gzip -f *.txt"
-						sh "mv *.txt.gz ${env.RELEASE_NUMBER}/"
+						sh "mv *.txt.gz ${currentRelease}/"
 					}
 				}
 			}

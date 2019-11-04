@@ -10,3 +10,9 @@ Major changes:
 # 1.1.1
  - Include creator information on other reports. (https://github.com/reactome/data-release-pipeline/issues/26)
  - Fixed order of columns. (https://github.com/reactome/data-release-pipeline/issues/25)
+
+# 1.1.2
+ - Updated dependencies
+
+# 1.1.3
+ - Fixed NullPointerException

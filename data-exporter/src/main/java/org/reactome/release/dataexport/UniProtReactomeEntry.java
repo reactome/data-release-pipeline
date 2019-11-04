@@ -110,8 +110,31 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 	}
 
 	/**
-	 * Retrieves, from the graph database, a Map of UniProtReactomeEntry objects to the set of Top Level Pathways in
+	 * Retrieves, from the graph database, a Map of UniProt accessions to the set of Top Level Pathways in
 	 * which each UniProt accession participates
+	 * @param graphDBSession Neo4J Driver Session object for querying the graph database
+	 * @return Map of UniProt accessions to set of Reactome Events representing top level pathways in Reactome
+	 * @deprecated As of data-exporter 1.2.0, use {@link #fetchUniProtReactomeEntryToTopLevelPathways(Session)} instead
+	 * as the UniProt entry in Reactome is represented by the returned map's keys rather than only the UniProt accession
+	 */
+	@Deprecated
+	public static Map<String, Set<ReactomeEvent>> fetchUniProtAccessionToTopLevelPathways(
+		Session graphDBSession
+	) {
+		return fetchUniProtReactomeEntryToTopLevelPathways(graphDBSession)
+			.entrySet()
+			.stream()
+			.collect(
+				Collectors.toMap(
+					entry -> entry.getKey().getAccession(),
+					Map.Entry::getValue
+				)
+			);
+	}
+
+	/**
+	 * Retrieves, from the graph database, a Map of UniProtReactomeEntry objects to the set of Top Level Pathways in
+	 * which each UniProtReactomeEntry participates
 	 * @param graphDBSession Neo4J Driver Session object for querying the graph database
 	 * @return Map of UniProtReactomeEntry objects to set of Reactome Events representing top level pathways in
 	 * Reactome
@@ -145,8 +168,31 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 	}
 
 	/**
+	 * Retrieves, from the graph database, a Map of UniProt accessions to the set of events (both Pathways
+	 * and Reaction Like Events) in which each UniProt accession participates
+	 * @param graphDBSession Neo4J Driver Session object for querying the graph database
+	 * @return Map of UniProt accessions to set of Reactome Events in Reactome
+	 * @deprecated As of data-exporter 1.2.0, use {@link #fetchUniProtReactomeEntryToReactomeEvents(Session)} instead
+	 * as the UniProt entry in Reactome is represented by the returned map's keys rather than only the UniProt accession
+	 */
+	@Deprecated
+	public static Map<String, Set<ReactomeEvent>> fetchUniProtAccessionToReactomeEvents(
+		Session graphDBSession
+	) {
+		return fetchUniProtReactomeEntryToReactomeEvents(graphDBSession)
+			.entrySet()
+			.stream()
+			.collect(
+				Collectors.toMap(
+					entry -> entry.getKey().getAccession(),
+					Map.Entry::getValue
+				)
+			);
+	}
+
+	/**
 	 * Retrieves, from the graph database, a Map of UniProtReactomeEntry objects to the set of events (both Pathways
-	 * and Reaction Like Events in which each UniProt accession participates
+	 * and Reaction Like Events) in which each UniProtReactomeEntry participates
 	 * @param graphDBSession Neo4J Driver Session object for querying the graph database
 	 * @return Map of UniProtReactomeEntry objects to set of Reactome Events in Reactome
 	 */

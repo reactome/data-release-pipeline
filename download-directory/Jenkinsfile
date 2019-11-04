@@ -1,6 +1,8 @@
 import groovy.json.JsonSlurper
 // This Jenkinsfile is used by Jenkins to run the DownloadDirectory step of Reactome's release.
 // It requires that the AddLinks-Insertion step has been run successfully before it can be run.
+def currentRelease
+def previousRelease
 pipeline {
 	agent any
 
@@ -9,7 +11,8 @@ pipeline {
 		stage('Check AddLinks-Insertion build succeeded'){
 			steps{
 				script{
-					def currentRelease = (pwd() =~ /Releases\/(\d+)\//)[0][1];
+					currentRelease = (pwd() =~ /Releases\/(\d+)\//)[0][1];
+					previousRelease = (pwd() =~ /Releases\/(\d+)\//)[0][1].toInteger() - 1;
 					// This queries the Jenkins API to confirm that the most recent build of AddLinks-Insertion was successful.
 					def addLinksInsertionStatusUrl = httpRequest authentication: 'jenkinsKey', validResponseCodes: "${env.VALID_RESPONSE_CODES}", url: "${env.JENKINS_JOB_URL}/job/$currentRelease/job/AddLinks-Insertion/lastBuild/api/json"
 					if (addLinksInsertionStatusUrl.getStatus() == 404) {
@@ -66,10 +69,10 @@ pipeline {
 			steps{
 				script{
 					dir('download-directory'){
-						sh "mkdir -p archive/${env.RELEASE_NUMBER}/logs"
-						sh "mv --backup=numbered biopax*validator.zip archive/${env.RELEASE_NUMBER}/"
+						sh "mkdir -p archive/${currentRelease}/logs"
+						sh "mv --backup=numbered biopax*validator.zip archive/${currentRelease}/"
 						sh "gzip logs/*"
-						sh "mv logs/* archive/${env.RELEASE_NUMBER}/logs/"
+						sh "mv logs/* archive/${currentRelease}/logs/"
 					}
 				}
 			}

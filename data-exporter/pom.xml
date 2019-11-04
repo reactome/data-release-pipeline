@@ -5,7 +5,7 @@
 	<groupId>org.reactome.release</groupId>
 	<artifactId>data-exporter</artifactId>
 	<packaging>jar</packaging>
-	<version>1.1.2</version>
+	<version>1.2.0</version>
 	<name>data-exporter</name>
 
 	<properties>

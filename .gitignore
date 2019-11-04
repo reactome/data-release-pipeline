@@ -18,6 +18,9 @@
 *.tar.gz
 *.rar
 
+# IntelliJ files
+.idea
+
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 
@@ -25,13 +28,8 @@ hs_err_pid*
 .metadata
 .recommenders
 RemoteSystemsTempFiles
-
 update-dois/target/maven-status/maven-compiler-plugin/compile/default-compile/*.lst
 update-dois/.settings/org.eclipse.jdt.core.prefs
-orthoinference/src/main/resources/*.txt
-orthoinference/src/main/resources/orthopairs/*
-orthoinference/*.txt
-orthoinference/target/*
 config.properties
 *.classpath
 *.project
@@ -39,3 +37,8 @@ config.properties
 target
 *.report
 .attach_pid*
+normal_event_skip_list.txt
+
+logs/
+\.idea/
+archive/

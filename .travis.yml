@@ -1,0 +1,6 @@
+language: java
+script:
+  - cd release-common-lib
+  - mvn clean install
+  - cd ../data-exporter
+  - mvn clean test

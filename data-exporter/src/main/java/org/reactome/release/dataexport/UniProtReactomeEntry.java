@@ -55,8 +55,8 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 
 		if (accessionOrNameMismatched(uniProtReactomeEntry, uniprotAccession, uniprotDisplayName)) {
 			throw new IllegalArgumentException(getExceptionMessage(
-				uniProtReactomeEntry, uniprotDbId, uniprotAccession, uniprotDisplayName)
-			);
+				uniProtReactomeEntry, uniprotDbId, uniprotAccession, uniprotDisplayName
+			));
 		}
 
 		return uniProtReactomeEntry;

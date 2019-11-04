@@ -21,19 +21,6 @@ pipeline{
 						error("Please update the config file for this release and upload it in Jenkins as a secret file credential. Please have the credential scoped to this folder.")
 					}
 				}
-				// This asks for confirmation the environmental variables have been updated for this release.
-				// These are global variables that are accessed at Jenkins -> Manage Jenkins -> Configure System -> Global properties
-				script{
-				def userInput = input(
-					id: 'userInput', message: "Have the release-specific Jenkins environmental variables been updated for this release?",
-					parameters: [
-												[$class: 'TextParameterDefinition', defaultValue: '', name: 'response']
-											])
-
-					if (!userInput.toLowerCase().startsWith("y")){
-						error("Please update release-specific environmental variables found at 'Jenkins -> Manage Jenkins -> Configure System -> Global Properties'.")
-					}
-				}
 				dir('scripts'){
 					script{
 						// This asks for the release number. Afterwards this input, along with the config file and environmental variables for

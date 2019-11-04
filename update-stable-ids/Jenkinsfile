@@ -2,6 +2,7 @@ import groovy.json.JsonSlurper
 // This Jenkinsfile is used by Jenkins to run the UpdateStableIdentifiers step of Reactome's release.
 // It requires that the ConfirmReleaseConfigs step has been run successfully before it can be run.
 def currentRelease
+def previousRelease
 pipeline {
 	agent any
 
@@ -10,7 +11,9 @@ pipeline {
 		stage('Check ConfirmReleaseConfig build succeeded'){
 			steps{
 				script{
+					// Get current release number from directory
 					currentRelease = (pwd() =~ /Releases\/(\d+)\//)[0][1];
+					previousRelease = (${currentRelease} as int) - 1;
 					// This queries the Jenkins API to confirm that the most recent build of ConfirmReleaseConfigs was successful.
 					def configStatusUrl = httpRequest authentication: 'jenkinsKey', validResponseCodes: "${env.VALID_RESPONSE_CODES}", url: "${env.JENKINS_JOB_URL}/job/${currentRelease}/job/ConfirmReleaseConfigs/lastBuild/api/json"
 					if (configStatusUrl.getStatus() == 404) {
@@ -33,7 +36,7 @@ pipeline {
 						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
 							def slice_test_snapshot_dump = "${env.SLICE_TEST}_${currentRelease}_snapshot.dump"
 							sh "mysql -u$user -p$pass -e \'drop database if exists ${env.SLICE_PREVIOUS}; create database ${env.SLICE_PREVIOUS}\'"
-							sh "zcat  archive/${env.PREV_RELEASE_NUMBER}/${env.SLICE_TEST}_${env.PREV_RELEASE_NUMBER}_snapshot.dump.gz 2>&1 | mysql -u$user -p$pass ${env.SLICE_PREVIOUS}"
+							sh "zcat  archive/${previousRelease}/${env.SLICE_TEST}_${previousRelease}_snapshot.dump.gz 2>&1 | mysql -u$user -p$pass ${env.SLICE_PREVIOUS}"
 							sh "mysqldump -u$user -p$pass ${env.SLICE_TEST} > $slice_test_snapshot_dump"
 							sh "gzip -f $slice_test_snapshot_dump"
 							sh "mysql -u$user -p$pass -e \'drop database if exists ${env.SLICE_CURRENT}; create database ${env.SLICE_CURRENT}\'"

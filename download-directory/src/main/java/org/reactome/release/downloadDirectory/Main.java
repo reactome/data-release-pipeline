@@ -33,12 +33,6 @@ public class Main {
 		Properties props = new Properties();
 		props.load(new FileInputStream(pathToConfig));
 
-		//TODO: Check stable identifiers db exists
-		//TODO: File existence check and size check
-		//TODO: Parallelize executions
-		//TODO: Integration with Perl wrapper
-		//TODO: Refactor to Command Pattern for execute calls
-
 		//Set up DB adaptor
 		String username = props.getProperty("release.database.user");
 		String password = props.getProperty("release.database.password");

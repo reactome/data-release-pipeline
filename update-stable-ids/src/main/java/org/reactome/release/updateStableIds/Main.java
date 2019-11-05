@@ -36,7 +36,7 @@ public class Main
        int releaseNumber = Integer.valueOf(props.getProperty("releaseNumber"));
        int prevReleaseNumber = releaseNumber - 1;
        
-       logger.info("Creating DB adaptors for test_slice_" + releaseNumber + ", test_slice_" + prevReleaseNumber + "_snapshot and gk_central");
+       logger.info("Creating DB adaptors");
        
        String sliceUsername = props.getProperty("release.database.user");
        String slicePassword = props.getProperty("release.database.password");

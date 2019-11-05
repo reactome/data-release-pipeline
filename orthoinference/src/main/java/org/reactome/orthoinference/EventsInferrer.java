@@ -49,10 +49,12 @@ public class EventsInferrer
 	private static String releaseVersion;
 	private static GKInstance instanceEditInst;
 	private static GKInstance speciesInst;
-	private static Map<GKInstance,GKInstance> manualEventToNonHumanSource = new HashMap<>();
-	private static List<GKInstance> manualHumanEvents = new ArrayList<>();
+	private static Map<GKInstance, GKInstance> eventsAlreadyInferredMap = new HashMap<>();
+	private static List<GKInstance> eventsAlreadyInferred = new ArrayList<>();
 	private static StableIdentifierGenerator stableIdentifierGenerator;
 	private static OrthologousPathwayDiagramGenerator orthologousPathwayDiagramGenerator;
+	private static final String summationText = "This event has been computationally inferred from an event that has been demonstrated in another species.<p>The inference is based on the homology mapping from PANTHER. Briefly, reactions for which all involved PhysicalEntities (in input, output and catalyst) have a mapped orthologue/paralogue (for complexes at least 75% of components must have a mapping) are inferred to the other species. High level events are also inferred for these events to allow for easier navigation.<p><a href='/electronic_inference_compara.html' target = 'NEW'>More details and caveats of the event inference in Reactome.</a> For details on PANTHER see also: <a href='http://www.pantherdb.org/about.jsp' target='NEW'>http://www.pantherdb.org/about.jsp</a>";
+
 
 	@SuppressWarnings("unchecked")
 	public static void inferEvents(Properties props, String species) throws Exception
@@ -103,7 +105,7 @@ public class EventsInferrer
 		String inferredFilename = "inferred_" + species + "_75.txt";
 		createNewFile(eligibleFilename);
 		createNewFile(inferredFilename);
-		ReactionInferrer.setEligibleFilename(eligibleFilename);
+		SkipInstanceChecker.setEligibleFilename(eligibleFilename);
 		ReactionInferrer.setInferredFilename(inferredFilename);
 
 		stableIdentifierGenerator = new StableIdentifierGenerator(dbAdaptor, (String) speciesObject.get("abbreviation"));
@@ -113,6 +115,7 @@ public class EventsInferrer
 			Map<String,String[]> homologueMappings = readHomologueMappingFile(species, "hsap", pathToOrthopairs);
 			ProteinCountUtility.setHomologueMappingFile(homologueMappings);
 			EWASInferrer.setHomologueMappingFile(homologueMappings);
+			SkipInstanceChecker.setHomologueMappingFile(homologueMappings);
 		} catch (FileNotFoundException e) {
 			logger.fatal("Unable to locate " + speciesName +" mapping file: hsap_" + species + "_mapping.txt. Orthology prediction not possible.");
 			return;
@@ -165,19 +168,19 @@ public class EventsInferrer
 			logger.info("Attempting RlE inference: " + reactionInst);
 			// Check if the current Reaction already exists for this species, that it is a valid instance (passes some filters), and that it doesn't have a Disease attribute.
 			// Adds to manualHumanEvents array if it passes conditions. This code block allows you to re-run the code without re-inferring instances.
-			List<GKInstance> previouslyInferredInstances = new ArrayList<GKInstance>();
+			List<GKInstance> previouslyInferredInstances = new ArrayList<>();
 			previouslyInferredInstances = checkIfPreviouslyInferred(reactionInst, orthologousEvent, previouslyInferredInstances);
-			previouslyInferredInstances = checkIfPreviouslyInferred(reactionInst, inferredFrom, previouslyInferredInstances);
-			if (previouslyInferredInstances.size() > 0)
-			{
+			previouslyInferredInstances.addAll(checkIfPreviouslyInferred(reactionInst, inferredFrom, previouslyInferredInstances));
+			if (previouslyInferredInstances.size() > 0) {
 				GKInstance prevInfInst = previouslyInferredInstances.get(0);
-				if (prevInfInst.getAttributeValue(disease) == null)
-				{
+				GKInstance prevInfSummationInst = (GKInstance) prevInfInst.getAttributeValue(summation);
+				String prevInfSummationText = prevInfSummationInst.getAttributeValue(text).toString();
+				if (prevInfInst.getAttributeValue(disease) == null &&  prevInfSummationText.equals(summationText)) {
 					logger.info("Inferred RlE already exists, skipping inference");
-					manualEventToNonHumanSource.put(reactionInst, prevInfInst);
-					manualHumanEvents.add(reactionInst);
+					eventsAlreadyInferredMap.put(reactionInst, prevInfInst);
+					eventsAlreadyInferred.add(reactionInst);
 				} else {
-					logger.info("Disease reaction, skipping inference");
+					logger.info("Either a disease or manually inferred reaction, skipping inference");
 				}
 				continue;
 			}
@@ -191,8 +194,11 @@ public class EventsInferrer
 				return;
 			}
 		}
-		PathwaysInferrer.setInferredEvent(ReactionInferrer.getInferredEvent());
-		PathwaysInferrer.inferPathways(ReactionInferrer.getInferrableHumanEvents());
+		// Retrieve events inferred from this run, and any that were already inferred. Combine them and then begin Pathway inference.
+		// The two methods below perform this for a map, containing the original RlE and the inferred RlE, and a List of just the inferred RlEs.
+		// The latter will be iterated through when building Pathway hierarchies, the former when information from original RlE is needed during this build.
+		PathwaysInferrer.setInferredEvent(ReactionInferrer.getInferredEvent(eventsAlreadyInferredMap));
+		PathwaysInferrer.inferPathways(ReactionInferrer.getInferrableHumanEvents(eventsAlreadyInferred));
 		orthologousPathwayDiagramGenerator.generateOrthologousPathwayDiagrams();
 		outputReport(species);
 		logger.info("Finished orthoinference of " + speciesName);
@@ -218,7 +224,7 @@ public class EventsInferrer
 	}
 
 	@SuppressWarnings("unchecked")
-	private static List<GKInstance> checkIfPreviouslyInferred(GKInstance reactionInst, String attribute, List<GKInstance> previouslyInferredInstances) throws InvalidAttributeException, Exception 
+	private static List<GKInstance> checkIfPreviouslyInferred(GKInstance reactionInst, String attribute, List<GKInstance> previouslyInferredInstances) throws Exception
 	{
 		for (GKInstance attributeInst : (Collection<GKInstance>) reactionInst.getAttributeValuesList(attribute))
 		{
@@ -233,7 +239,7 @@ public class EventsInferrer
 
 	private static void outputReport(String species) throws IOException
 	{
-		int eligibleCount = ReactionInferrer.getEligibleCount();
+		int eligibleCount = SkipInstanceChecker.getEligibleCount();
 		int inferredCount = ReactionInferrer.getInferredCount();
 		float percentInferred = (float) 100*inferredCount/eligibleCount;
 		// Create file if it doesn't exist
@@ -241,8 +247,10 @@ public class EventsInferrer
 		logger.info("Updating " + reportFilename);
 		if (!Files.exists(Paths.get(reportFilename))) {
 			createNewFile(reportFilename);
+			String reportHeader = "## Number of inferred reactions by species for Reactome Release " + releaseVersion;
+			Files.write(Paths.get(reportFilename), reportHeader.getBytes(), StandardOpenOption.APPEND);
 		}
-		String results = "hsap to " + species + ":\t" + inferredCount + " out of " + eligibleCount + " eligible reactions (" + String.format("%.2f", percentInferred) + "%)\n";
+		String results = "hsap to " + species + ":\tInferred " + inferredCount + " out of " + eligibleCount + " eligible reactions (" + String.format("%.2f", percentInferred) + "%)\n";
 		Files.write(Paths.get(reportFilename), results.getBytes(), StandardOpenOption.APPEND);
 	}
 	
@@ -302,7 +310,6 @@ public class EventsInferrer
 		GKInstance summationInst = new GKInstance(dbAdaptor.getSchema().getClassByName(Summation));
 		summationInst.setDbAdaptor(dbAdaptor);
 		summationInst.addAttributeValue(created, instanceEditInst);
-		String summationText = "This event has been computationally inferred from an event that has been demonstrated in another species.<p>The inference is based on the homology mapping from PANTHER. Briefly, reactions for which all involved PhysicalEntities (in input, output and catalyst) have a mapped orthologue/paralogue (for complexes at least 75% of components must have a mapping) are inferred to the other species. High level events are also inferred for these events to allow for easier navigation.<p><a href='/electronic_inference_compara.html' target = 'NEW'>More details and caveats of the event inference in Reactome.</a> For details on PANTHER see also: <a href='http://www.pantherdb.org/about.jsp' target='NEW'>http://www.pantherdb.org/about.jsp</a>";
 		summationInst.addAttributeValue(text, summationText);
 		summationInst.addAttributeValue(_displayName, summationText);
 		summationInst = InstanceUtilities.checkForIdenticalInstances(summationInst, null);

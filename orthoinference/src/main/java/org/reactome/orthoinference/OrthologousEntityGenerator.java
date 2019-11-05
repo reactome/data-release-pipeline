@@ -174,7 +174,7 @@ public class OrthologousEntityGenerator {
 	}
 	// Infers Complex or Polymer instances. These instances are generally comprised of more than 1 PhysicalEntity, and calls 'createOrthoEntity' for each one. Complex/Polymer instances
 	// are also subject to the 'countDistinctProteins' function. The result from this needs to have at least 75% of total proteins to be inferrable for inference to continue. 
-	private static GKInstance createInfComplexPolymer(GKInstance complexInst, boolean override) throws InvalidAttributeException, InvalidAttributeValueException, Exception
+	private static GKInstance createInfComplexPolymer(GKInstance complexInst, boolean override) throws Exception
 	{
 		if (complexPolymerIdenticals.get(complexInst) == null)
 		{

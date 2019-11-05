@@ -2,6 +2,9 @@ package org.reactome.orthoinference;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -23,6 +26,9 @@ public class SkipInstanceChecker {
 	private static final Logger logger = LogManager.getLogger();
 	private static MySQLAdaptor dba;
 	private static Set<String> skipList = new HashSet<>();
+	private static Map<String, String[]> homologueMappings = new HashMap<>();
+	private static String eligibleFilehandle;
+	private static Integer eligibleCount = 0;
 	
 	// Skiplist was traditionally provided in a file, but since it's currently just 3 instances, I've just hard-coded them here.
 	public static void getSkipList(String skipListFilename) throws NumberFormatException, Exception
@@ -101,9 +107,110 @@ public class SkipInstanceChecker {
 			logger.info(reactionInst + " has multiple species -- skipping");
 			return true;
 		}
+
+		// This function finds the total number of distinct proteins associated with an instance, as well as the number that can be inferred.
+		// Total proteins are stored in reactionProteinCounts[0], inferrable proteins in [1], and the maximum number of homologues for any entity involved in index [2].
+		// Reactions with no proteins/EWAS (Total = 0) are not inferred.
+		List<Integer> reactionProteinCounts = ProteinCountUtility.getDistinctProteinCounts(reactionInst);
+		int reactionTotalProteinCounts = reactionProteinCounts.get(0);
+		if (reactionTotalProteinCounts > 0) {
+			// Since we want to keep the eligibility counts the same for posterity, this is where Reaction eligibility will be determined, instead of in ReactionInferrer. (October 2019)
+			logger.info("Total protein count for RlE: " + reactionTotalProteinCounts);
+			eligibleCount++;
+			String eligibleEventName = reactionInst.getAttributeValue(DB_ID).toString() + "\t" + reactionInst.getDisplayName() + "\n";
+			Files.write(Paths.get(eligibleFilehandle), eligibleEventName.getBytes(), StandardOpenOption.APPEND);
+			// Checks that ReactionlikeEvents will be fully inferrable before attempting inference
+			if (!reactionComponentsAreInferrable(reactionInst)) {
+				return true;
+			}
+		} else {
+				logger.info("No distinct proteins found in instance -- terminating inference for " + reactionInst);
+				return true;
+			}
 		return false;
 	}
-	
+
+	/**
+	 * 	Each input, output, and catalyst is screened to verify that the Reaction will be inferred.
+	 * 	This prevents the majority of orphan PEs that were being created during orthoinference.
+	 * 	Only some EntitySets are still orphaned due to the complexity behind attempting to screen them
+	 * @param reactionInst -- GKInstance that will be screened
+	 * @return -- Boolean is returned that indicates if Reaction is fully inferrable or not
+	 * @throws Exception
+	 */
+	private static boolean reactionComponentsAreInferrable(GKInstance reactionInst) throws Exception {
+		// First gather all inputs, outputs and the PEs in catalyst activities
+		// Inputs/Outputs/CatalystPEs need to be stored in seperate collections. At time of writing, having it all stored in
+		// the same collection causes outputs to be inferred in both inputs and outputs during the actual inference -- not ideal
+		Collection<GKInstance> reactionInputs = reactionInst.getAttributeValuesList(input);
+		Collection<GKInstance> reactionOutputs = reactionInst.getAttributeValuesList(output);
+		Collection<GKInstance> reactionCatalystPEs = new ArrayList<>();
+		Collection<GKInstance> reactionCatalysts = reactionInst.getAttributeValuesList(catalystActivity);
+		for (GKInstance reactionCatalyst : reactionCatalysts) {
+			GKInstance catalystPE = (GKInstance) reactionCatalyst.getAttributeValue(physicalEntity);
+			if (catalystPE != null) {
+				reactionCatalystPEs.add(catalystPE);
+			}
+		}
+		// Screen inputs
+		for (GKInstance reactionInput : reactionInputs) {
+			if (!componentIsInferrable(reactionInput)) {
+				return false;
+			}
+		}
+		// Screen outputs
+		for (GKInstance reactionOutput : reactionOutputs) {
+			if (!componentIsInferrable(reactionOutput)) {
+				return false;
+			}
+		}
+		// Screen catalyst PhysicalEntities
+		for (GKInstance reactionCatalystPE : reactionCatalystPEs) {
+			if (!componentIsInferrable(reactionCatalystPE)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	// This looks a lot like the code structure found in OrthologousEntityGenerator, just without the actual inference code or override functionality
+	// This will screen all instance types except for some EntitySets, which are complex to screen ahead of time.
+	private static boolean componentIsInferrable(GKInstance reactionComponent) throws Exception {
+		// This block doesn't do anything aside from prevent non-species-containing instances from going through other screening.
+		// During actual inference, a non-species-containing instance would be returned without any inference.
+		if (!SpeciesCheckUtility.checkForSpeciesAttribute(reactionComponent)) {
+//				return true;
+		} else if (reactionComponent.getSchemClass().isa(GenomeEncodedEntity))
+		{
+			if (reactionComponent.getSchemClass().toString().contains(EntityWithAccessionedSequence)) {
+				String referenceEntityId = ((GKInstance) reactionComponent.getAttributeValue(referenceEntity)).getAttributeValue(identifier).toString();
+				if (homologueMappings.get(referenceEntityId) == null) {
+					return false;
+				}
+			} else {
+				return false;
+			}
+		} else if (reactionComponent.getSchemClass().isa(Complex) || reactionComponent.getSchemClass().isa(Polymer) || reactionComponent.getSchemClass().isa(EntitySet)) {
+			List<Integer> complexProteinCounts = ProteinCountUtility.getDistinctProteinCounts(reactionComponent);
+			int totalProteinCounts = complexProteinCounts.get(0);
+			int inferrableProteinCounts = complexProteinCounts.get(1);
+			if (reactionComponent.getSchemClass().isa(Complex) || reactionComponent.getSchemClass().isa(Polymer)) {
+				int percent = 0;
+				if (totalProteinCounts > 0) {
+					percent = (inferrableProteinCounts * 100) / totalProteinCounts;
+				}
+				if (percent < 75) {
+					logger.info("Complex/Polymer protein count is below 75% threshold (" + percent + "%) -- terminating inference");
+					return false;
+				}
+			} else if (totalProteinCounts > 0 && inferrableProteinCounts == 0) {
+				logger.info("No distinct proteins found in EntitySet -- terminating inference");
+				return false;
+			}
+		}
+		return true;
+	}
+
 	// Goes through all input/output/catalystActivity/regulatedBy attribute instances, and captures all species associates with them. Returns a collection of species instances.
 	@SuppressWarnings("unchecked")
 	private static Collection<GKInstance> checkIfEntitiesContainMultipleSpecies(GKInstance reactionInst) throws Exception
@@ -218,5 +325,17 @@ public class SkipInstanceChecker {
 	public static void setAdaptor(MySQLAdaptor dbAdaptor)
 	{
 		dba = dbAdaptor;
+	}
+
+	public static void setHomologueMappingFile(Map<String, String[]> homologueMappingsCopy) { homologueMappings = homologueMappingsCopy; }
+
+	public static void setEligibleFilename(String eligibleFilename)
+	{
+		eligibleFilehandle = eligibleFilename;
+	}
+
+	public static int getEligibleCount()
+	{
+		return eligibleCount;
 	}
 }

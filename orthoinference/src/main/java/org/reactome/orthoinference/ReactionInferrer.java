@@ -21,13 +21,11 @@ public class ReactionInferrer {
 	private static final Logger logger = LogManager.getLogger();
 	private static MySQLAdaptor dba;
 	private static String dateOfRelease = "";
-	private static String eligibleFilehandle;
 	private static String inferredFilehandle;
 	private static GKInstance summationInst;
 	private static GKInstance evidenceTypeInst;
 	private static Map<GKInstance, GKInstance> inferredCatalyst = new HashMap<>();
 	private static Map<GKInstance, GKInstance> inferredEvent = new HashMap<>();
-	private static Integer eligibleCount = 0;
 	private static Integer inferredCount = 0;
 	private static List<GKInstance> inferrableHumanEvents = new ArrayList<>();
 	
@@ -44,6 +42,7 @@ public class ReactionInferrer {
 		if (inferredEvent.get(reactionInst) == null)
 		{
 			///// The beginning of an inference process:
+
 			// Creates inferred instance of reaction.
 			GKInstance infReactionInst = InstanceUtilities.createNewInferredGKInstance(reactionInst);
 			infReactionInst.addAttributeValue(name, reactionInst.getAttributeValuesList(name));
@@ -52,87 +51,72 @@ public class ReactionInferrer {
 			infReactionInst.addAttributeValue(evidenceType, evidenceTypeInst);
 			infReactionInst.addAttributeValue(_displayName, reactionInst.getAttributeValue(_displayName));
 
-			// This function finds the total number of distinct proteins associated with an instance, as well as the number that can be inferred.
-			// Total proteins are stored in reactionProteinCounts[0], inferrable proteins in [1], and the maximum number of homologues for any entity involved in index [2].
-			// Reactions with no proteins/EWAS (Total = 0) are not inferred.
-			List<Integer> reactionProteinCounts = ProteinCountUtility.getDistinctProteinCounts(reactionInst);
-			int reactionTotalProteinCounts = reactionProteinCounts.get(0);
-			if (reactionTotalProteinCounts > 0) 
+			// Attempt to infer all PhysicalEntities associated with this reaction's Input, Output, CatalystActivity and RegulatedBy attributes.
+			// Failure to successfully infer any of these attributes will end inference for this reaction.
+			logger.info("Inferring inputs...");
+			if (inferReactionInputsOrOutputs(reactionInst, infReactionInst, input))
 			{
-				logger.info("Total protein count for RlE: " + reactionTotalProteinCounts);
-				String eligibleEventName = reactionInst.getAttributeValue(DB_ID).toString() + "\t" + reactionInst.getDisplayName() + "\n";	
-				// Having passed all tests/filters until now, the reaction is recorded in the 'eligible reactions' file, meaning inference is continued.
-				eligibleCount++;
-				Files.write(Paths.get(eligibleFilehandle), eligibleEventName.getBytes(), StandardOpenOption.APPEND);
-				// Attempt to infer all PhysicalEntities associated with this reaction's Input, Output, CatalystActivity and RegulatedBy attributes.
-				// Failure to successfully infer any of these attributes will end inference for this reaction.
-				logger.info("Inferring inputs...");
-				if (inferReactionInputsOrOutputs(reactionInst, infReactionInst, input))
+				logger.info("Inferring outputs...");
+				if (inferReactionInputsOrOutputs(reactionInst, infReactionInst, output))
 				{
-					logger.info("Inferring outputs...");
-					if (inferReactionInputsOrOutputs(reactionInst, infReactionInst, output))
+					logger.info("Inferring catalysts...");
+					if (inferReactionCatalysts(reactionInst, infReactionInst))
 					{
-						logger.info("Inferring catalysts...");
-						if (inferReactionCatalysts(reactionInst, infReactionInst))
+						// Many reactions are not regulated at all, meaning inference is attempted but will not end the process if there is nothing to infer.
+						// The inference process will end though if inferRegulations returns an invalid value.
+						logger.info("Inferring regulations...");
+						List<GKInstance> inferredRegulations = inferReactionRegulations(reactionInst);
+						if (inferredRegulations.size() == 1 && inferredRegulations.get(0) == null)
 						{
-							// Many reactions are not regulated at all, meaning inference is attempted but will not end the process if there is nothing to infer. 
-							// The inference process will end though if inferRegulations returns an invalid value.
-							logger.info("Inferring regulations...");
-							List<GKInstance> inferredRegulations = inferReactionRegulations(reactionInst);
-							if (inferredRegulations.size() == 1 && inferredRegulations.get(0) == null)
-							{
-								return;
-							}
-							if (infReactionInst.getSchemClass().isValidAttribute(releaseDate)) 
-							{
-								infReactionInst.addAttributeValue(releaseDate, dateOfRelease);
-							}
-							// FetchIdenticalInstances would just return the instance being inferred. Since this step is meant to always
-							// add a new inferred instance, the storeInstance method is just called here.
-							GKInstance orthoStableIdentifierInst = EventsInferrer.getStableIdentifierGenerator().generateOrthologousStableId(infReactionInst, reactionInst);
-							infReactionInst.addAttributeValue(stableIdentifier, orthoStableIdentifierInst);
-							dba.storeInstance(infReactionInst);
-							logger.info("Inferred RlE instance: " + infReactionInst);
-
-							if (infReactionInst.getSchemClass().isValidAttribute(inferredFrom))
-							{
-								infReactionInst = InstanceUtilities.addAttributeValueIfNecessary(infReactionInst, reactionInst, inferredFrom);
-								dba.updateInstanceAttribute(infReactionInst, inferredFrom);
-							}
-							infReactionInst = InstanceUtilities.addAttributeValueIfNecessary(infReactionInst, reactionInst, orthologousEvent);
-							dba.updateInstanceAttribute(infReactionInst, orthologousEvent);
-							reactionInst.addAttributeValue(orthologousEvent, infReactionInst);
-							dba.updateInstanceAttribute(reactionInst, orthologousEvent);
-							
-							inferredEvent.put(reactionInst, infReactionInst);
-							
-							// Regulations instances require the DB to contain the inferred ReactionlikeEvent, so Regulations inference happens post-inference
-							if (inferredRegulations.size() > 0)
-							{
-								logger.info("Number of regulator(s) inferred: " + inferredRegulations.size());
-								for (GKInstance infRegulation : inferredRegulations)
-								{
-									infRegulation = InstanceUtilities.checkForIdenticalInstances(infRegulation, null);
-									infReactionInst.addAttributeValue("regulatedBy", infRegulation);
-									dba.updateInstanceAttribute(infReactionInst, "regulatedBy");
-								}
-							}
-							// After successfully adding a new inferred instance to the DB, it is recorded in the 'inferred reactions' file
-							inferredCount++;
-							inferrableHumanEvents.add(reactionInst);
-							String inferredEvent = infReactionInst.getAttributeValue(DB_ID).toString() + "\t" + infReactionInst.getDisplayName() + "\n";	
-							Files.write(Paths.get(inferredFilehandle), inferredEvent.getBytes(), StandardOpenOption.APPEND);
-						} else {
-							logger.info("Catalyst inference unsuccessful -- terminating inference for " + reactionInst);
+							return;
 						}
+						if (infReactionInst.getSchemClass().isValidAttribute(releaseDate))
+						{
+							infReactionInst.addAttributeValue(releaseDate, dateOfRelease);
+						}
+						// FetchIdenticalInstances would just return the instance being inferred. Since this step is meant to always
+						// add a new inferred instance, the storeInstance method is just called here.
+						GKInstance orthoStableIdentifierInst = EventsInferrer.getStableIdentifierGenerator().generateOrthologousStableId(infReactionInst, reactionInst);
+						infReactionInst.addAttributeValue(stableIdentifier, orthoStableIdentifierInst);
+						dba.storeInstance(infReactionInst);
+						logger.info("Inferred RlE instance: " + infReactionInst);
+
+						if (infReactionInst.getSchemClass().isValidAttribute(inferredFrom))
+						{
+							infReactionInst = InstanceUtilities.addAttributeValueIfNecessary(infReactionInst, reactionInst, inferredFrom);
+							dba.updateInstanceAttribute(infReactionInst, inferredFrom);
+						}
+						infReactionInst = InstanceUtilities.addAttributeValueIfNecessary(infReactionInst, reactionInst, orthologousEvent);
+						dba.updateInstanceAttribute(infReactionInst, orthologousEvent);
+						reactionInst.addAttributeValue(orthologousEvent, infReactionInst);
+						dba.updateInstanceAttribute(reactionInst, orthologousEvent);
+
+						inferredEvent.put(reactionInst, infReactionInst);
+
+						// Regulations instances require the DB to contain the inferred ReactionlikeEvent, so Regulations inference happens post-inference
+						if (inferredRegulations.size() > 0)
+						{
+							logger.info("Number of regulator(s) inferred: " + inferredRegulations.size());
+							for (GKInstance infRegulation : inferredRegulations)
+							{
+								infRegulation = InstanceUtilities.checkForIdenticalInstances(infRegulation, null);
+								infReactionInst.addAttributeValue("regulatedBy", infRegulation);
+								dba.updateInstanceAttribute(infReactionInst, "regulatedBy");
+							}
+						}
+						// After successfully adding a new inferred instance to the DB, it is recorded in the 'inferred reactions' file
+						inferredCount++;
+						inferrableHumanEvents.add(reactionInst);
+						String inferredEvent = infReactionInst.getAttributeValue(DB_ID).toString() + "\t" + infReactionInst.getDisplayName() + "\n";
+						Files.write(Paths.get(inferredFilehandle), inferredEvent.getBytes(), StandardOpenOption.APPEND);
 					} else {
-						logger.info("Output inference unsuccessful -- terminating inference for " + reactionInst);
+						logger.info("Catalyst inference unsuccessful -- terminating inference for " + reactionInst);
 					}
 				} else {
-					logger.info("Input inference unsuccessful -- terminating inference for " + reactionInst);
+					logger.info("Output inference unsuccessful -- terminating inference for " + reactionInst);
 				}
 			} else {
-				logger.info("No distinct proteins found in instance -- terminating inference for " + reactionInst);
+				logger.info("Input inference unsuccessful -- terminating inference for " + reactionInst);
 			}
 		}
 	}
@@ -273,11 +257,6 @@ public class ReactionInferrer {
 		dba = dbAdaptor;
 	}
 	
-	public static void setEligibleFilename(String eligibleFilename)
-	{
-		eligibleFilehandle = eligibleFilename;
-	}
-	
 	public static void setInferredFilename(String inferredFilename)
 	{
 		inferredFilehandle = inferredFilename;
@@ -293,19 +272,16 @@ public class ReactionInferrer {
 		summationInst = summationInstCopy;
 	}
 	
-	public static Map<GKInstance, GKInstance> getInferredEvent()
+	public static Map<GKInstance, GKInstance> getInferredEvent(Map<GKInstance, GKInstance> eventsAlreadyInferredMap)
 	{
+		inferredEvent.putAll(eventsAlreadyInferredMap);
 		return inferredEvent;
 	}
 	
-	public static List<GKInstance> getInferrableHumanEvents()
+	public static List<GKInstance> getInferrableHumanEvents(List<GKInstance> eventsAlreadyInferred)
 	{
+		inferrableHumanEvents.addAll(eventsAlreadyInferred);
 		return inferrableHumanEvents;
-	}
-
-	public static int getEligibleCount()
-	{
-		return eligibleCount;
 	}
 	
 	public static int getInferredCount()

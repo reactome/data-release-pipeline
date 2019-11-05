@@ -41,8 +41,7 @@ public class Main {
 		int port = Integer.valueOf(props.getProperty("release.database.port"));
 		String releaseNumber = props.getProperty("releaseNumber");
 		String releaseDirAbsolute = props.getProperty("absoluteReleaseDirectoryPath");
-		String releaseDownloadDir = props.getProperty("releaseDownloadDirectoryPath");
-		String releaseDownloadDirWithNumber = releaseDownloadDir + releaseNumber;
+		String releaseDownloadDirWithNumber = Paths.get("download_directory", releaseNumber).toString();
 		MySQLAdaptor dbAdaptor = new MySQLAdaptor(host, database, username, password, port);
 		File releaseDir = new File(releaseNumber);
 		if (!releaseDir.exists())
@@ -53,9 +52,9 @@ public class Main {
 		String pathToSpeciesConfig = Paths.get("src/main/resources/Species.json").toString();
 
 		// Determine which steps will be run via stepsToRun.config file
-		
+
 		Set<String> stepsToRun;
-		
+
 		try(FileReader fr = new FileReader(pathToStepConfig);
 			BufferedReader br = new BufferedReader(fr);)
 		{
@@ -181,7 +180,7 @@ public class Main {
 				failedSteps.add("protegeexporter");
 				e.printStackTrace();
 			}
-			
+
 		}
 		if (stepsToRun.contains("CreateReactome2BioSystems"))
 		{
@@ -218,5 +217,3 @@ public class Main {
 		logger.info("Finished DownloadDirectory");
 	}
 }
-
-

@@ -81,7 +81,7 @@ public class EventsInferrer
 		int personId = Integer.valueOf(props.getProperty("personId"));
 		setReleaseDates(dateOfRelease);
 
-		String pathToSkipList = props.getProperty("pathToSkipList");
+		String pathToSkipList = props.getProperty("pathToOrthoinferenceSkipList");
 		SkipInstanceChecker.getSkipList(pathToSkipList);
 
 		JSONParser parser = new JSONParser();

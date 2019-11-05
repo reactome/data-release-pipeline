@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
@@ -151,5 +152,10 @@ public class DataExportUtilitiesTest {
 
 		String fileContent = FileUtils.readFileToString(TEST_FILE.toFile(), Charset.defaultCharset());
 		assertThat(fileContent, is(equalTo(EXPECTED_TEST_FILE_TEXT)));
+	}
+
+	@AfterEach
+	public void deleteTestFile() throws IOException {
+		Files.deleteIfExists(TEST_FILE);
 	}
 }

@@ -41,7 +41,7 @@ public class Main {
 		int port = Integer.valueOf(props.getProperty("release.database.port"));
 		String releaseNumber = props.getProperty("releaseNumber");
 		String releaseDirAbsolute = props.getProperty("absoluteReleaseDirectoryPath");
-		String releaseDownloadDirWithNumber = Paths.get("download_directory", releaseNumber).toString();
+		String releaseDownloadDirWithNumber = Paths.get(releaseDirAbsolute,  "download_directory", releaseNumber).toString();
 		MySQLAdaptor dbAdaptor = new MySQLAdaptor(host, database, username, password, port);
 		File releaseDir = new File(releaseNumber);
 		if (!releaseDir.exists())

@@ -1,6 +1,7 @@
 package org.reactome.release.updateStableIds;
 
 import java.io.FileInputStream;
+import java.sql.SQLException;
 import java.util.Properties;
 
 import org.apache.logging.log4j.LogManager;
@@ -35,24 +36,10 @@ public class Main
        int port = Integer.valueOf(props.getProperty("release.database.port"));
        int releaseNumber = Integer.valueOf(props.getProperty("releaseNumber"));
        int prevReleaseNumber = releaseNumber - 1;
-       
-       logger.info("Creating DB adaptors");
-       
-       String sliceUsername = props.getProperty("release.database.user");
-       String slicePassword = props.getProperty("release.database.password");
-       String sliceHost = props.getProperty("release.database.host");	   
-       String sliceDatabase = props.getProperty("slice_current.name");
-       MySQLAdaptor dbaSlice = new MySQLAdaptor(sliceHost, sliceDatabase, sliceUsername, slicePassword, port);
-       
-       String prevSliceDatabase = props.getProperty("slice_previous.name");
-       MySQLAdaptor dbaPrevSlice = new MySQLAdaptor(sliceHost, prevSliceDatabase, sliceUsername, slicePassword, port);
-       
-       String gkCentralUsername = props.getProperty("curator.database.user");
-       String gkCentralPassword = props.getProperty("curator.database.password");
-       String gkCentralHost = props.getProperty("curator.database.host");
-       String gkCentralDatabase = props.getProperty("curator.database.name");
-       
-       MySQLAdaptor dbaGkCentral = new MySQLAdaptor(gkCentralHost, gkCentralDatabase, gkCentralUsername, gkCentralPassword, port);
+
+       MySQLAdaptor dbaSlice = createDatabaseAdaptor(props, "release.database.user", "release.database.password", "release.database.host","slice_current.name", "release.database.port");
+       MySQLAdaptor dbaPrevSlice = createDatabaseAdaptor(props, "release.database.user", "release.database.password", "release.database.host","slice_previous.name", "release.database.port");
+       MySQLAdaptor dbaGkCentral = createDatabaseAdaptor(props, "curator.database.user", "curator.database.password", "curator.database.host", "curator.database.name", "curator.database.port");
        
        long personId = Long.parseLong(props.getProperty("personId"));
        StableIdentifierUpdater.updateStableIdentifiers(dbaSlice, dbaPrevSlice, dbaGkCentral, personId);
@@ -60,4 +47,16 @@ public class Main
 
        logger.info("Finished UpdateStableIds step");
 ;    }
+
+    private static MySQLAdaptor createDatabaseAdaptor(Properties props, String userProperty, String passwordProperty, String hostProperty, String databaseNameProperty, String portProperty) throws SQLException {
+        String userName = props.getProperty(userProperty);
+        String password = props.getProperty(passwordProperty);
+        String host = props.getProperty(hostProperty);
+        String databaseName = props.getProperty(databaseNameProperty);
+        int port = Integer.parseInt(props.getProperty(portProperty));
+
+        logger.info("Creating DB adaptor for " + databaseName + " at " + host + " on port " + port + " for user " + userName);
+
+        return new MySQLAdaptor(host, databaseName, userName, password, port);
+    }
 }

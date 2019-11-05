@@ -1,5 +1,12 @@
 package org.reactome.release.dataexport;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
@@ -11,9 +18,12 @@ import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.hamcrest.io.FileMatchers.aFileWithSize;
+import static org.hamcrest.io.FileMatchers.anExistingFile;
 import static org.reactome.release.dataexport.DataExportUtilities.*;
 
 public class DataExportUtilitiesTest {
+	private final Path TEST_FILE = Paths.get("src", "main", "resources", "created_test_file.txt");
 	private final String XML_HEADER = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>";
 	private Set<String> stringSet;
 
@@ -87,5 +97,59 @@ public class DataExportUtilitiesTest {
 		rootElement.appendChild(childElement);
 
 		assertThat(transformDocumentToXMLString(document), is(equalTo(expectedXML)));
+	}
+
+	@Test
+	public void createNewFile() throws IOException {
+		deleteAndCreateFile(TEST_FILE);
+
+		assertThat(TEST_FILE.toFile(), aFileWithSize(0));
+	}
+
+	@Test
+	public void overwriteExistingFile() throws IOException {
+		final String DUMMY_TEXT = "test text";
+
+		// Create file with some text and assert the text is written
+		deleteAndCreateFile(TEST_FILE);
+		Files.write(TEST_FILE, DUMMY_TEXT.getBytes(), StandardOpenOption.APPEND);
+		assertThat(TEST_FILE.toFile(), aFileWithSize(greaterThan(0L)));
+
+		// Delete and re-create the file and assert it is empty
+		deleteAndCreateFile(TEST_FILE);
+		assertThat(TEST_FILE.toFile(), aFileWithSize(0));
+	}
+
+	@Test
+	public void appendsOneLine() throws IOException {
+		final String DUMMY_TEXT_LINE = "Some dummy text to append";
+
+		deleteAndCreateFile(TEST_FILE);
+		appendWithNewLine(DUMMY_TEXT_LINE, TEST_FILE);
+		String fileContent = FileUtils.readFileToString(TEST_FILE.toFile(), Charset.defaultCharset());
+
+		assertThat(fileContent, is(equalTo(DUMMY_TEXT_LINE.concat(System.lineSeparator()))));
+	}
+
+	@Test
+	public void appendsMultipleLines() throws IOException {
+		final List<String> DUMMY_TEXT_LINES = Arrays.asList(
+			"Dummy text line 1",
+			"Dummy text line 2",
+			"Dummy text line 3"
+		);
+
+		final String EXPECTED_TEST_FILE_TEXT =
+			"Dummy text line 1" + System.lineSeparator() +
+			"Dummy text line 2" + System.lineSeparator() +
+			"Dummy text line 3" + System.lineSeparator();
+
+		deleteAndCreateFile(TEST_FILE);
+		appendWithNewLine(DUMMY_TEXT_LINES, TEST_FILE);
+
+		assertThat(Files.lines(TEST_FILE).count(), is(equalTo((long) DUMMY_TEXT_LINES.size())));
+
+		String fileContent = FileUtils.readFileToString(TEST_FILE.toFile(), Charset.defaultCharset());
+		assertThat(fileContent, is(equalTo(EXPECTED_TEST_FILE_TEXT)));
 	}
 }

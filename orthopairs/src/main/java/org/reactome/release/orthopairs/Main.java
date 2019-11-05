@@ -54,7 +54,7 @@ public class Main
         // Load all config properties
         String releaseNumber = props.get("releaseNumber").toString();
         String pathToSpeciesConfig = props.get("pathToSpeciesConfig").toString();
-        String pantherFilepath = props.get("pantherCurrentFilFoldereURL").toString();
+        String pantherFilepath = props.get("pantherCurrentFileFolderURL").toString();
         String pantherQfOFilename = props.get("pantherQfOFilename").toString();
         String pantherHCOPFilename = props.get("pantherHCOPFilename").toString();
         String MGIFileURL = props.get("MGIFileURL").toString();

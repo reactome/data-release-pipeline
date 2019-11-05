@@ -261,11 +261,13 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 		StatementResult statementResult = graphDBSession.run(
 			String.join(System.lineSeparator(),
 				"MATCH (rgp:ReferenceGeneProduct)<-[:referenceEntity|:referenceSequence|:hasModifiedResidue]-" +
-				"(ewas:EntityWithAccessionedSequence)<-[:hasComponent|:hasMember|:hasCandidate|:repeatedUnit" +
-				"|:input|:output|:catalystActivity|:physicalEntity*]-(rle:ReactionLikeEvent)",
-				"RETURN rgp.dbId, coalesce(rgp.variantIdentifier, rgp.identifier) as rgp_accession, "
+					"(ewas:EntityWithAccessionedSequence)<-[:hasComponent|hasMember|hasCandidate|repeatedUnit" +
+					"|input|output|catalystActivity|physicalEntity*]-(rle:ReactionLikeEvent)",
+				"MATCH (rgp)-[:referenceDatabase]->(rd:ReferenceDatabase)",
+				"WHERE rd.displayName = 'UniProt'",
+				"RETURN DISTINCT rgp.dbId, coalesce(rgp.variantIdentifier, rgp.identifier) as rgp_accession, "
 					+ "rgp.displayName, rle.dbId",
-				"ORDER BY rgp.identifier, rgp.variantIdentifier"
+				"ORDER BY rgp_accession"
 			)
 		);
 

@@ -108,14 +108,13 @@ public class SkipInstanceChecker {
 			return true;
 		}
 
-		// Since we want to keep the eligibility counts the same for posterity, this is where eligibility will be determined, instead of in ReactionInferrer.
-
 		// This function finds the total number of distinct proteins associated with an instance, as well as the number that can be inferred.
 		// Total proteins are stored in reactionProteinCounts[0], inferrable proteins in [1], and the maximum number of homologues for any entity involved in index [2].
 		// Reactions with no proteins/EWAS (Total = 0) are not inferred.
 		List<Integer> reactionProteinCounts = ProteinCountUtility.getDistinctProteinCounts(reactionInst);
 		int reactionTotalProteinCounts = reactionProteinCounts.get(0);
 		if (reactionTotalProteinCounts > 0) {
+			// Since we want to keep the eligibility counts the same for posterity, this is where Reaction eligibility will be determined, instead of in ReactionInferrer. (October 2019)
 			logger.info("Total protein count for RlE: " + reactionTotalProteinCounts);
 			eligibleCount++;
 			String eligibleEventName = reactionInst.getAttributeValue(DB_ID).toString() + "\t" + reactionInst.getDisplayName() + "\n";

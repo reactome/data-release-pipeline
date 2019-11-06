@@ -3,6 +3,7 @@ package org.reactome.orthoinference;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.*;
 
 import org.apache.logging.log4j.LogManager;
@@ -273,7 +274,7 @@ public class EWASInferrer {
 	public static void readENSGMappingFile(String toSpecies, String pathToOrthopairs) throws IOException
 	{
 		String mappingFileName = toSpecies + "_gene_protein_mapping.txt";
-		String mappingFilePath = pathToOrthopairs + mappingFileName;
+		String mappingFilePath = Paths.get(pathToOrthopairs, mappingFileName).toString();
 		logger.info("Reading in " + mappingFilePath);
 		FileReader fr = new FileReader(mappingFilePath);
 		BufferedReader br = new BufferedReader(fr);

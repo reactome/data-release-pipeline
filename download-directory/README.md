@@ -99,6 +99,16 @@ CreateReactome2BioSystems
 ```
 In this example, the BioPAX2 and PathwaySummationMappingFile steps will not be run. 
 
+<b> Running specific modules in Jenkins </b>
+
+When running Download Directory in Jenkins, the code is cloned from Github each time so updating the stepsToRun file locally is not possible. Instead, you will need to upload the modified stepsToRun file as a Jenkins 'credential' before re-running download directory. This is explained step-by-step below:
+
+  1) Modify the `stepsToRun.config` file found in `src/main/resources` folder so that only the step(s) you want to run are not commented out. 
+  2) In Jenkins, navigate to Releases -> releaseNumber (eg: 70). 
+  3) On the left-hand side, select Credentials. You should see a table of different credentials used by Jenkins. Look for the one with the ID 'stepsToRun' and select 'stepsToRun.config' uner the Name column.
+  4) On the left-hand side of this page, click Update, and then click the check-box for 'Upload stepsToRun.config' again.
+  5) Upload the stepsToRun file you modified in step 1. Save and re-run Download Directory -- only the steps you specified will be run.
+
 <h3> Verifying Download Directory Results</h3>
 
 This section will touch on the <b>files</b> produced by each step in Download Directory, and how to verify they were produced correctly. Often, comparing the files produced in the previous release is the way to go, but where needed this guide will provide additional suggestions for checking the output.

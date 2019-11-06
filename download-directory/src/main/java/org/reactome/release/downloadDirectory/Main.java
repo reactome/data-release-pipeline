@@ -22,49 +22,41 @@ import org.reactome.release.downloadDirectory.GenerateGOAnnotationFile.CreateGOA
 
 public class Main {
 	private static final Logger logger = LogManager.getLogger();
-
+	private static final String RESOURCES_DIR = Paths.get("src", "main", "resources").toString();
 	public static void main(String[] args) throws Exception {
 
 		logger.info("Beginning Download Directory step");
-		String pathToConfig = "";
-		if (args.length > 0) {
-			pathToConfig = args[0];
-		} else {
-			pathToConfig = "src/main/resources/config.properties";
-		}
+
+		String pathToConfig = args.length > 0 ? args[0] : Paths.get(RESOURCES_DIR ,"config.properties").toString();
+		String pathToStepConfig = args.length > 1 ? args[1] : Paths.get(RESOURCES_DIR,"stepsToRun.config").toString();
+
 		Properties props = new Properties();
 		props.load(new FileInputStream(pathToConfig));
 
-		//TODO: Check stable identifiers db exists
-		//TODO: File existence check and size check
-		//TODO: Parallelize executions
-		//TODO: Integration with Perl wrapper
-		//TODO: Refactor to Command Pattern for execute calls
-
 		//Set up DB adaptor
-		String username = props.getProperty("username");
-		String password = props.getProperty("password");
-		String database = props.getProperty("database");
-		String host = props.getProperty("host");
-		int port = Integer.valueOf(props.getProperty("port"));
-		String releaseNumber = props.getProperty("release");
+		String username = props.getProperty("release.database.user");
+		String password = props.getProperty("release.database.password");
+		String database = props.getProperty("release_current.name");
+		String host = props.getProperty("release.database.host");
+		int port = Integer.valueOf(props.getProperty("release.database.port"));
+		String releaseNumber = props.getProperty("releaseNumber");
 		String releaseDirAbsolute = props.getProperty("absoluteReleaseDirectoryPath");
-		String releaseDownloadDir = props.getProperty("releaseDownloadDirectoryPath");
-		String releaseDownloadDirWithNumber = releaseDownloadDir + releaseNumber;
+		String releaseDownloadDirWithNumber = Paths.get(releaseDirAbsolute,  "download_directory", releaseNumber).toString();
 		MySQLAdaptor dbAdaptor = new MySQLAdaptor(host, database, username, password, port);
 		File releaseDir = new File(releaseNumber);
 		if (!releaseDir.exists()) {
 			releaseDir.mkdir();
 		}
 
-		String pathToSpeciesConfig = props.getProperty("speciesConfigPath");
+		String pathToSpeciesConfig = Paths.get("src/main/resources/Species.json").toString();
 
 		// Determine which steps will be run via stepsToRun.config file
-		String pathToStepConfig = props.getProperty("stepsToRunConfigPath");
+
 		Set<String> stepsToRun;
 
-		try (FileReader fr = new FileReader(pathToStepConfig);
-			 BufferedReader br = new BufferedReader(fr);) {
+		try(FileReader fr = new FileReader(pathToStepConfig);
+			BufferedReader br = new BufferedReader(fr);)
+		{
 			stepsToRun = br.lines().filter(
 					line -> !line.startsWith("#")
 			).collect(Collectors.toSet());
@@ -176,6 +168,7 @@ public class Main {
 				e.printStackTrace();
 			}
 
+<<<<<<< HEAD:downloadDirectory/src/main/java/org/reactome/release/downloadDirectory/Main.java
 		}
 		if (stepsToRun.contains("HumanPathwaysWithDiagrams"))
 		{
@@ -221,5 +214,3 @@ public class Main {
 		logger.info("Finished DownloadDirectory");
 	}
 }
-
-

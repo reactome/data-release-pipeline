@@ -19,16 +19,16 @@ import static org.gk.model.ReactomeJavaConstants.*;
 import org.gk.persistence.MySQLAdaptor;
 
 public class SkipInstanceChecker {
-	
+
 	private static final Logger logger = LogManager.getLogger();
 	private static MySQLAdaptor dba;
 	private static Set<String> skipList = new HashSet<>();
-	
+
 	// Skiplist was traditionally provided in a file, but since it's currently just 3 instances, I've just hard-coded them here.
-	public static void getSkipList(String skipListFilename) throws NumberFormatException, Exception
+	public static void getSkipList(String pathToSkipList) throws NumberFormatException, Exception
 	{
 		String[] pathwayIdsToSkip = {"162906","168254","977225"};
-		for (String pathwayId : pathwayIdsToSkip) 
+		for (String pathwayId : pathwayIdsToSkip)
 		{
 			GKInstance pathwayInst = dba.fetchInstance(Long.valueOf(pathwayId));
 			if (pathwayInst != null)
@@ -39,7 +39,7 @@ public class SkipInstanceChecker {
 				String[] outClasses = new String[] {ReactionlikeEvent};
 				@SuppressWarnings("unchecked")
 				Collection<GKInstance> followedInstances = InstanceUtilities.followInstanceAttributes(pathwayInst, classesToFollow, outClasses);
-				
+
 				for (GKInstance entityInst : followedInstances)
 				{
 					skipList.add(entityInst.getDBID().toString());
@@ -47,8 +47,7 @@ public class SkipInstanceChecker {
 			}
 		}
 		// Generates skiplist
-		String skipListFilePath = "src/main/resources/" + skipListFilename; 
-		FileReader fr = new FileReader(skipListFilePath);
+		FileReader fr = new FileReader(pathToSkipList);
 		BufferedReader br = new BufferedReader(fr);
 		String currentLine;
 		while ((currentLine = br.readLine()) != null)
@@ -103,7 +102,7 @@ public class SkipInstanceChecker {
 		}
 		return false;
 	}
-	
+
 	// Goes through all input/output/catalystActivity/regulatedBy attribute instances, and captures all species associates with them. Returns a collection of species instances.
 	@SuppressWarnings("unchecked")
 	private static Collection<GKInstance> checkIfEntitiesContainMultipleSpecies(GKInstance reactionInst) throws Exception
@@ -117,7 +116,7 @@ public class SkipInstanceChecker {
 		}
 		List<GKInstance> regulatedByInstances = (ArrayList<GKInstance>) reactionInst.getAttributeValuesList("regulatedBy");
 
-		if (regulatedByInstances != null) 
+		if (regulatedByInstances != null)
 		{
 			for (GKInstance regulatedByInst : regulatedByInstances)
 			{
@@ -162,7 +161,7 @@ public class SkipInstanceChecker {
 		}
 		return speciesHash.values();
 	}
-	
+
 	// Looks at referrals of the constituent instances for the species attribute as well
 	// The term 'constituent' is used as a catch-all for instances under the hasMember/hasComponent/repeatedUnit attributes
 	@SuppressWarnings("unchecked")
@@ -194,7 +193,7 @@ public class SkipInstanceChecker {
 		{
 			Map<String, GKInstance> finalConstituentInstancesMap = new HashMap<>();
 			for (GKInstance constituentInst : constituentInstances.values())
-			{	
+			{
 				finalConstituentInstancesMap.put(constituentInst.getDBID().toString(), constituentInst);
 				if (constituentInst.getSchemClass().isa(EntitySet) || constituentInst.getSchemClass().isa(Complex) || constituentInst.getSchemClass().isa(Polymer))
 				{
@@ -214,7 +213,7 @@ public class SkipInstanceChecker {
 		}
 		return null;
 	}
-	
+
 	public static void setAdaptor(MySQLAdaptor dbAdaptor)
 	{
 		dba = dbAdaptor;

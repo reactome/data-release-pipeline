@@ -1364,7 +1364,7 @@
          "dbname" : [
             "KDRI_Zj"
          ],
-         "url" : "http:\/\/www.kazusa.or.jp\/jatropha\/"
+         "url" : "http:\/\/zoysia.kazusa.or.jp\/"
       },
       "name" : [
          "Zoysia japonica"
@@ -1475,7 +1475,7 @@
       ],
       "abbreviation": "CSK"
    },
-   "csat" : {
+   "cnst" : {
       "refdb" : {
          "access" : "\/pages\/content\/release-summary\/",
          "dbname" : [

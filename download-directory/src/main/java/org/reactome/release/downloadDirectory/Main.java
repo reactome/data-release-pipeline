@@ -167,8 +167,6 @@ public class Main {
 				failedSteps.add("protegeexporter");
 				e.printStackTrace();
 			}
-
-<<<<<<< HEAD:downloadDirectory/src/main/java/org/reactome/release/downloadDirectory/Main.java
 		}
 		if (stepsToRun.contains("HumanPathwaysWithDiagrams"))
 		{

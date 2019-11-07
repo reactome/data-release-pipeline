@@ -15,7 +15,7 @@ public class Main {
     private static final Logger logger = LogManager.getLogger();
     private static final String RESOURCES_DIR = Paths.get("src", "main", "resources").toString();
 
-    public static void main(String[] args) throws IOException, SQLException {
+    public static void main(String[] args) throws Exception {
 
         String pathToConfig = args.length > 0 ? args[0] : Paths.get(RESOURCES_DIR ,"config.properties").toString();
 
@@ -35,7 +35,7 @@ public class Main {
         MySQLAdaptor dbAdaptorPrev = new MySQLAdaptor(host, releasePrevious, username, password, port);
 
         logger.info("Executing post-step checks");
-        PostStepChecks.compareOtherIdentifierCounts();
+        PostStepChecks.compareOtherIdentifierCounts(dbAdaptor, dbAdaptorPrev);
 
     }
 }

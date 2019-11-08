@@ -139,7 +139,7 @@ public class EuropePMCTest {
 		final String PATHWAY_URL = CONTENT_DETAIL_URL + PATHWAY_STABLE_ID;
 		final String PUBMED_ID = "9153395";
 
-		String expectedXML = String.format(
+		final String EXPECTED_XML = String.format(
 			"<link providerId=\"1925\">" +
 			"<resource><title>%s</title><url>%s</url></resource>" +
 			"<record><source>MED</source><id>%s</id></record>" +
@@ -155,7 +155,7 @@ public class EuropePMCTest {
 		Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 		Element europePMCLinkXML = europePMCLink.getLinkXML(document);
 
-		assertThat(getElementAsString(europePMCLinkXML), equalTo(expectedXML));
+		assertThat(getElementAsString(europePMCLinkXML), equalTo(EXPECTED_XML));
 	}
 
 	// Taken from https://stackoverflow.com/a/19701727

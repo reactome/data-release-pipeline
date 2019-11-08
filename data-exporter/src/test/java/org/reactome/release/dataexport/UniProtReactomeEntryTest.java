@@ -8,7 +8,7 @@ import java.util.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.reactome.release.dataexport.UniProtDbIdGenerator.getNextUniProtDBID;
+import static org.reactome.release.dataexport.DbIdGenerator.getNextDBID;
 
 public class UniProtReactomeEntryTest {
 	private UniProtReactomeEntry canonicalUniProtReactomeEntry;
@@ -56,7 +56,7 @@ public class UniProtReactomeEntryTest {
 		assertThat(
 			canonicalUniProtReactomeEntry,
 			is(not(equalTo(
-				UniProtReactomeEntry.get(getNextUniProtDBID(), DIFFERENT_ACCESSION, DIFFERENT_DISPLAY_NAME))
+				UniProtReactomeEntry.get(getNextDBID(), DIFFERENT_ACCESSION, DIFFERENT_DISPLAY_NAME))
 			))
 		);
 	}
@@ -68,7 +68,7 @@ public class UniProtReactomeEntryTest {
 		List<UniProtReactomeEntry> uniProtReactomeEntries = new ArrayList<>();
 		uniProtReactomeEntries.add(canonicalUniProtReactomeEntry);
 		UniProtReactomeEntry uniProtReactomeEntry2 = UniProtReactomeEntry.get(
-			getNextUniProtDBID(),
+			getNextDBID(),
 			ACCESSION_THAT_SHOULD_BE_FIRST,
 			DUMMY_UNIPROT_DISPLAY_NAME
 		);
@@ -84,7 +84,7 @@ public class UniProtReactomeEntryTest {
 		final String ISOFORM_ACCESSION = "P12345-1";
 
 		UniProtReactomeEntry uniprot = UniProtReactomeEntry.get(
-			getNextUniProtDBID(), ISOFORM_ACCESSION, DUMMY_UNIPROT_DISPLAY_NAME
+			getNextDBID(), ISOFORM_ACCESSION, DUMMY_UNIPROT_DISPLAY_NAME
 		);
 
 		assertThat(uniprot.getAccession(), equalTo(ISOFORM_ACCESSION));
@@ -97,7 +97,7 @@ public class UniProtReactomeEntryTest {
 		IllegalArgumentException thrown = assertThrows(
 			IllegalArgumentException.class,
 			() -> UniProtReactomeEntry.get(
-				getNextUniProtDBID(), INCORRECT_ISOFORM_ACCESSION, DUMMY_UNIPROT_DISPLAY_NAME
+				getNextDBID(), INCORRECT_ISOFORM_ACCESSION, DUMMY_UNIPROT_DISPLAY_NAME
 			),
 			"Expected call to 'UniProtReactomeEntry.get' to throw due to improper UniProt accession, but it didn't"
 		);
@@ -109,7 +109,7 @@ public class UniProtReactomeEntryTest {
 	public void tenCharacterAccessionIsAccepted() {
 		final String ACCESSION = "A0A123A456";
 		UniProtReactomeEntry uniprot = UniProtReactomeEntry.get(
-			getNextUniProtDBID(), ACCESSION, DUMMY_UNIPROT_DISPLAY_NAME
+			getNextDBID(), ACCESSION, DUMMY_UNIPROT_DISPLAY_NAME
 		);
 
 		assertThat(uniprot.getAccession() , equalTo(ACCESSION));
@@ -122,7 +122,7 @@ public class UniProtReactomeEntryTest {
 		IllegalArgumentException thrown = assertThrows(
 			IllegalArgumentException.class,
 			() -> UniProtReactomeEntry.get(
-				getNextUniProtDBID(), INCORRECT_ACCESSION, DUMMY_UNIPROT_DISPLAY_NAME
+				getNextDBID(), INCORRECT_ACCESSION, DUMMY_UNIPROT_DISPLAY_NAME
 			),
 			"Expected call to 'UniProtReactomeEntry.get' to throw due to improper UniProt accession, but it didn't"
 		);
@@ -137,7 +137,7 @@ public class UniProtReactomeEntryTest {
 		IllegalArgumentException thrown = assertThrows(
 			IllegalArgumentException.class,
 			() -> UniProtReactomeEntry.get(
-				getNextUniProtDBID(), DUMMY_UNIPROT_ACCESSION, INCORRECT_DISPLAY_NAME
+				getNextDBID(), DUMMY_UNIPROT_ACCESSION, INCORRECT_DISPLAY_NAME
 			),
 			"Expected call to 'UniProtReactomeEntry.get' to throw due to improper UniProt display name, but it didn't"
 		);

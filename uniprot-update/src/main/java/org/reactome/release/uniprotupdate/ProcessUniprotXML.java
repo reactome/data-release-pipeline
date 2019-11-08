@@ -15,7 +15,6 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stax.StAXSource;
@@ -26,12 +25,11 @@ import org.apache.logging.log4j.Logger;
 import org.reactome.release.uniprotupdate.dataschema.UniprotData;
 
 /**
- * This class contains code that can be used to process Uniprot XML files.
+ * This class contains code that can be used to process UniProt XML files.
  * @author sshorser
  *
  */
-class ProcessUniprotXML
-{
+class ProcessUniprotXML {
 	private static final Logger logger = LogManager.getLogger();
 	private static final String ENTRY_ELEMENT_NAME = "entry";
 	// Starting size of ArrayList was determined by counting the number of "<entry>" lines in the input file.
@@ -42,109 +40,111 @@ class ProcessUniprotXML
 	private static OutputStream debugOutputStream;
 
 	/**
-	 * This function will process a Uniprot XML file, and return a list of all UniprotData objects that were extracted.
-	 * @param pathToFile - The path to the Uniprot file to process.
+	 * This method will process a UniProt XML file, and return a list of all UniprotData objects that were extracted.
+	 *
+	 * @param pathToUniProtXMLFile - The path to the Uniprot XML file to process.
+	 * @param debugXML True to be passed if the results of the UniProt XML transformation should be logged to a debug
+	 * file; false otherwise
 	 * @return An ArrayList containing UniprotData objects.
-	 * @throws JAXBException
-	 * @throws XMLStreamException
-	 * @throws TransformerConfigurationException
-	 * @throws FileNotFoundException
+	 * @throws JAXBException Thrown if an error is encountered while creating the
+	 * JAXBContext or JAXBResult
+	 * @throws XMLStreamException Thrown if unable to create an XMLStreamReader or process tags for the UniProt XML file
+	 * @throws FileNotFoundException Thrown if unable to find the UniProt XML file or the XSL file to transform the
+	 * UniProt XML tags in the UniProt XML file
 	 */
-	public static List<UniprotData> getDataFromUniprotFile(String pathToFile, boolean debugXML)
-		throws JAXBException, XMLStreamException, TransformerConfigurationException, FileNotFoundException
-	{
+	public static List<UniprotData> getDataFromUniprotFile(String pathToUniProtXMLFile, boolean debugXML)
+		throws JAXBException, XMLStreamException, FileNotFoundException {
 		List<UniprotData> uniprotData = new ArrayList<>(EXPECTED_ENTRY_MAX_SIZE);
 
-		// Stream the XML file. StAX is faster than DOM (waaaaaaaaaay faster) or SAX.
-		XMLInputFactory xif = XMLInputFactory.newInstance();
-		XMLStreamReader xsr = xif.createXMLStreamReader(new FileReader(pathToFile));
-		xsr.nextTag(); // Advance to statements element
-
-		// But... we're also going to use XSL for parts of the document!
-		// Load the XSL.
-		Source xsl = new StreamSource(new FileInputStream(PATH_TO_XSL));
-		Transformer transformer = TransformerFactory.newInstance().newTransformer(xsl);
-		// ...AND we'll use JAXB to take the transformed output and turn it into an object!
-		JAXBContext unmarshallerContext = JAXBContext.newInstance(UniprotData.class);
-
 		long startTime = System.currentTimeMillis();
-		while (xsr.nextTag() == XMLStreamConstants.START_ELEMENT)
-		{
+		XMLStreamReader xmlStreamReader = getXMLStreamReader(pathToUniProtXMLFile);
+		while (xmlStreamReader.nextTag() == XMLStreamConstants.START_ELEMENT) {
 			// Check to see if we found "<entry>"
-			if (foundEntry(xsr))
-			{
-				// Create a new StAX source based on the current stream reader, which is pointing at "<entry>",
-				// and then pass that to the transformer, and then unmarshall that into a Java class (UniprotData).
-				StAXSource src = new StAXSource(xsr);
+			if (foundUniProtEntryTag(xmlStreamReader)) {
+				JAXBResult transformedUniProtXMLResult = transformUniProtEntry(xmlStreamReader);
 
-				JAXBResult result = new JAXBResult(unmarshallerContext);
-
-				try
-				{
-					transformer.transform(src, result);
-				}
-				catch (TransformerException e)
-				{
+				if (transformedUniProtXMLResult == null) {
 					// Hmmm... should I break the loop if something bad happens here?
 					// Or just print the stacktrace/some custom message, and then
 					// keep going? Hasn't happened yet with samples of REAL data.
-					e.printStackTrace();
-				}
-
-				// Try to also send to a file.
-				if (debugXML)
-				{
-					sendResultsToDebugFile(result);
+					continue;
 				}
 
 				// Add the result to the list.
-				uniprotData.add( (UniprotData) result.getResult() );
+				uniprotData.add((UniprotData) transformedUniProtXMLResult.getResult());
 
-				// Just to let the users know that progress *IS* being made.
-				if (uniprotData.size()%10000 == 0)
-				{
+				// Try to also send to a file.
+				if (debugXML) {
+					sendResultsToDebugFile(transformedUniProtXMLResult);
+				}
+
+				// Log results for every 10000 UniProt entries to let the users know that progress *IS* being made.
+				if (uniprotData.size() % 10000 == 0) {
 					logProgressSince(startTime, uniprotData.size());
 				}
 			}
 		}
 		logProgressSince(startTime, uniprotData.size());
-		xsr.close();
+		xmlStreamReader.close();
 		return uniprotData;
 	}
 
-	private static boolean foundEntry(XMLStreamReader xsr)
-	{
-		return xsr.getName().getLocalPart().equals(ENTRY_ELEMENT_NAME);
+	private static XMLStreamReader getXMLStreamReader(String pathToUniProtXMLFile)
+		throws FileNotFoundException, XMLStreamException {
+		// Stream the XML file. StAX is faster than DOM (waaaaaaaaaay faster) or SAX.
+		XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
+		XMLStreamReader xmlStreamReader = xmlInputFactory.createXMLStreamReader(new FileReader(pathToUniProtXMLFile));
+		xmlStreamReader.nextTag(); // Advance to statements element
+
+		return xmlStreamReader;
 	}
 
-	private static void sendResultsToDebugFile(JAXBResult result)
-	{
-		try
-		{
+	private static boolean foundUniProtEntryTag(XMLStreamReader xmlStreamReader) {
+		return xmlStreamReader.getName().getLocalPart().equals(ENTRY_ELEMENT_NAME);
+	}
+
+	private static JAXBResult transformUniProtEntry(XMLStreamReader xmlStreamReader)
+		throws JAXBException, FileNotFoundException {
+		// We're also going to use XSL for parts of the document!
+		// Load the XSL.
+		Source xsl = new StreamSource(new FileInputStream(PATH_TO_XSL));
+		// Create a new StAX source based on the current stream reader, which is pointing at "<entry>",
+		StAXSource sourceUniProtData = new StAXSource(xmlStreamReader);
+		// Then unmarshall that into a Java class (UniprotData).
+		JAXBResult targetUniProtDataResult = new JAXBResult(JAXBContext.newInstance(UniprotData.class));
+
+		// ...AND we'll use JAXB to take the transformed output and turn it into an object!
+		try {
+			Transformer transformer = TransformerFactory.newInstance().newTransformer(xsl);
+			transformer.transform(sourceUniProtData, targetUniProtDataResult);
+			return targetUniProtDataResult;
+		} catch (TransformerException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	private static void sendResultsToDebugFile(JAXBResult result) {
+		try {
 			JAXBContext marshallerContext = JAXBContext.newInstance(UniprotData.class);
 			Marshaller marshaller = marshallerContext.createMarshaller();
 			marshaller.setProperty("jaxb.formatted.output", true);
 			marshaller.setProperty("jaxb.fragment", true);
 			marshaller.marshal(result.getResult(), getDebugOutputStream());
-		}
-		catch (JAXBException | FileNotFoundException e)
-		{
+		} catch (JAXBException | FileNotFoundException e) {
 			e.printStackTrace();
 		}
 	}
 
-	private static OutputStream getDebugOutputStream() throws FileNotFoundException
-	{
-		if (debugOutputStream == null)
-		{
+	private static OutputStream getDebugOutputStream() throws FileNotFoundException {
+		if (debugOutputStream == null) {
 			debugOutputStream = new FileOutputStream("simplified_uniprot_sprot.xml");
 		}
 
 		return debugOutputStream;
 	}
 
-	private static void logProgressSince(long startTime, int dataListSize)
-	{
+	private static void logProgressSince(long startTime, int dataListSize) {
 		long duration = System.currentTimeMillis() - startTime;
 
 		logger.info("{} records extracted in {} seconds.",

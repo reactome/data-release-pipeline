@@ -2,7 +2,6 @@ package org.reactome.release.common.database;
 
 import org.gk.model.GKInstance;
 import org.gk.model.InstanceDisplayNameGenerator;
-import org.gk.model.PersistenceAdaptor;
 import org.gk.model.ReactomeJavaConstants;
 import org.gk.persistence.MySQLAdaptor;
 import org.gk.schema.InvalidAttributeException;
@@ -15,6 +14,7 @@ public class InstanceEditUtils {
 	/**
 	 * Create an InstanceEdit.
 	 *
+	 * @param adaptor Database adaptor from which to fetch the person instance and store the created instance edit
 	 * @param personID ID of the associated Person entity.
 	 * @param creatorName The name of the person/thing that is creating this InstanceEdit.
 	 * Typically, you would want to use the package and classname that
@@ -37,20 +37,20 @@ public class InstanceEditUtils {
 	 * Create and save in the database a default InstanceEdit associated with the
 	 * Person entity whose DB_ID is <i>defaultPersonId</i>.
 	 *
-	 * @param dba Database adaptor from which to fetch the person instance and store the created instance edit
+	 * @param adaptor Database adaptor from which to fetch the person instance and store the created instance edit
 	 * @param defaultPersonId Database identifier for the person instance to fetch
 	 * @param needStore True if the created instance edit should be stored, false otherwise
 	 * @return An InstanceEdit object.
 	 * @throws Exception Thrown if unable to fetch person instance or create/store instance edit for the
 	 * fetch person instance
 	 */
-	public static GKInstance createDefaultIE(MySQLAdaptor dba, Long defaultPersonId, boolean needStore, String note)
+	public static GKInstance createDefaultIE(MySQLAdaptor adaptor, long defaultPersonId, boolean needStore, String note)
 		throws Exception {
-		GKInstance defaultPerson = dba.fetchInstance(defaultPersonId);
+		GKInstance defaultPerson = adaptor.fetchInstance(defaultPersonId);
 		if (defaultPerson == null) {
 			throw new Exception(
 				"Could not fetch Person entity with ID " + defaultPersonId + ". " +
-					"Please check that a Person entity exists in the database with this ID."
+				"Please check that a Person entity exists in the database with this ID."
 			);
 		}
 
@@ -60,7 +60,7 @@ public class InstanceEditUtils {
 		InstanceDisplayNameGenerator.setDisplayName(newIE);
 
 		if (needStore) {
-			dba.storeInstance(newIE);
+			adaptor.storeInstance(newIE);
 		}
 		return newIE;
 	}
@@ -76,7 +76,7 @@ public class InstanceEditUtils {
 	 */
 	public static GKInstance createDefaultInstanceEdit(GKInstance person)
 		throws InvalidAttributeException, InvalidAttributeValueException {
-		PersistenceAdaptor adaptor = person.getDbAdaptor();
+		MySQLAdaptor adaptor = (MySQLAdaptor) person.getDbAdaptor();
 
 		GKInstance instanceEdit = new GKInstance();
 		instanceEdit.setDbAdaptor(adaptor);
@@ -86,7 +86,7 @@ public class InstanceEditUtils {
 		return instanceEdit;
 	}
 
-	private static SchemaClass getInstanceEditSchemaClass(PersistenceAdaptor adaptor) {
+	private static SchemaClass getInstanceEditSchemaClass(MySQLAdaptor adaptor) {
 		return adaptor.getSchema().getClassByName(ReactomeJavaConstants.InstanceEdit);
 	}
 }

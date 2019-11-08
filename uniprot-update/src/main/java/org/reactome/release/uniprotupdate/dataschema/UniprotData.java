@@ -267,39 +267,18 @@ public class UniprotData {
 		this.commentTexts = commentText;
 	}
 
-	public List<String> getFlattenedGeneNames()
-	{
-		int i = 0;
-		if (this.genes!=null)
-		{
-			for (Gene gene : this.getGenes())
-			{
-				for (Name name : gene.getNames())
-				{
-					this.flattenedGeneNames.add(name.getValue());
-					if (name.getType().equals("primary"))
-					{
-						this.primaryGeneName = name.getValue();
+	/**
+	 * Returns a list of all gene names, as Strings, associated with this UniProt entry object
+	 * @return List of gene name Strings or an empty list if there are none
+	 */
+	public List<String> getFlattenedGeneNames() {
+		return getGenes()
+			.stream()
+			.flatMap(gene -> gene.getNames().stream())
+			.sorted(primaryNamesFirst())
+			.map(Name::getValue)
+			.collect(Collectors.toList());
 	}
-					else
-					{
-						// only have to count positions until after primary gene name has been found.
-						if (this.primaryGeneName == null)
-						{
-							i ++;
-						}
-					}
-				}
-			}
-		}
-		// Move the primary gene name to the head of the array, if it's not already there.
-		if (i>0 && this.primaryGeneName != null)
-		{
-			// remove primary gene name from its current position.
-			this.flattenedGeneNames.remove(i);
-			// add it at the begining.
-			this.flattenedGeneNames.add(0, primaryGeneName);
-		}
 
 	/**
 	 * Returns a list of all comments, as Strings, associated with this UniProt entry object

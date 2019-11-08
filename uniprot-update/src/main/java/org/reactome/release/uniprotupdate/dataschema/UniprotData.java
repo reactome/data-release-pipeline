@@ -28,6 +28,24 @@ public class UniprotData {
 	private List<String> alternativeNames;
 
 	/**
+	 * Returns the primary UniProt accession
+	 * @return Primary UniProt acccession or an empty String if there is none
+	 */
+	public String getPrimaryAccession() {
+		return !getAccessions().isEmpty() ? getAccessions().get(0) : "";
+	}
+
+	/**
+	 * Returns a list of all secondary UniProt accessions for this UniProt entry object, if any
+	 * @return List of secondary UniProt accessions or an empty list if there are none
+	 */
+	public List<String> getSecondaryAccessions() {
+		return getAccessions().size() > 1 ?
+			getAccessions().subList(1, getAccessions().size()) :
+			new ArrayList<>();
+	}
+
+	/**
 	 * Returns a list of all UniProt accessions for this Uniprot entry object
 	 * @return List of UniProt accessions or an empty list if there are none
 	 */

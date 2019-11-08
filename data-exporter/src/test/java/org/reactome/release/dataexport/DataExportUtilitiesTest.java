@@ -20,7 +20,6 @@ import java.util.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.io.FileMatchers.aFileWithSize;
-import static org.hamcrest.io.FileMatchers.anExistingFile;
 import static org.reactome.release.dataexport.DataExportUtilities.*;
 
 public class DataExportUtilitiesTest {
@@ -35,28 +34,29 @@ public class DataExportUtilitiesTest {
 
 	@Test
 	public void splitSetWithEvenSubSetSizes() {
-		final int NUM_OF_SUB_SETS = 4;
+		final int EXPECTED_NUMBER_OF_SUBSETS = 4;
+		final int EXPECTED_NUMBER_OF_ITEMS_PER_SUBSET = 2;
 
-		List<Set<String>> listOfStringSubSets = splitSet(stringSet, NUM_OF_SUB_SETS);
+		List<Set<String>> listOfStringSubSets = splitSet(stringSet, EXPECTED_NUMBER_OF_SUBSETS);
 
-		assertThat(listOfStringSubSets, hasSize(NUM_OF_SUB_SETS));
-
-		// Every set received even size of 2 elements
-		assertThat(listOfStringSubSets, everyItem(hasSize(2)));
+		assertThat(listOfStringSubSets, hasSize(EXPECTED_NUMBER_OF_SUBSETS));
+		assertThat(listOfStringSubSets, everyItem(hasSize(EXPECTED_NUMBER_OF_ITEMS_PER_SUBSET)));
 	}
 
 	@Test
 	public void splitSetWithUnEvenSubSetSizes() {
-		final int NUM_OF_SUB_SETS = 3;
+		final int EXPECTED_NUMBER_OF_SUBSETS = 3;
+		final int EXPECTED_NUMBER_OF_ITEMS_PER_SUBSET = 3;
+		final int EXPECTED_NUMBER_OF_ITEMS_IN_LAST_SUBSET = 2;
 
-		List<Set<String>> listOfStringSubSets = splitSet(stringSet, NUM_OF_SUB_SETS);
+		List<Set<String>> listOfStringSubSets = splitSet(stringSet, EXPECTED_NUMBER_OF_SUBSETS);
 
-		assertThat(listOfStringSubSets, hasSize(NUM_OF_SUB_SETS));
+		assertThat(listOfStringSubSets, hasSize(EXPECTED_NUMBER_OF_SUBSETS));
 
 		// Three sets of size 3, 3, and 2
-		assertThat(listOfStringSubSets.get(0), hasSize(3));
-		assertThat(listOfStringSubSets.get(1), hasSize(3));
-		assertThat(listOfStringSubSets.get(2), hasSize(2));
+		assertThat(listOfStringSubSets.get(0), hasSize(EXPECTED_NUMBER_OF_ITEMS_PER_SUBSET));
+		assertThat(listOfStringSubSets.get(1), hasSize(EXPECTED_NUMBER_OF_ITEMS_PER_SUBSET));
+		assertThat(listOfStringSubSets.get(2), hasSize(EXPECTED_NUMBER_OF_ITEMS_IN_LAST_SUBSET));
 	}
 
 	@Test
@@ -85,7 +85,7 @@ public class DataExportUtilitiesTest {
 		final String CHILD_ELEMENT_NAME = "name";
 		final String CHILD_ELEMENT_TEXT = "inner text";
 
-		String expectedXML = String.join(System.lineSeparator(),
+		final String EXPECTED_XML = String.join(System.lineSeparator(),
 			XML_HEADER,
 			String.format("<%s>", ROOT_ELEMENT_NAME),
 			String.format("%s<%s>%s</%s>", INDENT, CHILD_ELEMENT_NAME, CHILD_ELEMENT_TEXT, CHILD_ELEMENT_NAME),
@@ -97,7 +97,7 @@ public class DataExportUtilitiesTest {
 		Element childElement = getElement(document, CHILD_ELEMENT_NAME, CHILD_ELEMENT_TEXT);
 		rootElement.appendChild(childElement);
 
-		assertThat(transformDocumentToXMLString(document), is(equalTo(expectedXML)));
+		assertThat(transformDocumentToXMLString(document), is(equalTo(EXPECTED_XML)));
 	}
 
 	@Test

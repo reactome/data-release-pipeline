@@ -13,15 +13,26 @@ public class PathwayHierarchyUtilitiesTest {
 	@Test
 	public void findTopLevelPathwayIdsWithGrandParentPathways() {
 		final long PATHWAY_ID = 1L;
+		final long FIRST_PARENT_PATHWAY_ID = 2L;
+		final long SECOND_PARENT_PATHWAY_ID = 3L;
+		final long FIRST_GRANDPARENT_PATHWAY_ID = 4L;
+		final long SECOND_GRANDPARENT_PATHWAY_ID = 5L;
+
 		Map<Long, Set<Long>> pathwayHierarchy = new HashMap<>();
-		pathwayHierarchy.put(1L, new HashSet<>(Arrays.asList(2L, 3L)));
-		pathwayHierarchy.put(2L, new HashSet<>(Arrays.asList(4L, 5L)));
+		pathwayHierarchy.put(PATHWAY_ID, new HashSet<>(Arrays.asList(
+			FIRST_PARENT_PATHWAY_ID, SECOND_PARENT_PATHWAY_ID
+		)));
+		pathwayHierarchy.put(FIRST_PARENT_PATHWAY_ID, new HashSet<>(Arrays.asList(
+			FIRST_GRANDPARENT_PATHWAY_ID, SECOND_GRANDPARENT_PATHWAY_ID
+		)));
 
 		Set<Long> topLevelPathwayIds = PathwayHierarchyUtilities.findTopLevelPathwayIds(PATHWAY_ID, pathwayHierarchy);
 
 		// The top level pathways for id of "1" should be "3" (parent pathway) and
 		// "4" and "5" (grandparent pathways through intermediate parent pathway "2")
-		assertThat(topLevelPathwayIds, contains(3L, 4L, 5L));
+		assertThat(topLevelPathwayIds, contains(
+			SECOND_PARENT_PATHWAY_ID, FIRST_GRANDPARENT_PATHWAY_ID, SECOND_GRANDPARENT_PATHWAY_ID
+		));
 	}
 
 	@Test

@@ -16,7 +16,6 @@ import java.util.Objects;
 public class DummyGraphDBServer {
 	private static DummyGraphDBServer dummyGraphDBServer;
 
-	private ServerControls embeddedDatabaseServer;
 	private Session session;
 
 	public static DummyGraphDBServer getInstance() {
@@ -28,11 +27,13 @@ public class DummyGraphDBServer {
 	}
 
 	public void initializeNeo4j() {
-		this.embeddedDatabaseServer = TestServerBuilders.newInProcessBuilder().newServer();
+		ServerControls embeddedDatabaseServer = TestServerBuilders.newInProcessBuilder().newServer();
 		this.session = GraphDatabase.driver(embeddedDatabaseServer.boltURI()).session();
 	}
 
 	public void populateDummyGraphDB() {
+		final String MOCK_GRAPHDB_CYPHER_DATA_FILE = "mock_reactome_graphdb.txt";
+
 		List<String> cypherStatements;
 
 		try {
@@ -41,7 +42,7 @@ public class DummyGraphDBServer {
 					Objects.requireNonNull(
 						getClass()
 						.getClassLoader()
-						.getResource("mock_reactome_graphdb.txt")
+						.getResource(MOCK_GRAPHDB_CYPHER_DATA_FILE)
 					)
 					.getPath()
 				));

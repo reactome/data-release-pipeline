@@ -81,24 +81,35 @@ public class NCBIEntryTest {
 	@Test
 	public void getEventLinkXML() {
 		final String NCBI_GENE_ID = "12345";
+		final List<String> EXPECTED_STRINGS = Arrays.asList(
+			"<ObjId>" + NCBI_GENE_ID + "</ObjId>",
+			"<Base>&event.base.url;</Base>",
+			"<Rule>" + NCBIEntryTestFixture.EVENT_STABLE_ID + "</Rule>",
+			"<UrlName>Reactome Event:" + NCBIEntryTestFixture.EVENT_NAME
+		);
 
 		String eventLinkXML = entry1.getEventLinkXML(NCBI_GENE_ID, event);
 
-		assertThat(eventLinkXML, containsString("<ObjId>" + NCBI_GENE_ID + "</ObjId>"));
-		assertThat(eventLinkXML, containsString("<Base>&event.base.url;</Base>"));
-		assertThat(eventLinkXML, containsString("<Rule>" + eventStId + "</Rule>"));
-		assertThat(eventLinkXML, containsString("<UrlName>Reactome Event:" + eventName));
+		for (String expectedString : EXPECTED_STRINGS) {
+			assertThat(eventLinkXML, containsString(expectedString));
+	}
 	}
 
 	@Test
 	public void getEntityLinkXML() {
 		final String NCBI_GENE_ID = "12345";
+		final List<String> EXPECTED_STRINGS = Arrays.asList(
+			"<ObjId>" + NCBI_GENE_ID + "</ObjId>",
+			"<Base>&entity.base.url;</Base>",
+			"<Rule>" + entry1.getUniprotAccession() + "</Rule>",
+			"<UrlName>Reactome Entity:" + entry1.getUniprotAccession()
+		);
 
 		String entityLinkXML = entry1.getEntityLinkXML(NCBI_GENE_ID);
 
-		assertThat(entityLinkXML, containsString("<ObjId>" + NCBI_GENE_ID + "</ObjId>"));
-		assertThat(entityLinkXML, containsString("<Base>&entity.base.url;</Base>"));
-		assertThat(entityLinkXML, containsString("<Rule>" + uniprotAccessions[0] + "</Rule>"));
-		assertThat(entityLinkXML, containsString("<UrlName>Reactome Entity:" + uniprotAccessions[0]));
+		for (String expectedString : EXPECTED_STRINGS) {
+			assertThat(entityLinkXML, containsString(expectedString));
+		}
+	}
 	}
 }

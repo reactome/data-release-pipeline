@@ -6,7 +6,6 @@ import org.gk.model.GKInstance;
 import org.gk.model.ReactomeJavaConstants;
 import org.gk.persistence.MySQLAdaptor;
 import org.gk.persistence.TransactionsNotSupportedException;
-import org.gk.schema.InvalidAttributeException;
 import org.reactome.release.common.ReleaseStep;
 import org.reactome.release.common.database.InstanceEditUtils;
 import org.reactome.release.uniprotupdate.dataschema.UniprotData;
@@ -71,78 +70,70 @@ public class UniprotUpdateStep extends ReleaseStep {
 	}
 
 	private Map<String, GKInstance> getReferenceDNASequences(MySQLAdaptor adaptor) throws Exception {
-		return getIdentifierMappedCollectionOfType(adaptor, ReactomeJavaConstants.ReferenceDNASequence, null);
+		return getIdentifierMappedCollectionOfType(ReactomeJavaConstants.ReferenceDNASequence, adaptor);
 	}
 
 	private Map<String, GKInstance> getReferenceGeneProducts(MySQLAdaptor adaptor) throws Exception {
-		return getIdentifierMappedCollectionOfType(adaptor, ReactomeJavaConstants.ReferenceGeneProduct, "UniProt");
+		return getIdentifierMappedCollectionOfType(ReactomeJavaConstants.ReferenceGeneProduct, "UniProt", adaptor);
 	}
 
 	private Map<String, GKInstance> getReferenceIsoforms(MySQLAdaptor adaptor) throws Exception {
-		return getIdentifierMappedCollectionOfType(adaptor, ReactomeJavaConstants.ReferenceIsoform, "UniProt");
+		return getIdentifierMappedCollectionOfType(ReactomeJavaConstants.ReferenceIsoform, "UniProt", adaptor);
 	}
 
 	/**
-	 * Gets a map of instances, keyed by identifier.
-	 * @param adaptor - the database adaptor to use.
+	 * Gets a map of instances (keyed by identifier values) for a specified Reactome class name
 	 * @param reactomeClassName - the Reactome "type" to which the instances will be constrained.
-	 * @param refDBName - the name of the reference database to which the instances will be constrained.
-	 * @return
-	 * @throws Exception
-	 * @throws InvalidAttributeException
+	 * @param adaptor - the database adaptor to use.
+	 * @return Map of String identifier to a GKInstance object containing the identifier
+	 * @throws Exception Thrown if unable to fetch instances by the provided reactomeClassName or if there is a problem
+	 * calling the cleanUp method on any MySQLAdaptor objects in the adaptorPool
 	 */
 	private Map<String, GKInstance> getIdentifierMappedCollectionOfType(
-		MySQLAdaptor adaptor, String reactomeClassName, String refDBName)
-			throws Exception, InvalidAttributeException
-	{
+		String reactomeClassName, MySQLAdaptor adaptor
+	) throws Exception {
+		final String ANY_REFERENCE_DATABASE_NAME = "";
+		return getIdentifierMappedCollectionOfType(reactomeClassName, ANY_REFERENCE_DATABASE_NAME, adaptor);
+	}
+
+	/**
+	 * Gets a map of instances (keyed by identifier values) for a specified Reactome class name and restricted
+	 * to a specific reference database.
+	 * @param reactomeClassName - the Reactome "type" to which the instances will be constrained.
+	 * @param refDBName - the name of the reference database to which the instances will be constrained.
+	 * @param adaptor - the database adaptor to use.
+	 * @return Map of String identifier to a GKInstance object containing the identifier
+	 * @throws Exception Thrown if unable to fetch instances by the provided reactomeClassName or if there is a problem
+	 * calling the cleanUp method on any MySQLAdaptor objects in the adaptorPool
+	 */
+	private Map<String, GKInstance> getIdentifierMappedCollectionOfType(
+		String reactomeClassName, String refDBName, MySQLAdaptor adaptor
+	) throws Exception {
 		@SuppressWarnings("unchecked")
-		Collection<GKInstance> instances = (Collection<GKInstance>)adaptor.fetchInstancesByClass(reactomeClassName);
+		Collection<GKInstance> instances = (Collection<GKInstance>) adaptor.fetchInstancesByClass(reactomeClassName);
 		Map<String, GKInstance> instanceMap = Collections.synchronizedMap(new HashMap<>(instances.size()));
-		//for (GKInstance instance : instances)
 		Map<String, MySQLAdaptor> adaptorPool = Collections.synchronizedMap(new HashMap<>());
 
-		instances.parallelStream().forEach( instance ->
-		{
-			try
-			{
-				MySQLAdaptor tmpAdaptor = adaptorPool.get(Thread.currentThread().getName());;
-				if (tmpAdaptor == null)
-				{
-					tmpAdaptor = cloneInstanceDBAdaptor(instance);
-					adaptorPool.put(Thread.currentThread().getName(), tmpAdaptor);
-				}
+		instances.parallelStream().forEach( instance -> {
+			MySQLAdaptor tmpAdaptor = getTemporaryAdaptor(instance, adaptorPool);
+			if (tmpAdaptor != null) {
 				instance.setDbAdaptor(tmpAdaptor);
+			}
 
-				String identifier;
-				try
-				{
-					identifier = (String) instance.getAttributeValue(ReactomeJavaConstants.identifier);
-					if (identifier !=null && identifier.length() > 0)
-					{
-						// fast-load the attributes now so accessing them later will be faster.
-						// tmpAdaptor.fastLoadInstanceAttributeValues(instance);
-						// Specify a ReferenceDatabase name that the instances should be constrained by.
-						if (instanceHasAllowedRefDB(instance, refDBName)) {
-							instanceMap.put(identifier, instance);
-						}
-					}
-				} catch (Exception e)
-				{
-					e.printStackTrace();
-				}
-				// set back to the main adaptor
-				instance.setDbAdaptor(adaptor);
+			String identifier = getIdentifierAttributeValue(instance);
+			// Specify a ReferenceDatabase name that the instances should be constrained by (no constraint if no name is
+			// specified).
+			if (!identifier.isEmpty() && instanceHasAllowedRefDB(instance, refDBName)) {
+				instanceMap.put(identifier, instance);
 			}
-			catch (SQLException e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+
+			// set back to the main adaptor
+			instance.setDbAdaptor(adaptor);
 		});
 
 		// Clean up other adaptors.
-		for (String k : adaptorPool.keySet()) {
-			adaptorPool.get(k).cleanUp();
+		for (MySQLAdaptor dba : adaptorPool.values()) {
+			dba.cleanUp();
 		}
 
 		logger.info("{}s {} mapped by Identifier.", reactomeClassName, instanceMap.size());
@@ -152,6 +143,19 @@ public class UniprotUpdateStep extends ReleaseStep {
 
 	private boolean debugXML(Properties props) {
 		return Boolean.parseBoolean(props.getProperty("debugXML", "false"));
+	}
+
+	private MySQLAdaptor getTemporaryAdaptor(GKInstance instance, Map<String, MySQLAdaptor> adaptorPool) {
+		final String CURRENT_THREAD_NAME = Thread.currentThread().getName();
+
+		return adaptorPool.computeIfAbsent(CURRENT_THREAD_NAME, currentThread -> {
+			try {
+				return cloneInstanceDBAdaptor(instance);
+			} catch (SQLException e) {
+				logger.error("Unable to create a temporary MySQLAdaptor for " + instance.getExtendedDisplayName(), e);
+				return null;
+			}
+		});
 	}
 
 	private MySQLAdaptor cloneInstanceDBAdaptor(GKInstance instance) throws SQLException {
@@ -166,14 +170,32 @@ public class UniprotUpdateStep extends ReleaseStep {
 		);
 	}
 
-	private boolean instanceHasAllowedRefDB(GKInstance instance, String refDBName) throws Exception {
+	private boolean instanceHasAllowedRefDB(GKInstance instance, String refDBName)  {
 		// No constraint if no reference database name is specified
-		if (refDBName == null) {
+		if (refDBName == null || refDBName.isEmpty()) {
 			return true;
 		}
 
-		GKInstance refDB = (GKInstance) instance.getAttributeValue(ReactomeJavaConstants.referenceDatabase);
-		return (refDB != null && refDBName.equals(refDB.getAttributeValue(ReactomeJavaConstants.name)));
+		try {
+			GKInstance refDB = (GKInstance) instance.getAttributeValue(ReactomeJavaConstants.referenceDatabase);
+			return (refDB != null && refDBName.equals(refDB.getAttributeValue(ReactomeJavaConstants.name)));
+		} catch (Exception e) {
+			String errorMessage = "Unable to get reference database (or its name) for " +
+				instance.getExtendedDisplayName();
+			logger.fatal(errorMessage);
+			throw new RuntimeException(errorMessage, e);
+		}
+	}
+
+	private String getIdentifierAttributeValue(GKInstance instance) {
+		final String EMPTY_STRING = "";
+		try {
+			String identifier = (String) instance.getAttributeValue(ReactomeJavaConstants.identifier);
+			return identifier != null && !identifier.isEmpty() ? identifier : EMPTY_STRING;
+		} catch (Exception e) {
+			logger.error("Unable to get identifier attribute value for " + instance.getExtendedDisplayName(), e);
+			return EMPTY_STRING;
+		}
 	}
 
 	private void startTransaction(MySQLAdaptor adaptor, String savePoint)

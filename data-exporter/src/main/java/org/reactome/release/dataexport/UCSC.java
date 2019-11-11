@@ -210,8 +210,9 @@ public class UCSC {
 				"MATCH (ewas:EntityWithAccessionedSequence)-[:referenceEntity]->(rgp:ReferenceGeneProduct)" +
 				"-[:referenceDatabase]->(rd:ReferenceDatabase)",
 				"WHERE ewas.speciesName IN [" + UCSC_ACCEPTED_SPECIES + "] AND rd.displayName = 'UniProt'",
-				"RETURN rgp.dbId, coalesce(rgp.variantIdentifier, rgp.identifier) as rgp_accession, rgp.displayName",
-				"ORDER BY rgp.identifier, rgp.variantIdentifier"
+				"RETURN DISTINCT rgp.dbId, coalesce(rgp.variantIdentifier, rgp.identifier) as rgp_accession,"
+					+ " rgp.displayName",
+				"ORDER BY rgp_accession"
 			)
 		)
 		.stream()

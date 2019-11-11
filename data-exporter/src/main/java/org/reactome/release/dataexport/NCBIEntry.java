@@ -68,9 +68,9 @@ public class NCBIEntry implements Comparable<NCBIEntry> {
 				"MATCH (rgp:ReferenceGeneProduct)-[:referenceDatabase]->(rd:ReferenceDatabase)",
 				"MATCH (rgp)-[:referenceGene]->(rds:ReferenceDNASequence)",
 				"WHERE rd.displayName = 'UniProt' AND rds.databaseName = 'NCBI Gene'",
-				"RETURN rgp.dbId, rgp.displayName, coalesce(rgp.variantIdentifier, rgp.identifier) as rgp_accession,"
-					+ " rds.identifier",
-				"ORDER BY rgp.identifier, rgp.variantIdentifier"
+				"RETURN DISTINCT rgp.dbId, rgp.displayName, "
+					+ "coalesce(rgp.variantIdentifier, rgp.identifier) as rgp_accession, rds.identifier",
+				"ORDER BY rgp_accession"
 			)
 		);
 

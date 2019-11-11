@@ -332,7 +332,7 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 	 * Sets the UniProt accession for the UniProtReactomeEntry instance
 	 * @param accession UniProt accession
 	 * @throws NullPointerException Thrown if the UniProt accession in null
-	 * @throws IllegalArgumentException Thrown if the UniProt accession is not a properly formatted accession (i.e.
+	 * @throws IllegalArgumentException Thrown if the UniProt accession is not a legal accession (i.e.
 	 * a 6 or 10 character String)
 	 */
 	private void setAccession(String accession) {
@@ -342,7 +342,7 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 
 		if (!isValidCanonicalAccession(accession) && !isValidIsoformAccession(accession)) {
 			throw new IllegalArgumentException(
-				accession + " is not a proper UniProt accession.  Must be an alphanumeric string of length 6 or 10 " +
+				accession + " is not a legal UniProt accession.  Must be an alphanumeric string of length 6 or 10 " +
 				"optionally followed by a dash and one or more digits if the UniProt accession is representing an " +
 				"isoform"
 			);

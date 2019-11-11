@@ -50,84 +50,84 @@ public class UniProtReactomeEntryTest {
 
 	@Test
 	public void differentUniProtObjectsWithDifferentValuesNotEqual() {
-		final String DIFFERENT_ACCESSION = "Q54321";
-		final String DIFFERENT_DISPLAY_NAME = "UniProt:" + DIFFERENT_ACCESSION;
+		final String DIFFERENT_UNIPROT_ACCESSION = "Q54321";
+		final String DIFFERENT_DISPLAY_NAME = "UniProt:" + DIFFERENT_UNIPROT_ACCESSION;
 
 		assertThat(
 			canonicalUniProtReactomeEntry,
 			is(not(equalTo(
-				UniProtReactomeEntry.get(getNextDBID(), DIFFERENT_ACCESSION, DIFFERENT_DISPLAY_NAME))
+				UniProtReactomeEntry.get(getNextDBID(), DIFFERENT_UNIPROT_ACCESSION, DIFFERENT_DISPLAY_NAME))
 			))
 		);
 	}
 
 	@Test
 	public void sortsByUniProtAccessionAscendingly() {
-		final String ACCESSION_THAT_SHOULD_BE_FIRST = "A0A234";
+		final String UNIPROT_ACCESSION_THAT_SHOULD_BE_FIRST = "A0A234";
 
 		List<UniProtReactomeEntry> uniProtReactomeEntries = new ArrayList<>();
 		uniProtReactomeEntries.add(canonicalUniProtReactomeEntry);
-		UniProtReactomeEntry uniProtReactomeEntry2 = UniProtReactomeEntry.get(
+		UniProtReactomeEntry uniProtReactomeEntryAddedSecond = UniProtReactomeEntry.get(
 			getNextDBID(),
-			ACCESSION_THAT_SHOULD_BE_FIRST,
+			UNIPROT_ACCESSION_THAT_SHOULD_BE_FIRST,
 			DUMMY_UNIPROT_DISPLAY_NAME
 		);
-		uniProtReactomeEntries.add(uniProtReactomeEntry2);
+		uniProtReactomeEntries.add(uniProtReactomeEntryAddedSecond);
 
 		Collections.sort(uniProtReactomeEntries);
 
-		assertThat(uniProtReactomeEntries, contains(uniProtReactomeEntry2, canonicalUniProtReactomeEntry));
+		assertThat(uniProtReactomeEntries, contains(uniProtReactomeEntryAddedSecond, canonicalUniProtReactomeEntry));
 	}
 
 	@Test
 	public void isoformAccessionIsAccepted() {
-		final String ISOFORM_ACCESSION = "P12345-1";
+		final String UNIPROT_ISOFORM_ACCESSION = "P12345-1";
 
 		UniProtReactomeEntry uniprot = UniProtReactomeEntry.get(
-			getNextDBID(), ISOFORM_ACCESSION, DUMMY_UNIPROT_DISPLAY_NAME
+			getNextDBID(), UNIPROT_ISOFORM_ACCESSION, DUMMY_UNIPROT_DISPLAY_NAME
 		);
 
-		assertThat(uniprot.getAccession(), equalTo(ISOFORM_ACCESSION));
+		assertThat(uniprot.getAccession(), equalTo(UNIPROT_ISOFORM_ACCESSION));
 	}
 
 	@Test
-	public void incorrectIsoformAccessionThrowsIllegalArgumentException() {
-		final String INCORRECT_ISOFORM_ACCESSION = "P123456-1"; // 7 character parent accession is illegal in UniProt
+	public void illegalIsoformAccessionThrowsIllegalArgumentException() {
+		final String ILLEGAL_ISOFORM_ACCESSION = "P123456-1"; // 7 character parent accession is illegal in UniProt
 
 		IllegalArgumentException thrown = assertThrows(
 			IllegalArgumentException.class,
 			() -> UniProtReactomeEntry.get(
-				getNextDBID(), INCORRECT_ISOFORM_ACCESSION, DUMMY_UNIPROT_DISPLAY_NAME
+				getNextDBID(), ILLEGAL_ISOFORM_ACCESSION, DUMMY_UNIPROT_DISPLAY_NAME
 			),
 			"Expected call to 'UniProtReactomeEntry.get' to throw due to improper UniProt accession, but it didn't"
 		);
 
-		assertThat(thrown.getMessage(), containsString("not a proper UniProt accession"));
+		assertThat(thrown.getMessage(), containsString("not a legal UniProt accession"));
 	}
 
 	@Test
 	public void tenCharacterAccessionIsAccepted() {
-		final String ACCESSION = "A0A123A456";
+		final String UNIPROT_ACCESSION = "A0A123A456";
 		UniProtReactomeEntry uniprot = UniProtReactomeEntry.get(
-			getNextDBID(), ACCESSION, DUMMY_UNIPROT_DISPLAY_NAME
+			getNextDBID(), UNIPROT_ACCESSION, DUMMY_UNIPROT_DISPLAY_NAME
 		);
 
-		assertThat(uniprot.getAccession() , equalTo(ACCESSION));
+		assertThat(uniprot.getAccession() , equalTo(UNIPROT_ACCESSION));
 	}
 
 	@Test
-	public void incorrectAccessionThrowsIllegalArgumentException() {
-		final String INCORRECT_ACCESSION = "P123456"; // 7 character accession is illegal in UniProt
+	public void illegalUniProtAccessionThrowsIllegalArgumentException() {
+		final String ILLEGAL_UNIPROT_ACCESSION = "P123456"; // 7 character accession is illegal in UniProt
 
 		IllegalArgumentException thrown = assertThrows(
 			IllegalArgumentException.class,
 			() -> UniProtReactomeEntry.get(
-				getNextDBID(), INCORRECT_ACCESSION, DUMMY_UNIPROT_DISPLAY_NAME
+				getNextDBID(), ILLEGAL_UNIPROT_ACCESSION, DUMMY_UNIPROT_DISPLAY_NAME
 			),
-			"Expected call to 'UniProtReactomeEntry.get' to throw due to improper UniProt accession, but it didn't"
+			"Expected call to 'UniProtReactomeEntry.get' to throw due to an illegal UniProt accession, but it didn't"
 		);
 
-		assertThat(thrown.getMessage(), containsString("not a proper UniProt accession"));
+		assertThat(thrown.getMessage(), containsString("not a legal UniProt accession"));
 	}
 
 	@Test
@@ -139,7 +139,8 @@ public class UniProtReactomeEntryTest {
 			() -> UniProtReactomeEntry.get(
 				getNextDBID(), DUMMY_UNIPROT_ACCESSION, INCORRECT_DISPLAY_NAME
 			),
-			"Expected call to 'UniProtReactomeEntry.get' to throw due to improper UniProt display name, but it didn't"
+			"Expected call to 'UniProtReactomeEntry.get' to throw due to an improper UniProt display name, but it " +
+			"didn't"
 		);
 
 		assertThat(thrown.getMessage(), containsString("not a proper UniProt Display Name"));

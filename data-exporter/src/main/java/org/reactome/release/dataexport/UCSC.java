@@ -1,5 +1,6 @@
 package org.reactome.release.dataexport;
 
+import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.neo4j.driver.v1.*;
@@ -197,6 +198,11 @@ public class UCSC {
 	 * @return Set of UniProt Reactome Entry objects
 	 */
 	Set<UniProtReactomeEntry> getUniProtReactomeEntriesForUCSC(Session graphDBSession) {
+		final String UCSC_ACCEPTED_SPECIES = Stream.of("Homo sapiens", "Rattus norvegicus", "Mus musculus")
+			.map(species -> "'" + species + "'")
+			.collect(Collectors.joining(","));
+
+
 		if (ucscUniProtReactomeEntries != null) {
 			return ucscUniProtReactomeEntries;
 		}
@@ -207,8 +213,7 @@ public class UCSC {
 			String.join(System.lineSeparator(),
 				"MATCH (ewas:EntityWithAccessionedSequence)-[:referenceEntity]->(rgp:ReferenceGeneProduct)" +
 				"-[:referenceDatabase]->(rd:ReferenceDatabase)",
-				"WHERE ewas.speciesName IN ['Homo sapiens', 'Rattus norvegicus', 'Mus musculus'] AND rd.displayName =" +
-				" 'UniProt'",
+				"WHERE ewas.speciesName IN [" + UCSC_ACCEPTED_SPECIES + "] AND rd.displayName = 'UniProt'",
 				"RETURN rgp.dbId, coalesce(rgp.variantIdentifier, rgp.identifier) as rgp_accession, rgp.displayName",
 				"ORDER BY rgp.identifier, rgp.variantIdentifier"
 			)

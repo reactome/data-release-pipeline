@@ -2,7 +2,6 @@ package org.reactome.release.otherIdentifiers;
 
 import org.gk.model.GKInstance;
 import org.gk.model.ReactomeJavaConstants;
-import org.gk.persistence.MySQLAdaptor;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -10,13 +9,14 @@ import org.mockito.Mockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+
+import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({PostStepChecks.class})
@@ -24,22 +24,78 @@ import java.util.concurrent.atomic.AtomicInteger;
         "javax.xml.*", "com.sun.org.apache.xerces.*", "org.xml.sax.*", "com.sun.xml.*", "org.w3c.dom.*", "org.mockito.*"})
 public class PostStepChecksTest {
 
-    private final int correctOtherIdentifierCount = 2;
+    private final long correctOtherIdentifierCount = 1L;
 
     @Mock
-    GKInstance mockGKInstance;
+    GKInstance mockRGPInstance;
+    @Mock
+    GKInstance mockRGPInstance2;
 
-    Collection<GKInstance> gkInstanceCollection = new ArrayList<>();
-    List<Object> otherIdentifierCollection = new ArrayList<>();
+    Collection<GKInstance> rgpInstanceCollection = new ArrayList<>();
+    List<String> otherIdentifierList = new ArrayList<>();
+    List<String> otherIdentifierList2 = new ArrayList<>();
 
     @Test
-    public void getOtherIdentifierCountReturnsAtomicInt() throws Exception {
+    public void getOtherIdentifierCountReturnsCorrectOtherIdentifierCount() throws Exception {
 
-        gkInstanceCollection.add(mockGKInstance);
-        gkInstanceCollection.add(mockGKInstance);
-        otherIdentifierCollection.add("Mock otherIdentifier");
-        Mockito.when(mockGKInstance.getAttributeValuesList(ReactomeJavaConstants.otherIdentifier)).thenReturn(otherIdentifierCollection);
-        int otherIdentifierCount = PostStepChecks.getOtherIdentifierCount(gkInstanceCollection);
+        rgpInstanceCollection.add(mockRGPInstance);
+        rgpInstanceCollection.add(mockRGPInstance2);
+        otherIdentifierList.add("Mock otherIdentifier");
+        Mockito.when(mockRGPInstance.getAttributeValuesList(ReactomeJavaConstants.otherIdentifier)).thenReturn(otherIdentifierList);
+        Mockito.when(mockRGPInstance2.getAttributeValuesList(ReactomeJavaConstants.otherIdentifier)).thenReturn(otherIdentifierList2);
+        long otherIdentifierCount = PostStepChecks.getCountOfInstancesWithOtherIdentifiers(rgpInstanceCollection);
+        assertThat(otherIdentifierCount, is(equalTo(correctOtherIdentifierCount)));
+    }
+
+    @Test
+    public void instanceWithoutOtherIdentifiersReturnsFalse() throws Exception {
+        Mockito.when(mockRGPInstance.getAttributeValuesList(ReactomeJavaConstants.otherIdentifier)).thenReturn(otherIdentifierList);
+        boolean hasOtherIdentifiers = PostStepChecks.hasOtherIdentifiers(mockRGPInstance);
+        assertThat(hasOtherIdentifiers, is(equalTo(false)));
+    }
+
+    @Test
+    public void instanceWithOtherIdentifiersReturnsTrue() throws Exception {
+        rgpInstanceCollection.add(mockRGPInstance);
+        otherIdentifierList.add("Mock otherIdentifier");
+        Mockito.when(mockRGPInstance.getAttributeValuesList(ReactomeJavaConstants.otherIdentifier)).thenReturn(otherIdentifierList);
+        boolean hasOtherIdentifiers = PostStepChecks.hasOtherIdentifiers(mockRGPInstance);
+        assertThat(hasOtherIdentifiers, is(equalTo(true)));
+    }
+
+    @Test
+    public void getCountOfInstancesWithOtherIdentifiersNullTest() {
+        try {
+            long otherIdentifierCount = PostStepChecks.getCountOfInstancesWithOtherIdentifiers(null);
+        } catch (Exception e) {
+            e.printStackTrace();
+            assertTrue(e.toString().contains("NullPointerException"));
+        }
+    }
+
+    @Test
+    public void hasOtherIdentifiersNullTest() {
+        try {
+            PostStepChecks.hasOtherIdentifiers(null);
+        } catch(Exception e) {
+            e.printStackTrace();
+            assertTrue(e.getMessage().equals("Unable to retrieve other identifiers from RGP instance null"));
+        }
+    }
+
+    @Test
+    public void emptyCollectionReturnsZero() {
+        long otherIdentifierCount = PostStepChecks.getCountOfInstancesWithOtherIdentifiers(rgpInstanceCollection);
+        assertThat(otherIdentifierCount, is(equalTo(0L)));
+    }
+
+    @Test
+    public void instanceWithMultipleOtherIdentifiersCountedCorrectly() throws Exception {
+        rgpInstanceCollection.add(mockRGPInstance);
+        otherIdentifierList.add("Mock otherIdentifier");
+        otherIdentifierList.add("Mock otherIdentifier 2");
+        Mockito.when(mockRGPInstance.getAttributeValuesList(ReactomeJavaConstants.otherIdentifier)).thenReturn(otherIdentifierList);
+        long otherIdentifierCount = PostStepChecks.getCountOfInstancesWithOtherIdentifiers(rgpInstanceCollection);
         assertThat(otherIdentifierCount, is(equalTo(correctOtherIdentifierCount)));
     }
 }

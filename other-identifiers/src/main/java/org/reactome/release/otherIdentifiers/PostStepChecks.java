@@ -7,7 +7,7 @@ import org.gk.model.ReactomeJavaConstants;
 import org.gk.persistence.MySQLAdaptor;
 
 import java.util.Collection;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.List;
 
 /**
  *  This is a QA step that will be run after finishing an OtherIdentifiers run. For each species,
@@ -22,14 +22,22 @@ public class PostStepChecks {
     public static void compareOtherIdentifierCounts(MySQLAdaptor dba, MySQLAdaptor dbaPrev) throws Exception {
 
         Collection<GKInstance> speciesInstances = dba.fetchInstancesByClass(ReactomeJavaConstants.Species);
-
+        int currentOtherIdentifierCount = 0;
+        int previousOtherIdentifierCount = 0;
         for (GKInstance speciesInstance : speciesInstances) {
-            int currentOtherIdentifierCount = getRGPInstanceOtherIdentifierCount(dba, speciesInstance);
-            int previousOtherIdentifierCount = getRGPInstanceOtherIdentifierCount(dbaPrev, speciesInstance);
-            if (currentOtherIdentifierCount < previousOtherIdentifierCount) {
+            long speciesCurrentOtherIdentifierCount = getRGPInstanceOtherIdentifierCount(dba, speciesInstance);
+            long speciesPreviousOtherIdentifierCount = getRGPInstanceOtherIdentifierCount(dbaPrev, speciesInstance);
+            if (speciesCurrentOtherIdentifierCount < speciesPreviousOtherIdentifierCount) {
                 logger.warn(speciesInstance.getDisplayName() + " has fewer ReferenceGeneProduct instances with OtherIdentifiers compared to previous release:  " +
-                        "release_current - " + currentOtherIdentifierCount + " -- release_previous - " + previousOtherIdentifierCount);
+                        dba.getDBName() + " - " + speciesCurrentOtherIdentifierCount + " -- " + dbaPrev.getDBName() + " - " + speciesPreviousOtherIdentifierCount);
             }
+            currentOtherIdentifierCount += speciesCurrentOtherIdentifierCount;
+            previousOtherIdentifierCount += speciesPreviousOtherIdentifierCount;
+        }
+
+        if (currentOtherIdentifierCount < previousOtherIdentifierCount) {
+            logger.warn(dba.getDBName() + " has fewer ReferenceGeneProduct instances compared to " + dbaPrev.getDBName() + ": " +
+                    dba.getDBName() + " - " + currentOtherIdentifierCount + " -- " + dbaPrev.getDBName() + " - " + previousOtherIdentifierCount);
         }
     }
 
@@ -38,13 +46,11 @@ public class PostStepChecks {
      * @param dba MySQLAdaptor
      * @param speciesInstance GKInstance pertaining to a specific species
      * @return The other identifier count, as an int.
-     * @throws Exception
+     * @throws Exception can be caused by errors interacting with the database using the db adaptor.
      */
-    private static int getRGPInstanceOtherIdentifierCount(MySQLAdaptor dba, GKInstance speciesInstance) throws Exception {
+    private static long getRGPInstanceOtherIdentifierCount(MySQLAdaptor dba, GKInstance speciesInstance) throws Exception {
         Collection<GKInstance> rgpInstances = dba.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceGeneProduct, ReactomeJavaConstants.species, "=", speciesInstance);
-
-        int currentOtherIdentifierCount = getOtherIdentifierCount(rgpInstances);
-        return currentOtherIdentifierCount;
+        return getCountOfInstancesWithOtherIdentifiers(rgpInstances);
     }
 
     /**
@@ -52,17 +58,25 @@ public class PostStepChecks {
      * @param rgpInstances Collection of RGP GKInstances associated with a species.
      * @return An int is returned, representing the otherIdentifier count.
      */
-    public static int getOtherIdentifierCount(Collection<GKInstance> rgpInstances) {
-        AtomicInteger currentOtherIdentifierCount = new AtomicInteger();
-        rgpInstances.forEach(rgpInstance -> {
-            try {
-                if (rgpInstance.getAttributeValuesList(ReactomeJavaConstants.otherIdentifier).size() > 0) {
-                    currentOtherIdentifierCount.getAndIncrement();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-        return currentOtherIdentifierCount.intValue();
+    public static long getCountOfInstancesWithOtherIdentifiers(Collection<GKInstance> rgpInstances) {
+        return rgpInstances.stream().filter(rgp -> hasOtherIdentifiers(rgp)).count();
+    }
+
+    /**
+     * Returns true if the ReferenceGeneProduct instance has a filled otherIdentifier attribute, false if not.
+     * @param rgpInstance GKInstance for ReferenceGeneProduct
+     * @return boolean
+     */
+    public static boolean hasOtherIdentifiers(GKInstance rgpInstance) {
+        try {
+            List<String> otherIdentifiers = rgpInstance.getAttributeValuesList(ReactomeJavaConstants.otherIdentifier);
+
+            return !otherIdentifiers.isEmpty();
+        } catch(Exception e) {
+            String errorMessage = "Unable to retrieve other identifiers from RGP instance " + rgpInstance;
+
+            logger.fatal(errorMessage, e);
+            throw new RuntimeException(errorMessage, e);
+        }
     }
 }

@@ -198,10 +198,7 @@ public class UCSC {
 	 * @return Set of UniProt Reactome Entry objects
 	 */
 	Set<UniProtReactomeEntry> getUniProtReactomeEntriesForUCSC(Session graphDBSession) {
-		final String UCSC_ACCEPTED_SPECIES = Stream.of("Homo sapiens", "Rattus norvegicus", "Mus musculus")
-			.map(species -> "'" + species + "'")
-			.collect(Collectors.joining(","));
-
+		final String UCSC_ACCEPTED_SPECIES = "'Homo sapiens', 'Rattus norvegicus', 'Mus musculus'";
 
 		if (ucscUniProtReactomeEntries != null) {
 			return ucscUniProtReactomeEntries;

@@ -18,8 +18,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
- * Class for describing UniProt entries in Reactome and their associated Reactome Events (i.e. Pathways and Reaction
- * Like Events).
+ * Class for describing UniProt entries in Reactome and their associated Reactome Events (i.e. Pathways and
+ * ReactionlikeEvents).
  * @author jweiser
  */
 public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
@@ -126,7 +126,8 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 	 * @param graphDBSession Neo4J Driver Session object for querying the graph database
 	 * @return Map of UniProt accessions to set of Reactome Events representing top level pathways in Reactome
 	 * @deprecated As of data-exporter 1.2.0, use {@link #fetchUniProtReactomeEntryToTopLevelPathways(Session)} instead
-	 * as the UniProt entry in Reactome is represented by the returned map's keys rather than only the UniProt accession
+	 * as the UniProt entry in Reactome is represented by the returned map's keys rather than only the UniProt
+	 * accession
 	 */
 	@Deprecated
 	public static Map<String, Set<ReactomeEvent>> fetchUniProtAccessionToTopLevelPathways(
@@ -180,11 +181,12 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 
 	/**
 	 * Retrieves, from the graph database, a Map of UniProt accessions to the set of events (both Pathways
-	 * and Reaction Like Events) in which each UniProt accession participates
+	 * and ReactionlikeEvents) in which each UniProt accession participates
 	 * @param graphDBSession Neo4J Driver Session object for querying the graph database
 	 * @return Map of UniProt accessions to set of Reactome Events in Reactome
 	 * @deprecated As of data-exporter 1.2.0, use {@link #fetchUniProtReactomeEntryToReactomeEvents(Session)} instead
-	 * as the UniProt entry in Reactome is represented by the returned map's keys rather than only the UniProt accession
+	 * as the UniProt entry in Reactome is represented by the returned map's keys rather than only the UniProt
+	 * accession
 	 */
 	@Deprecated
 	public static Map<String, Set<ReactomeEvent>> fetchUniProtAccessionToReactomeEvents(
@@ -203,7 +205,7 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 
 	/**
 	 * Retrieves, from the graph database, a Map of UniProtReactomeEntry objects to the set of events (both Pathways
-	 * and Reaction Like Events) in which each UniProtReactomeEntry participates
+	 * and ReactionlikeEvents) in which each UniProtReactomeEntry participates
 	 * @param graphDBSession Neo4J Driver Session object for querying the graph database
 	 * @return Map of UniProtReactomeEntry objects to set of Reactome Events in Reactome
 	 */
@@ -271,8 +273,7 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 	 * which represent the ReactionlikeEvents.
 	 * @param reactionLikeEventIds ReactionlikeEvent db ids for which to retrieve associated ReactomeEvent objects
 	 * @param graphDBSession Neo4J Driver Session object for querying the graph database
-	 * @return Set of ReactomeEvents representing the ReactionlikeEvents which correspond to the passed
-	 * ReactionlikeEvent db ids
+	 * @return Set of ReactomeEvents which represent the ReactionlikeEvents associated with the passed db ids
 	 */
 	private static Set<ReactomeEvent> getRLEReactomeEventsFromRLEIds(
 		Set<Long> reactionLikeEventIds, Session graphDBSession
@@ -282,12 +283,12 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 
 	/**
 	 * Retrieves, from the graph database for the passed ReactionlikeEvent db ids, the set of ReactomeEvent objects
-	 * represent Reactome Pathways containing the ReactionlikeEvents
+	 * which represent Reactome Pathways containing the ReactionlikeEvents
 	 * @param reactionLikeEventIds ReactionlikeEvent db ids for which to retrieve associated ReactomeEvent objects
 	 * representing pathways
 	 * @param graphDBSession Neo4J Driver Session object for querying the graph database
-	 * @return Set of ReactomeEvents representing the Pathways containing the ReactionlikeEvents
-	 * which correspond to the passed ReactionlikeEvent db ids
+	 * @return Set of ReactomeEvents which represent the Pathways that contain the ReactionlikeEvents
+	 * associated with the passed db ids
 	 */
 	private static Set<ReactomeEvent> getPathwayReactomeEventsFromRLEIds(
 		Set<Long> reactionLikeEventIds, Session graphDBSession
@@ -322,7 +323,7 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 
 	/**
 	 * Converts a database identifier value for a Reactome event (ReactionlikeEvent or Pathway) to a ReactomeEvent
-	 * object, querying the required information from the graph database
+	 * object, querying the graph database for the required information
 	 * @param dbId Database identifier value for a Reactome event
 	 * @param graphDBSession Neo4J Driver Session object for querying the graph database
 	 * @return ReactomeEvent object corresponding to the database identifier value passed
@@ -335,7 +336,7 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 
 	/**
 	 * Converts a set of database identifier values corresponding to Reactome events (ReactionlikeEvents or Pathways)
-	 * to a set of ReactomeEvent objects, querying the required information from the graph database
+	 * to a set of ReactomeEvent objects, querying the graph database for the required information
 	 * @param dbIds Set of database identifier values for Reactome events
 	 * @param graphDBSession Neo4J Driver Session object for querying the graph database
 	 * @return Set of ReactomeEvent objects corresponding to the database identifier values passed
@@ -347,10 +348,10 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 	}
 
 	/**
-	 * Logs the number of UniProt entries in Reactome for which associated Reactome Events
-	 * (ReactionlikeEvents and Pathway) have been retrieved.  The number of entries processed (i.e. for which Reactome
-	 * Events have been retrieved) divided by the total number of entries to process will give the percentage of
-	 * UniProt entries processed at the time of this method call.
+	 * Logs the number of UniProt entries in Reactome for which associated Reactome Events (ReactionlikeEvents and
+	 * Pathway) have been retrieved.  The number of entries processed (i.e. for which Reactome Events have been
+	 * retrieved) divided by the total number of entries to process will give the percentage of UniProt entries
+	 * processed at the time of this method call.
 	 * @param entriesProcessed Number of UniProt entries processed
 	 * @param totalEntries Total number of UniProt entries to process
 	 */
@@ -370,9 +371,9 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 
 	/**
 	 * Retrieves, from the graph database, a Map of UniProtReactomeEntry objects to the set of identifiers for
-	 * Reaction Like Events in which each UniProt accession participates
+	 * ReactionlikeEvents in which each UniProt accession participates
 	 * @param graphDBSession Neo4J Driver Session object for querying the graph database
-	 * @return Map of UniProtReactomeEntry objects to set of database identifiers for Reaction Like Events in Reactome
+	 * @return Map of UniProtReactomeEntry objects to set of database identifiers for ReactionlikeEvents in Reactome
 	 */
 	private static Map<UniProtReactomeEntry, Set<Long>> fetchUniProtReactomeEntryToRLEId(Session graphDBSession) {
 		if (uniprotReactomeEntryToReactionLikeEventIdCache.containsKey(graphDBSession)) {

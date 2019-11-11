@@ -292,17 +292,32 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 	private static Set<ReactomeEvent> getPathwayReactomeEventsFromRLEIds(
 		Set<Long> reactionLikeEventIds, Session graphDBSession
 	) {
-		Set<ReactomeEvent> pathwayReactomeEvents = new HashSet<>();
-
-		pathwayReactomeEvents.addAll(reactionLikeEventIds.stream().flatMap(
-			rleId -> {
-				Map<Long, Set<Long>> rleIdToPathwayIds = fetchRLEIdToPathwayId(graphDBSession);
-				Set<Long> pathwayIds = rleIdToPathwayIds.computeIfAbsent(rleId, k -> new HashSet<>());
-				return pathwayIds.stream();
-			}
-		).map(pathwayId -> convertDbIdToReactomeEvent(pathwayId, graphDBSession)).collect(Collectors.toList()));
+		Set<ReactomeEvent> pathwayReactomeEvents = reactionLikeEventIds
+			.stream()
+			.flatMap(rleId -> getPathwayReactomeEventsFromRLEId(rleId, graphDBSession).stream())
+			.collect(Collectors.toSet());
 
 		return pathwayReactomeEvents;
+	}
+
+	/**
+	 * Retrieves, from the graph database for the passed ReactionlikeEvent db id, the set of ReactomeEvent objects
+	 * which represent Reactome Pathways containing the ReactionlikeEvent
+	 * @param reactionLikeEventId ReactionlikeEvent db id for which to retrieve pathways as ReactomeEvent objects
+	 * @param graphDBSession Neo4J Driver Session object for querying the graph database
+	 * @return Set of ReactomeEvents which represent the Pathways that contain the ReactionlikeEvent
+	 * associated with the passed db id
+	 */
+	private static Set<ReactomeEvent> getPathwayReactomeEventsFromRLEId(
+		long reactionLikeEventId, Session graphDBSession
+	) {
+		Map<Long, Set<Long>> rleIdToPathwayIds = fetchRLEIdToPathwayId(graphDBSession);
+		Set<Long> pathwayIds = rleIdToPathwayIds.computeIfAbsent(reactionLikeEventId, k -> new HashSet<>());
+
+		return pathwayIds
+			.stream()
+			.map(pathwayId -> convertDbIdToReactomeEvent(pathwayId, graphDBSession))
+			.collect(Collectors.toSet());
 	}
 
 	/**

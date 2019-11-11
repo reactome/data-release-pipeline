@@ -27,6 +27,14 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 		"([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})"
 	); // As defined at https://www.uniprot.org/help/accession_numbers (October 2019)
 
+	private final Pattern ANCHORED_PARENT_ACCESSION_REGEX =
+		Pattern.compile("^" + PARENT_ACCESSION_REGEX.pattern() + "$");
+
+	private final Pattern ISOFORM_SUFFIX_REGEX = Pattern.compile("-[0-9]+");
+	private final Pattern ISOFORM_REGEX =
+		Pattern.compile("^" + PARENT_ACCESSION_REGEX.pattern() + ISOFORM_SUFFIX_REGEX.pattern() + "$");
+
+
 	private static Map<Long, UniProtReactomeEntry> uniProtReactomeEntryMap = new HashMap<>();
 
 	private static Map<Session, Map<UniProtReactomeEntry, Set<ReactomeEvent>>>
@@ -483,8 +491,6 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 	 * false otherwise
 	 */
 	private boolean isValidCanonicalAccession(String accession) {
-		final Pattern ANCHORED_PARENT_ACCESSION_REGEX = Pattern.compile("^" + PARENT_ACCESSION_REGEX.pattern() + "$");
-
 		return ANCHORED_PARENT_ACCESSION_REGEX.matcher(accession).matches();
 	}
 
@@ -497,11 +503,7 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 	 * @return true if the accession passed is a valid UniProt accession for an isoform, false otherwise
 	 */
 	private boolean isValidIsoformAccession(String accession) {
-		Pattern isoformSuffixRegex = Pattern.compile("-[0-9]+");
-		Pattern isoformRegex = Pattern.compile(
-			"^" + PARENT_ACCESSION_REGEX.pattern() + isoformSuffixRegex.pattern() + "$"
-		);
-		return isoformRegex.matcher(accession).matches();
+		return ISOFORM_REGEX.matcher(accession).matches();
 	}
 
 	/**

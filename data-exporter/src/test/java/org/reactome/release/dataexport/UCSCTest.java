@@ -8,11 +8,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 public class UCSCTest {
+	private final String DUMMY_DIR = "outputDir";
+	private final int DUMMY_REACTOME_VERSION = 999;
+
 
 	@Test
 	public void noUniProtReactomeEntriesRetrievedFromEmptyDatabase() {
-		final String DUMMY_DIR = "outputDir";
-		final int DUMMY_REACTOME_VERSION = 999;
 
 		DummyGraphDBServer dummyGraphDBServer = DummyGraphDBServer.getInstance();
 		dummyGraphDBServer.initializeNeo4j();
@@ -24,10 +25,7 @@ public class UCSCTest {
 	}
 
 	@Test
-	public void correctUniProtReactomeEntriesRetrieved() {
-		final String DUMMY_DIR = "outputDir";
-		final int DUMMY_REACTOME_VERSION = 999;
-
+	public void correctCanonicalUniProtReactomeEntriesRetrieved() {
 		final long UNIPROT_DB_ID = 69487L;
 		final String UNIPROT_ACCESSION = "P04637";
 		final String UNIPROT_DISPLAY_NAME = "UniProt:P04637 TP53";
@@ -42,6 +40,25 @@ public class UCSCTest {
 		UniProtReactomeEntry expectedUniProtReactomeEntry =
 			UniProtReactomeEntry.get(UNIPROT_DB_ID, UNIPROT_ACCESSION, UNIPROT_DISPLAY_NAME);
 
-		assertThat(uniProtReactomeEntries, contains(expectedUniProtReactomeEntry));
+		assertThat(uniProtReactomeEntries, hasItem(expectedUniProtReactomeEntry));
+	}
+
+	@Test
+	public void correctIsoformUniProtReactomeEntriesRetrieved() {
+		final long UNIPROT_DB_ID = 152926L;
+		final String UNIPROT_ACCESSION = "O75916-3";
+		final String UNIPROT_DISPLAY_NAME = "UniProt:O75916-3 RGS9";
+
+		DummyGraphDBServer dummyGraphDBServer = DummyGraphDBServer.getInstance();
+		dummyGraphDBServer.initializeNeo4j();
+		dummyGraphDBServer.populateDummyGraphDB();
+
+		Set<UniProtReactomeEntry> uniProtReactomeEntries = UCSC.getInstance(DUMMY_DIR, DUMMY_REACTOME_VERSION)
+			.getUniProtReactomeEntriesForUCSC(dummyGraphDBServer.getSession());
+
+		UniProtReactomeEntry expectedUniProtReactomeEntry =
+			UniProtReactomeEntry.get(UNIPROT_DB_ID, UNIPROT_ACCESSION, UNIPROT_DISPLAY_NAME);
+
+		assertThat(uniProtReactomeEntries, hasItem(expectedUniProtReactomeEntry));
 	}
 }

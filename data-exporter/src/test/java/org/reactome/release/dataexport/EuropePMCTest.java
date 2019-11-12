@@ -16,6 +16,94 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.reactome.release.dataexport.ReactomeURLConstants.CONTENT_DETAIL_URL;
 
 public class EuropePMCTest {
+	private static EuropePMC europePMC;
+	private static EuropePMC.EuropePMCLink europePMCLink;
+
+	@BeforeAll
+	public static void createEuropePMCInstance() {
+		final String DUMMY_OUTPUT_DIR = "output_dir";
+		final int DUMMY_RELEASE_NUMBER = 999;
+
+		europePMC = EuropePMC.getInstance(DUMMY_OUTPUT_DIR, DUMMY_RELEASE_NUMBER);
+	}
+
+	@BeforeAll
+	public static void createEuropePMCLink() {
+		final String DUMMY_PATHWAY_DISPLAY_NAME = "Cell Cycle";
+		final String DUMMY_PATHWAY_STABLE_ID = "R-HSA-1640170";
+		final String DUMMY_PUBMED_IDENTIFIER = "9153395";
+
+		europePMCLink = new EuropePMC.EuropePMCLink(
+			DUMMY_PATHWAY_DISPLAY_NAME,
+			DUMMY_PATHWAY_STABLE_ID,
+			DUMMY_PUBMED_IDENTIFIER
+		);
+	}
+
+	@Test
+	public void properEuropePMCProfileXML() {
+		final String REACTOME_DESCRIPTION =
+			"Reactome is a free, open-source, curated and peer-reviewed pathway database.";
+
+		final String EXPECTED_EUROPE_PMC_PROFILE_XML = String.join(System.lineSeparator(),
+			"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>",
+			"<providers>",
+			"    <provider>",
+			"        <id>1925</id>",
+			"        <resourceName>Reactome</resourceName>",
+			"        <description>" + REACTOME_DESCRIPTION + "</description>",
+			"        <email>help@reactome.org</email>",
+			"    </provider>",
+			"</providers>"
+		).concat(System.lineSeparator());
+
+		assertThat(europePMC.getEuropePMCProfileXML(), is(equalTo(EXPECTED_EUROPE_PMC_PROFILE_XML)));
+	}
+
+	@Test
+	public void properEuropePMCLinksXML() {
+		final String EXPECTED_EUROPE_PMC_LINKS_XML = String.join(System.lineSeparator(),
+			"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>",
+			"<links>",
+			"    <link providerId=\"1925\">",
+			"        <resource>",
+			"            <title>p53-Dependent G1 DNA Damage Response</title>",
+			"            <url>https://reactome.org/content/detail/R-HSA-69563</url>",
+			"        </resource>",
+			"        <record>",
+			"            <source>MED</source>",
+			"            <id>9153395</id>",
+			"        </record>",
+			"    </link>",
+			"</links>"
+		).concat(System.lineSeparator());
+
+		DummyGraphDBServer dummyGraphDBServer = DummyGraphDBServer.getInstance();
+		dummyGraphDBServer.initializeNeo4j();
+		dummyGraphDBServer.populateDummyGraphDB();
+
+		String europePMCLinksXML = europePMC.getEuropePMCLinksXML(dummyGraphDBServer.getSession());
+		assertThat(europePMCLinksXML, is(equalTo(EXPECTED_EUROPE_PMC_LINKS_XML)));
+
+	}
+
+	@Test
+	public void europePMCLinkEqualForSameObject() {
+		assertThat(europePMCLink, is(equalTo(europePMCLink)));
+	}
+
+	@Test
+	public void europePMCLinkNotEqualForDifferentObjectType() {
+		assertThat(europePMCLink, is(not(equalTo("String object"))));
+	}
+
+
+	@Test
+	public void properEuropePMCLinkToString() {
+		final String EXPECTED_EUROPE_PMC_LINK_TO_STRING = "Europe PMC Link: Cell Cycle (R-HSA-1640170) PubMed 9153395";
+
+		assertThat(europePMCLink.toString(), is(equalTo(EXPECTED_EUROPE_PMC_LINK_TO_STRING)));
+	}
 
 	@Test
 	public void emptySetOfEuropePMCLinksFromEmptyDatabase() {
@@ -51,7 +139,7 @@ public class EuropePMCTest {
 		final String PATHWAY_URL = CONTENT_DETAIL_URL + PATHWAY_STABLE_ID;
 		final String PUBMED_ID = "9153395";
 
-		String expectedXML = String.format(
+		final String EXPECTED_XML = String.format(
 			"<link providerId=\"1925\">" +
 			"<resource><title>%s</title><url>%s</url></resource>" +
 			"<record><source>MED</source><id>%s</id></record>" +
@@ -67,7 +155,7 @@ public class EuropePMCTest {
 		Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 		Element europePMCLinkXML = europePMCLink.getLinkXML(document);
 
-		assertThat(getElementAsString(europePMCLinkXML), equalTo(expectedXML));
+		assertThat(getElementAsString(europePMCLinkXML), equalTo(EXPECTED_XML));
 	}
 
 	// Taken from https://stackoverflow.com/a/19701727

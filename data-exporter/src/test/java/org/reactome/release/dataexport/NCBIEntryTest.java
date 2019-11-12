@@ -6,31 +6,22 @@ import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.reactome.release.dataexport.DbIdGenerator.getNextDBID;
 
 public class NCBIEntryTest {
-
-	private final String[] uniprotAccessions = { "Q12345", "P23456" };
-	private final String eventName = "test event";
-	private final String eventStId = "R-HSA-54321";
 	private NCBIEntry entry1;
 	private NCBIEntry entry2;
-	private ReactomeEvent event;
 
 	@BeforeEach
-	public void createFixtures() {
-		entry1 = new NCBIEntry(
-			1L,
-			uniprotAccessions[0],
-			"UniProt:" + uniprotAccessions[0],
-			new HashSet<>(Arrays.asList("1", "2"))
-		);
-		entry2 = new NCBIEntry(
-			2L,
-			uniprotAccessions[1],
-			"UniProt:" + uniprotAccessions[1],
-			new HashSet<>(Arrays.asList("3", "4")));
-		event = new ReactomeEvent(1L, eventName, eventStId);
+	public void createTestFixtures() {
+		final String FIRST_UNIPROT_ACCESSION = "Q12345";
+		final Set<String> FIRST_DUMMY_SET_OF_NCBI_IDS = new HashSet<>(Arrays.asList("1", "2"));
 
+		final String SECOND_UNIPROT_ACCESSION = "P23456";
+		final Set<String> SECOND_DUMMY_SET_OF_NCBI_IDS = new HashSet<>(Arrays.asList("3", "4"));
+
+		entry1 = NCBIEntryTestFixture.createNCBIEntry(FIRST_UNIPROT_ACCESSION, FIRST_DUMMY_SET_OF_NCBI_IDS);
+		entry2 = NCBIEntryTestFixture.createNCBIEntry(SECOND_UNIPROT_ACCESSION, SECOND_DUMMY_SET_OF_NCBI_IDS);
 	}
 
 	@Test
@@ -64,7 +55,7 @@ public class NCBIEntryTest {
 
 		List<NCBIEntry> ncbiEntries = NCBIEntry.getUniProtToNCBIGeneEntries(dummyGraphDBServer.getSession());
 
-		assertThat(ncbiEntries, contains(expectedNCBIEntry));
+		assertThat(ncbiEntries, hasItem(expectedNCBIEntry));
 	}
 
 	@Test
@@ -81,24 +72,63 @@ public class NCBIEntryTest {
 	@Test
 	public void getEventLinkXML() {
 		final String NCBI_GENE_ID = "12345";
+		final List<String> EXPECTED_STRINGS = Arrays.asList(
+			"<ObjId>" + NCBI_GENE_ID + "</ObjId>",
+			"<Base>&event.base.url;</Base>",
+			"<Rule>" + NCBIEntryTestFixture.EVENT_STABLE_ID + "</Rule>",
+			"<UrlName>Reactome Event:" + NCBIEntryTestFixture.EVENT_NAME
+		);
 
-		String eventLinkXML = entry1.getEventLinkXML(NCBI_GENE_ID, event);
+		String eventLinkXML = entry1.getEventLinkXML(NCBI_GENE_ID, NCBIEntryTestFixture.EVENT);
 
-		assertThat(eventLinkXML, containsString("<ObjId>" + NCBI_GENE_ID + "</ObjId>"));
-		assertThat(eventLinkXML, containsString("<Base>&event.base.url;</Base>"));
-		assertThat(eventLinkXML, containsString("<Rule>" + eventStId + "</Rule>"));
-		assertThat(eventLinkXML, containsString("<UrlName>Reactome Event:" + eventName));
+		for (String expectedString : EXPECTED_STRINGS) {
+			assertThat(eventLinkXML, containsString(expectedString));
+		}
 	}
 
 	@Test
 	public void getEntityLinkXML() {
 		final String NCBI_GENE_ID = "12345";
+		final List<String> EXPECTED_STRINGS = Arrays.asList(
+			"<ObjId>" + NCBI_GENE_ID + "</ObjId>",
+			"<Base>&entity.base.url;</Base>",
+			"<Rule>" + entry1.getUniprotAccession() + "</Rule>",
+			"<UrlName>Reactome Entity:" + entry1.getUniprotAccession()
+		);
 
 		String entityLinkXML = entry1.getEntityLinkXML(NCBI_GENE_ID);
 
-		assertThat(entityLinkXML, containsString("<ObjId>" + NCBI_GENE_ID + "</ObjId>"));
-		assertThat(entityLinkXML, containsString("<Base>&entity.base.url;</Base>"));
-		assertThat(entityLinkXML, containsString("<Rule>" + uniprotAccessions[0] + "</Rule>"));
-		assertThat(entityLinkXML, containsString("<UrlName>Reactome Entity:" + uniprotAccessions[0]));
+		for (String expectedString : EXPECTED_STRINGS) {
+			assertThat(entityLinkXML, containsString(expectedString));
+		}
+	}
+
+	private static class NCBIEntryTestFixture {
+		private NCBIEntry entry;
+
+		private static final String EVENT_NAME = "test event";
+		private static final String EVENT_STABLE_ID = "R-HSA-54321";
+		private static final ReactomeEvent EVENT = new ReactomeEvent(getNextDBID(), EVENT_NAME, EVENT_STABLE_ID);
+
+		private NCBIEntryTestFixture(String uniProtAccession, Set<String> ncbiIds) {
+			entry = new NCBIEntry(
+				getNextDBID(),
+				uniProtAccession,
+				createDummyDisplayName(uniProtAccession),
+				ncbiIds
+			);
+		}
+
+		public static NCBIEntry createNCBIEntry(String uniProtAccession, Set<String> ncbiIds) {
+			return new NCBIEntryTestFixture(uniProtAccession, ncbiIds).getNCBIEntry();
+		}
+
+		private NCBIEntry getNCBIEntry() {
+			return this.entry;
+		}
+
+		private String createDummyDisplayName(String uniProtAccession) {
+			return "UniProt:" + uniProtAccession + " GENE_NAME";
+		}
 	}
 }

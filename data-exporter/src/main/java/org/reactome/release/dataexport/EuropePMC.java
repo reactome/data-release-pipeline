@@ -108,7 +108,7 @@ public class EuropePMC {
 	 * Produces Europe PMC profile XML content
 	 * @return XML string describing Reactome as a data provider to Europe PMC
 	 */
-	private String getEuropePMCProfileXML() {
+	String getEuropePMCProfileXML() {
 		Document document;
 		try {
 			document = createXMLDocument();
@@ -159,7 +159,7 @@ public class EuropePMC {
 	 * @return XML String describing the relationships between Reactome pathways and literature references in Europe
 	 * PMC XML format (https://europepmc.org/LabsLink)
 	 */
-	private String getEuropePMCLinksXML(Session graphDBSession) {
+	String getEuropePMCLinksXML(Session graphDBSession) {
 		Document document;
 		try {
 			document = createXMLDocument();

@@ -22,17 +22,24 @@ public class Main {
         Properties props = new Properties();
         props.load(new FileInputStream(pathToConfig));
 
-        //Set up DB adaptor
-        String username = props.getProperty("release.database.user");
-        String password = props.getProperty("release.database.password");
-        String host = props.getProperty("release.database.host");
-        int port = Integer.valueOf(props.getProperty("release.database.port"));
-
+        //Set up DB adaptors
+        String releaseUsername = props.getProperty("release.database.user");
+        String releasePassword = props.getProperty("release.database.password");
+        String releaseHost = props.getProperty("release.database.host");
+        int releasePort = Integer.valueOf(props.getProperty("release.database.port"));
         String releaseCurrent = props.getProperty("release_current.name");
 
-        MySQLAdaptor dbAdaptor = new MySQLAdaptor(host, releaseCurrent, username, password, port);
+        String curatorUsername = props.getProperty("curator.database.user");
+        String curatorPassword = props.getProperty("curator.database.password");
+        String curatorHost = props.getProperty("curator.database.host");
+        int curatorPort = Integer.valueOf(props.getProperty("curator.database.port"));
+        String curatorDatabase = props.getProperty("curator.database.name");
+
+        MySQLAdaptor dbAdaptor = new MySQLAdaptor(releaseHost, releaseCurrent, releaseUsername, releasePassword, releasePort);
+        MySQLAdaptor dbAdaptorCurator = new MySQLAdaptor(curatorHost, curatorDatabase, curatorUsername, curatorPassword, curatorPort);
 
         logger.info("Executing post-step checks");
-        PostStepChecks.performStableIdentifierHistoryQA(dbAdaptor);
+        PostStepChecks.performStableIdentifierHistoryQA(dbAdaptor, dbAdaptorCurator);
+        logger.info("Finished post-step checks");
     }
 }

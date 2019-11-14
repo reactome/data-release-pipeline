@@ -51,7 +51,7 @@ pipeline {
 			steps{
 				script{
 					dir('update-stable-ids'){
-						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
+						withCredentials([usernamePassword(credentialsId: 'mySQLCuratorUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
 							def central_before_update_stable_ids_dump = "${env.GK_CENTRAL}_${currentRelease}_before_st_id.dump"
 							sh "mysqldump -u$user -p$pass -h${env.CURATOR_SERVER} ${env.GK_CENTRAL} > $central_before_update_stable_ids_dump"
 							sh "gzip -f $central_before_update_stable_ids_dump"
@@ -103,12 +103,14 @@ pipeline {
 				script{
 					dir('update-stable-ids'){
 						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
-							def slice_current_after_update_stable_ids_dump = "${env.SLICE_CURRENT}_${currentRelease}_after_st_id.dump"
-							def central_after_update_stable_ids_dump = "${env.GK_CENTRAL}_${currentRelease}_after_st_id.dump"
-							sh "mysqldump -u$user -p$pass ${env.SLICE_CURRENT} > $slice_current_after_update_stable_ids_dump"
-							sh "gzip -f $slice_current_after_update_stable_ids_dump"
-							sh "mysqldump -u$user -p$pass -h${env.CURATOR_SERVER} ${env.GK_CENTRAL} > $central_after_update_stable_ids_dump"
-							sh "gzip -f $central_after_update_stable_ids_dump"
+							withCredentials([usernamePassword(credentialsId: 'mySQLCuratorUsernamePassword', passwordVariable: 'curPass', usernameVariable: 'curUser')]){
+								def slice_current_after_update_stable_ids_dump = "${env.SLICE_CURRENT}_${currentRelease}_after_st_id.dump"
+								def central_after_update_stable_ids_dump = "${env.GK_CENTRAL}_${currentRelease}_after_st_id.dump"
+								sh "mysqldump -u$user -p$pass ${env.SLICE_CURRENT} > $slice_current_after_update_stable_ids_dump"
+								sh "gzip -f $slice_current_after_update_stable_ids_dump"
+								sh "mysqldump -u$curUser -p$curPass -h${env.CURATOR_SERVER} ${env.GK_CENTRAL} > $central_after_update_stable_ids_dump"
+								sh "gzip -f $central_after_update_stable_ids_dump"
+							}
 						}
 					}
 				}

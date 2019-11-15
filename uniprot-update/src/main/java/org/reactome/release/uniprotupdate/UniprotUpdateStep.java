@@ -27,23 +27,22 @@ public class UniprotUpdateStep extends ReleaseStep {
 	public void executeStep(Properties props) throws Exception {
 		this.setTestModeFromProperties(props);
 
-		// Extract property values
-		String pathToUniprotFile = props.getProperty("pathToUniprotFile");
-		String pathToUnreviewedUniprotIDsFile = props.getProperty("pathToUnreviewedUniprotIDsFile");
+		// Extract property values for MySQL adaptor
 		MySQLAdaptor adaptor = getMySQLAdaptorFromProperties(props);
-		long personID = Long.parseLong(props.getProperty("person.id"));
 
 		// Start UniProt Update database transaction
 		startTransaction(adaptor, SAVEPOINT_NAME);
 
 		// Create instance edit
+		long personID = Long.parseLong(props.getProperty("person.id"));
 		String creatorName = this.getClass().getName();
 		GKInstance instanceEdit = InstanceEditUtils.createInstanceEdit(adaptor, personID, creatorName);
 
-		UniprotUpdater updater = new UniprotUpdater();
 		// Extract data from UniProt XML
+		String pathToUniprotFile = props.getProperty("pathToUniprotFile");
 		List<UniprotData> uniprotData = ProcessUniprotXML.getDataFromUniprotFile(pathToUniprotFile, debugXML(props));
 
+		UniprotUpdater updater = new UniprotUpdater();
 		// Update UniProt ReferenceGeneProduct instances
 		updater.updateUniprotInstances(
 			adaptor,
@@ -58,6 +57,7 @@ public class UniprotUpdateStep extends ReleaseStep {
 		adaptor.commit();
 
 		// Delete obsolete instances
+		String pathToUnreviewedUniprotIDsFile = props.getProperty("pathToUnreviewedUniprotIDsFile");
 		InstancesDeleter deleter = new InstancesDeleter();
 		deleter.deleteObsoleteInstances(adaptor, pathToUnreviewedUniprotIDsFile);
 

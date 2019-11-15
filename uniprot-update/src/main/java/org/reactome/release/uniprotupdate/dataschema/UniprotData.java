@@ -10,12 +10,13 @@ import java.util.stream.Collectors;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
+import org.reactome.release.uniprotupdate.dataschema.chain.SequenceChain;
 
 @XmlRootElement(name="entry")
 @XmlType(name="entry", namespace="https://uniprot.org/uniprot")
 public class UniprotData {
 	private List<String> accessions;
-	private List<Chain> chains;
+	private List<SequenceChain> chains;
 	private List<Gene> genes;
 	private List<Isoform> isoforms;
 	private List<Keyword> keywords;
@@ -71,7 +72,7 @@ public class UniprotData {
 	 * @return List of Chain objects or an empty list if there are none
 	 */
 	@XmlElement(name="chain")
-	public List<Chain> getChains() {
+	public List<SequenceChain> getChains() {
 		if (chains == null) {
 			return new ArrayList<>();
 		}
@@ -83,7 +84,7 @@ public class UniprotData {
 	 * Sets the list of UniProt chains for this UniProt entry object
 	 * @param chains List of UniProt chains to assign to this UniProt entry object
 	 */
-	public void setChains(List<Chain> chains) {
+	public void setChains(List<SequenceChain> chains) {
 		this.chains = chains;
 	}
 

@@ -21,7 +21,6 @@ import org.gk.schema.InvalidAttributeValueException;
 import org.reactome.release.uniprotupdate.dataschema.GeneName;
 import org.reactome.release.uniprotupdate.dataschema.Gene;
 import org.reactome.release.uniprotupdate.dataschema.Isoform;
-import org.reactome.release.uniprotupdate.dataschema.Name;
 import org.reactome.release.uniprotupdate.dataschema.UniprotData;
 
 public abstract class AbstractDataProcessor
@@ -274,7 +273,7 @@ public abstract class AbstractDataProcessor
 	private List<String> getNewChains(UniprotData data) {
 		return data.getChains()
 			.stream()
-			.map(Chain::toString)
+			.map(Object::toString)
 			.collect(Collectors.toList());
 	}
 

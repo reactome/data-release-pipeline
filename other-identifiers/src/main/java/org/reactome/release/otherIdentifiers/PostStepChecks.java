@@ -46,11 +46,11 @@ public class PostStepChecks {
      * @param dba MySQLAdaptor
      * @param speciesInstance GKInstance pertaining to a specific species
      * @return The other identifier count, as an int.
-     * @throws Exception can be caused by errors interacting with the database using the db adaptor.
+     * @throws Exception can be caused by errors when attempting to retrieve ReferenceGeneProduct instances from the database.
      */
     private static long getRGPInstanceOtherIdentifierCount(MySQLAdaptor dba, GKInstance speciesInstance) throws Exception {
-        Collection<GKInstance> rgpInstances = dba.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceGeneProduct, ReactomeJavaConstants.species, "=", speciesInstance);
-        return getCountOfInstancesWithOtherIdentifiers(rgpInstances);
+            Collection<GKInstance> rgpInstances = dba.fetchInstanceByAttribute(ReactomeJavaConstants.ReferenceGeneProduct, ReactomeJavaConstants.species, "=", speciesInstance);
+            return getCountOfInstancesWithOtherIdentifiers(rgpInstances);
     }
 
     /**

@@ -10,13 +10,14 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({PostStepChecks.class})
@@ -65,22 +66,18 @@ public class PostStepChecksTest {
 
     @Test
     public void getCountOfInstancesWithOtherIdentifiersNullTest() {
-        try {
-            long otherIdentifierCount = PostStepChecks.getCountOfInstancesWithOtherIdentifiers(null);
-        } catch (Exception e) {
-            e.printStackTrace();
-            assertTrue(e.toString().contains("NullPointerException"));
-        }
+        NullPointerException thrown = assertThrows(
+                NullPointerException.class,
+                () -> PostStepChecks.getCountOfInstancesWithOtherIdentifiers(null));
+        assertThat(thrown.toString(), containsString("NullPointerException"));
     }
 
     @Test
     public void hasOtherIdentifiersNullTest() {
-        try {
-            PostStepChecks.hasOtherIdentifiers(null);
-        } catch(Exception e) {
-            e.printStackTrace();
-            assertTrue(e.getMessage().equals("Unable to retrieve other identifiers from RGP instance null"));
-        }
+            RuntimeException thrown = assertThrows(
+                    RuntimeException.class,
+                    () -> PostStepChecks.hasOtherIdentifiers(null));
+            assertThat(thrown.getMessage(), containsString("Unable to retrieve other identifiers from RGP instance"));
     }
 
     @Test

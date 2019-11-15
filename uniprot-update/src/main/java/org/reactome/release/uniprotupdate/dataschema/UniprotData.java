@@ -1,6 +1,6 @@
 package org.reactome.release.uniprotupdate.dataschema;
 
-import static org.reactome.release.uniprotupdate.dataschema.Name.primaryNamesFirst;
+import static org.reactome.release.uniprotupdate.dataschema.GeneName.primaryNamesFirst;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -276,7 +276,7 @@ public class UniprotData {
 			.stream()
 			.flatMap(gene -> gene.getNames().stream())
 			.sorted(primaryNamesFirst())
-			.map(Name::getValue)
+			.map(GeneName::getValue)
 			.collect(Collectors.toList());
 	}
 

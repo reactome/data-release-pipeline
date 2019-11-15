@@ -18,7 +18,7 @@ import org.gk.model.ReactomeJavaConstants;
 import org.gk.persistence.MySQLAdaptor;
 import org.gk.schema.InvalidAttributeException;
 import org.gk.schema.InvalidAttributeValueException;
-import org.reactome.release.uniprotupdate.dataschema.Chain;
+import org.reactome.release.uniprotupdate.dataschema.GeneName;
 import org.reactome.release.uniprotupdate.dataschema.Gene;
 import org.reactome.release.uniprotupdate.dataschema.Isoform;
 import org.reactome.release.uniprotupdate.dataschema.Name;
@@ -391,7 +391,7 @@ public abstract class AbstractDataProcessor
 	{
 		StringBuilder sb = new StringBuilder();
 		for (Gene gene : geneNames)
-		{
+			for (GeneName name : gene.getNames()) {
 			for (Name name : gene.getNames())
 			{
 				sb.append(name.getType()).append(" \"").append(name.getValue()).append("\", ");

@@ -12,6 +12,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import org.reactome.release.uniprotupdate.dataschema.chain.SequenceChain;
 
+/**
+ * Class representing a UniProt entry
+ * @author sshorser, jweiser
+ */
 @XmlRootElement(name="entry")
 @XmlType(name="entry", namespace="https://uniprot.org/uniprot")
 public class UniprotData {
@@ -282,22 +286,20 @@ public class UniprotData {
 	}
 
 	/**
-	 * Returns a list of all comments, as Strings, associated with this UniProt entry object
-	 * @return List of comment Strings or an empty list if there are none
+	 * Returns all comments associated with this UniProt entry object, as a concatenated String
+	 * @return All comments as a String or an empty String if there are none
 	 */
 	public String getFlattenedCommentsText() {
-		StringBuilder flattenedCommentsText = new StringBuilder();
-		if (this.commentTexts != null) {
-			for (CommentText comment : this.commentTexts) {
-				flattenedCommentsText
-				.append(comment.getType().toUpperCase())
-				.append(" ")
-				.append(comment.getText())
-				.append(" ");
-			}
+		if (this.commentTexts == null) {
+			return "";
 		}
+
+		return this.commentTexts
+			.stream()
+			.map(CommentText::toString)
+			.collect(Collectors.joining());
+
 		// TODO: move the bulk of this code to the setter method for commentTexts?
-		return flattenedCommentsText.toString().trim();
 	}
 
 	/**
@@ -305,14 +307,16 @@ public class UniprotData {
 	 * @return List of keyword Strings or an empty list if there are none
 	 */
 	public List<String> getFlattenedKeywords() {
-		List<String> flattenedKeywords = new ArrayList<>();
-		if (this.keywords != null) {
-			for (Keyword keyword : this.keywords) {
-				flattenedKeywords.add(keyword.getKeyword());
-			}
+		if (this.keywords == null) {
+			return new ArrayList<>();
 		}
+
+		return this.keywords
+			.stream()
+			.map(Keyword::getKeyword)
+			.collect(Collectors.toList());
+
 		// TODO: move the bulk of this code to the setter method for keywords?
-		return flattenedKeywords;
 	}
 
 	/**

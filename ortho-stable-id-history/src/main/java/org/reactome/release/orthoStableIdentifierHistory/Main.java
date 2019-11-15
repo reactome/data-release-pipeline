@@ -5,9 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.gk.persistence.MySQLAdaptor;
 
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.nio.file.Paths;
-import java.sql.SQLException;
 import java.util.Properties;
 
 public class Main {

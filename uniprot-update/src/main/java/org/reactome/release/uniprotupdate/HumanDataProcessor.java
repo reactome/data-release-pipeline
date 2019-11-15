@@ -22,34 +22,31 @@ public class HumanDataProcessor extends AbstractDataProcessor
 	 * @param referenceDNASequences - a map of ReferenceDNASequences, keyed by ENSEMBL Gene IDs
 	 * @param referenceGeneProducts - a list of ReferenceGeneProducts, keyed by accession.
 	 * @param genesOKWithENSEMBL - A set of Genes that are considered "OK" in ENSEMBL.
-	 * @param data - the UniprotData object to process.
-	 * @param geneList - a list of ENSEMBL Gene IDs for this UniprotData object.
-	 * @param accession - The accession
+	 * @param uniprotEntry - the UniprotData object to process.
 	 * @throws InvalidAttributeException
 	 * @throws Exception
 	 * @throws InvalidAttributeValueException
 	 */
 	void processHumanData(Map<String, GKInstance> referenceDNASequences, Map<String, GKInstance> referenceGeneProducts,
-		Set<String> genesOKWithENSEMBL, UniprotData data, List<String> geneList, String accession)
-			throws InvalidAttributeException, Exception, InvalidAttributeValueException
+		Set<String> genesOKWithENSEMBL, UniprotData uniprotEntry)
 	{
 		List<GKInstance> referenceDNASequencesForThisUniprot = new ArrayList<>();
 		// Will need a flattened list of geneNames.
 		List<String> geneNames = new ArrayList<>();
 		String primaryGeneName = "";
 
-		geneNames = data.getFlattenedGeneNames();
+		geneNames = uniprotEntry.getFlattenedGeneNames();
 		if (geneNames != null && !geneNames.isEmpty())
 		{
 			primaryGeneName = geneNames.get(0);
 		}
 
 		// Report when there are multiple gene names.
-		if (data.getGenes() != null && data.getGenes().size() > 1)
+		if (uniprotEntry.getGenes() != null && uniprotEntry.getGenes().size() > 1)
 		{
 			referenceDNASequenceLog.info(
-				"Accession " + data.getAccessions().toString() + " has multiple gene names: " +
-				geneNamesListToString(data.getGenes())
+				"Accession " + uniprotEntry.getAccessions().toString() + " has multiple gene names: " +
+				geneNamesListToString(uniprotEntry.getGenes())
 			);
 		}
 		// For each ENSEMBL Gene ID that is in this chunk of Data.
@@ -66,9 +63,9 @@ public class HumanDataProcessor extends AbstractDataProcessor
 		// In this case, there are two different dbReference entities that refer to the same ENSEMBL Gene ID.
 		// So that's why I have added the .stream().distinct(...)
 		// to the for-loop.
-		if (data.getEnsembleGeneIDs() != null)
+		if (uniprotEntry.getEnsembleGeneIDs() != null)
 		{
-			for (String ensemblGeneID : geneList)
+			for (String ensemblGeneID : uniprotEntry.getUniqueEnsEMBLGeneIds())
 			{
 //				boolean speciesModified = false;
 				// Check to see if the ENSEMBL ID (Remember: the XSL only selects for "Ensembl" gene names)
@@ -76,13 +73,13 @@ public class HumanDataProcessor extends AbstractDataProcessor
 				if (referenceDNASequences.containsKey(ensemblGeneID))
 				{
 					this.processForExistingENSEMBLID(
-						referenceDNASequences, data, referenceDNASequencesForThisUniprot, geneNames, ensemblGeneID
+						referenceDNASequences, uniprotEntry, referenceDNASequencesForThisUniprot, geneNames, ensemblGeneID
 					);
 				}
 				// if the gene ID was NOT in the ReferenceDNASequences map, we may need to add it to the database.
 				else
 				{
-					if (geneList.size() > 1 && !genesOKWithENSEMBL.contains(ensemblGeneID))
+					if (uniprotEntry.getUniqueEnsEMBLGeneIds().size() > 1 && !genesOKWithENSEMBL.contains(ensemblGeneID))
 					{
 						referenceDNASequenceLog.info(
 							"{} is not a primary/canonical gene -- skipping creation of ReferenceDNASequence",
@@ -104,37 +101,43 @@ public class HumanDataProcessor extends AbstractDataProcessor
 					}
 				}
 
-				if (referenceGeneProducts.containsKey(accession))
+				String primaryAccession = uniprotEntry.getPrimaryAccession();
+				if (referenceGeneProducts.containsKey(primaryAccession))
 				{
-					GKInstance referenceGeneProduct = referenceGeneProducts.get(accession);
+					GKInstance referenceGeneProduct = referenceGeneProducts.get(primaryAccession);
 					if (!referenceGeneProduct.getSchemClass().isa(ReactomeJavaConstants.ReferenceIsoform))
 					{
 
-						this.updateReferenceGeneProduct(referenceGeneProduct, data, accession);
+						this.updateReferenceGeneProduct(referenceGeneProduct, uniprotEntry, primaryAccession);
 					}
 				}
 				else
 				{
-					// create new RefGeneProd...
-					InstanceCreator creator = new InstanceCreator(adaptor, instanceEdit);
-					GKInstance referenceGeneProduct = creator.createNewReferenceGeneProduct(accession);
-					Long newRefGeneProductDBID = adaptor.storeInstance(referenceGeneProduct);
-					updateInstanceWithData(referenceGeneProduct, data);
-					referenceGeneProduct.setAttributeValue(
-						ReactomeJavaConstants.referenceGene,
-						referenceDNASequencesForThisUniprot
-					);
-					adaptor.updateInstanceAttribute(referenceGeneProduct, ReactomeJavaConstants.referenceGene);
-					InstanceDisplayNameGenerator.setDisplayName(referenceGeneProduct);
-					adaptor.updateInstanceAttribute(referenceGeneProduct, ReactomeJavaConstants._displayName);
-					uniprotRecordsLog.info(
-						"New UniProt: \"{}\" {} {}",
-						referenceGeneProduct.toString(), accession, newRefGeneProductDBID
-					);
-					addIsoformsIfNecessary(data, accession, referenceGeneProduct);
+
 				}
 			}
 		}
+	}
+
+	private void createNewReferenceGeneProduct(
+		UniprotData uniprotEntry, List<GKInstance> referenceDNASequencesForThisUniprot
+	) throws Exception {
+		InstanceCreator creator = new InstanceCreator(adaptor, instanceEdit);
+		GKInstance referenceGeneProduct = creator.createNewReferenceGeneProduct(uniprotEntry.getPrimaryAccession());
+		Long newRefGeneProductDBID = adaptor.storeInstance(referenceGeneProduct);
+		updateInstanceWithData(referenceGeneProduct, uniprotEntry);
+		referenceGeneProduct.setAttributeValue(
+			ReactomeJavaConstants.referenceGene,
+			referenceDNASequencesForThisUniprot
+		);
+		adaptor.updateInstanceAttribute(referenceGeneProduct, ReactomeJavaConstants.referenceGene);
+		InstanceDisplayNameGenerator.setDisplayName(referenceGeneProduct);
+		adaptor.updateInstanceAttribute(referenceGeneProduct, ReactomeJavaConstants._displayName);
+		uniprotRecordsLog.info(
+			"New UniProt: \"{}\" {} {}",
+			referenceGeneProduct.toString(), uniprotEntry.getPrimaryAccession(), newRefGeneProductDBID
+		);
+		addIsoformsIfNecessary(uniprotEntry, referenceGeneProduct);
 	}
 
 	/**

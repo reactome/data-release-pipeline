@@ -4,8 +4,10 @@ import static org.reactome.release.uniprotupdate.dataschema.GeneName.primaryName
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -228,6 +230,10 @@ public class UniprotData {
 	 */
 	public void setRecommendedName(String recommendedName) {
 		this.recommendedName = recommendedName;
+	}
+
+	public Set<String> getUniqueEnsEMBLGeneIds() {
+		return new HashSet<>(getEnsembleGeneIDs());
 	}
 
 	/**

@@ -22,34 +22,34 @@ public class NonHumanDataProcessor extends AbstractDataProcessor
 	 * Process data elements whose species is not human.
 	 * @param referenceGeneProducts - a reference list of ReferenceGeneProducts
 	 * @param data - a Data element. This is an object that is produced by reading the Uniprot XML file.
-	 * @param accession - The Uniprot accession.
 	 * @throws InvalidAttributeException
 	 * @throws InvalidAttributeValueException
 	 * @throws Exception
 	 */
-	void processNonHumanData(Map<String, GKInstance> referenceGeneProducts, UniprotData data, String accession)
+	void processNonHumanData(Map<String, GKInstance> referenceGeneProducts, UniprotData data)
 		throws InvalidAttributeException, InvalidAttributeValueException, Exception
 	{
-		if (!referenceGeneProducts.containsKey(accession))
+		String primaryAccession = data.getPrimaryAccession();
+		if (!referenceGeneProducts.containsKey(primaryAccession))
 		{
 			InstanceCreator creator = new InstanceCreator(adaptor, instanceEdit);
-			GKInstance newRefGeneProduct = creator.createNewReferenceGeneProduct(accession);
+			GKInstance newRefGeneProduct = creator.createNewReferenceGeneProduct(primaryAccession);
 			adaptor.storeInstance(newRefGeneProduct);
 			this.updateInstanceWithData(newRefGeneProduct, data);
 			adaptor.updateInstanceAttribute(newRefGeneProduct, ReactomeJavaConstants.referenceGene);
 			InstanceDisplayNameGenerator.generateDisplayName(newRefGeneProduct);
-			addIsoformsIfNecessary(data, accession, newRefGeneProduct);
+			addIsoformsIfNecessary(data, primaryAccession, newRefGeneProduct);
 			uniprotRecordsLog.info(
 				"New UniProt: \"{}\" {} {}",
-				newRefGeneProduct.toString(), accession, newRefGeneProduct.getDBID()
+				newRefGeneProduct.toString(), primaryAccession, newRefGeneProduct.getDBID()
 			);
 		}
 		else
 		{
-			GKInstance referenceGeneProduct = referenceGeneProducts.get(accession);
+			GKInstance referenceGeneProduct = referenceGeneProducts.get(primaryAccession);
 			if (!referenceGeneProduct.getSchemClass().isa(ReactomeJavaConstants.ReferenceIsoform))
 			{
-				this.updateReferenceGeneProduct(referenceGeneProduct, data, accession);
+				this.updateReferenceGeneProduct(referenceGeneProduct, data, primaryAccession);
 			}
 		}
 	}

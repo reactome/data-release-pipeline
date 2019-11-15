@@ -1,5 +1,6 @@
 package org.reactome.release.uniprotupdate;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.gk.model.GKInstance;
@@ -22,11 +23,10 @@ public class UniprotUpdater
 {
 	private static final Logger logger = LogManager.getLogger();
 	private static final int SECONDS_UNTIL_WRITING_TO_LOG = 30;
-	private long recordsProcessed = 0;
 
 	/**
 	 * Updates UniProt instances.
-	 * @param uniprotData - The uniprot data that was extracted from the XML file.
+	 * @param uniprotEntries - The uniprot data that was extracted from the XML file.
 	 * This will be a list of UniprotData objects, each object representing an &lt;entry/&gt; entity from the file.
 	 * @param referenceDNASequences - A map of ReferenceDNASequence objects, keyed by their Identifier
 	 * (ReferenceDNASequences without an identifier should not be in this list).
@@ -37,75 +37,61 @@ public class UniprotUpdater
 	 * @throws Exception
 	 */
 	void updateUniprotInstances(
-		MySQLAdaptor adaptor, List<UniprotData> uniprotData,
+		MySQLAdaptor adaptor,
+		List<UniprotData> uniprotEntries,
 		Map<String, GKInstance> referenceDNASequences,
 		Map<String, GKInstance> referenceGeneProducts,
 		Map<String, GKInstance> referenceIsoforms,
 		GKInstance instanceEdit
 	) throws Exception
 	{
-		Set<String> genesOKWithENSEMBL = ENSEMBLQueryUtil.checkGenesWithENSEMBL(uniprotData, HOMO_SAPIENS);
+		Set<String> genesOKWithENSEMBL = ENSEMBLQueryUtil.checkGenesWithENSEMBL(uniprotEntries, HOMO_SAPIENS);
 
-		Map<String, List<String>> primaryToSecondaryAccessions = new HashMap<>();
-		long startTime = System.currentTimeMillis();
-		for (UniprotData data : uniprotData)
-		{
-			if (secondsElapsedSince(startTime) > SECONDS_UNTIL_WRITING_TO_LOG) {
-				logger.info("{} uniprot records processed ", recordsProcessed);
-				startTime = System.currentTimeMillis();
-			}
-			// Should each pass through this loop be a single transaction?
-			// This might work well if this loop is run in parallel...
-			// first, let's make sure this piece of data is for a species that we can update via Uniprot Update.
-			if (SPECIES_TO_UPDATE.contains(data.getScientificName()))
-			{
-				// Update secondary accessions
-				String primaryAccession = data.getAccessions().get(0);
-				List<String> secondaryAccessions = data.getAccessions().subList(1, data.getAccessions().size());
-				if (primaryToSecondaryAccessions.containsKey(primaryAccession))
-				{
-					primaryToSecondaryAccessions.get(primaryAccession).addAll(secondaryAccessions);
-				}
-				else
-				{
-					primaryToSecondaryAccessions.put(primaryAccession, secondaryAccessions);
-				}
+		AtomicInteger recordsProcessed = new AtomicInteger();
 
-				// for human data, we may need to update a ReferenceDNASequence.
-				if (data.getScientificName().equals(HOMO_SAPIENS))
-				{
-					HumanDataProcessor processor = new HumanDataProcessor(adaptor, instanceEdit);
-					List<String> geneList = getGeneList(data);
-					processor.processHumanData(
-						referenceDNASequences,
-						referenceGeneProducts,
-						genesOKWithENSEMBL,
-						data,
-						geneList,
-						primaryAccession
-					);
+		uniprotEntries.stream()
+			.filter(uniprotEntry -> SPECIES_TO_UPDATE.contains(uniprotEntry.getScientificName()))
+			.forEach(uniprotEntry -> {
+
+				updateUniProtInstance(
+					adaptor,
+					uniprotEntry,
+					genesOKWithENSEMBL,
+					referenceDNASequences,
+					referenceGeneProducts,
+					referenceIsoforms,
+					instanceEdit
+				);
+
+				if (recordsProcessed.getAndIncrement() % 100 == 0) {
+					logger.info("{} uniprot records processed ", recordsProcessed);
 				}
-				else // Not human, but still need to process it...
-				{
-					NonHumanDataProcessor processor = new NonHumanDataProcessor(adaptor, instanceEdit);
-					processor.processNonHumanData(referenceGeneProducts, data, primaryAccession);
-				}
-			}
-			recordsProcessed += 1;
+			});
+	}
+
+	private void updateUniProtInstance(
+		MySQLAdaptor adaptor,
+		UniprotData uniprotEntry,
+		Set<String> genesOKWithENSEMBL,
+		Map<String, GKInstance> referenceDNASequences,
+		Map<String, GKInstance> referenceGeneProducts,
+		Map<String, GKInstance> referenceIsoforms,
+		GKInstance instanceEdit
+	) {
+		// for human data, we may need to update a ReferenceDNASequence.
+		if (uniprotEntry.getScientificName().equals(HOMO_SAPIENS)) {
+			HumanDataProcessor processor = new HumanDataProcessor(adaptor, instanceEdit);
+			processor.processHumanData(
+				referenceDNASequences,
+				referenceGeneProducts,
+				genesOKWithENSEMBL,
+				uniprotEntry
+			);
+		} else { // Not human, but still need to process it...
+			NonHumanDataProcessor processor = new NonHumanDataProcessor(adaptor, instanceEdit);
+			processor.processNonHumanData(referenceGeneProducts, uniprotEntry);
 		}
 	}
 
-	private long secondsElapsedSince(long timePoint)
-	{
-		return (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - timePoint));
-	}
 
-	private List<String> getGeneList(UniprotData data)
-	{
-		List<String> geneList = new ArrayList<>();
-		if (data.getEnsembleGeneIDs()!=null) {
-			geneList = data.getEnsembleGeneIDs().stream().distinct().collect(Collectors.toList());
-		}
-		return geneList;
-	}
 }

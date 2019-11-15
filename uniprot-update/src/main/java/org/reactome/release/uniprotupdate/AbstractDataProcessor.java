@@ -402,23 +402,16 @@ public abstract class AbstractDataProcessor
 	 * Will check to see if a UniprotData object has any isoforms, and if so it will create
 	 * new ones or update existing ones in the database.
 	 * @param data - The UniprotData object.
-	 * @param accession - The Uniprot accession.
 	 * @param newRefGeneProduct - This method usually gets called when a new ReferenceGeneProduct has been created.
 	 * That RGP should be passed in here.
 	 * @throws InvalidAttributeException
 	 * @throws InvalidAttributeValueException
 	 * @throws Exception
 	 */
-	void addIsoformsIfNecessary(UniprotData data, String accession, GKInstance newRefGeneProduct)
-		throws InvalidAttributeException, InvalidAttributeValueException, Exception
-	{
-		// add Isoforms if available...
-		if (data.getIsoforms() != null)
-		{
-			for (Isoform isoform : data.getIsoforms())
-			{
-				createOrUpdateIsoform(accession, newRefGeneProduct, isoform);
-			}
+	void addIsoformsIfNecessary(UniprotData data, GKInstance newRefGeneProduct)
+		throws InvalidAttributeException, InvalidAttributeValueException, Exception {
+		for (Isoform isoform : data.getIsoforms()) {
+			createOrUpdateIsoform(data.getPrimaryAccession(), newRefGeneProduct, isoform);
 		}
 	}
 

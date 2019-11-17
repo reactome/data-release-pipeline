@@ -8,42 +8,49 @@ import org.gk.schema.InvalidAttributeException;
 import org.gk.schema.InvalidAttributeValueException;
 import org.reactome.release.uniprotupdate.dataschema.UniprotData;
 
+import java.io.IOException;
 import java.util.*;
 
-public class HumanDataProcessor extends AbstractDataProcessor
-{
-	public HumanDataProcessor(MySQLAdaptor adaptor, GKInstance instanceEdit)
-	{
+import static org.reactome.release.uniprotupdate.UniprotConstants.HOMO_SAPIENS;
+
+class HumanDataProcessor extends AbstractDataProcessor {
+	private Set<String> genesOKWithENSEMBL;
+
+	HumanDataProcessor(MySQLAdaptor adaptor, GKInstance instanceEdit, List<UniprotData> uniprotData) {
+		this(adaptor, instanceEdit);
+		try {
+			this.genesOKWithENSEMBL = ENSEMBLQueryUtil.checkGenesWithENSEMBL(uniprotData, HOMO_SAPIENS);
+		} catch (IOException e) {
+			logger.error("Unable to find canonical ENSEMBL genes for {}", HOMO_SAPIENS, e);
+			this.genesOKWithENSEMBL = new HashSet<>();
+		}
+	}
+
+	private HumanDataProcessor(MySQLAdaptor adaptor, GKInstance instanceEdit) {
 		super(adaptor, instanceEdit);
 	}
 
 	/**
 	 * Process UniprotData object whose species is Human.
-	 * @param referenceDNASequences - a map of ReferenceDNASequences, keyed by ENSEMBL Gene IDs
-	 * @param referenceGeneProducts - a list of ReferenceGeneProducts, keyed by accession.
-	 * @param genesOKWithENSEMBL - A set of Genes that are considered "OK" in ENSEMBL.
 	 * @param uniprotEntry - the UniprotData object to process.
 	 * @throws InvalidAttributeException
-	 * @throws Exception
 	 * @throws InvalidAttributeValueException
+	 * @throws Exception
 	 */
-	void processHumanData(Map<String, GKInstance> referenceDNASequences, Map<String, GKInstance> referenceGeneProducts,
-		Set<String> genesOKWithENSEMBL, UniprotData uniprotEntry)
-	{
+	@Override
+	protected void processData(UniprotData uniprotEntry)
+		throws InvalidAttributeException, InvalidAttributeValueException, Exception {
 		List<GKInstance> referenceDNASequencesForThisUniprot = new ArrayList<>();
 		// Will need a flattened list of geneNames.
-		List<String> geneNames = new ArrayList<>();
 		String primaryGeneName = "";
 
-		geneNames = uniprotEntry.getFlattenedGeneNames();
-		if (geneNames != null && !geneNames.isEmpty())
-		{
+		List<String> geneNames = uniprotEntry.getFlattenedGeneNames();
+		if (geneNames != null && !geneNames.isEmpty()) {
 			primaryGeneName = geneNames.get(0);
 		}
 
 		// Report when there are multiple gene names.
-		if (uniprotEntry.getGenes() != null && uniprotEntry.getGenes().size() > 1)
-		{
+		if (uniprotEntry.getGenes() != null && uniprotEntry.getGenes().size() > 1) {
 			referenceDNASequenceLog.info(
 				"Accession " + uniprotEntry.getAccessions().toString() + " has multiple gene names: " +
 				geneNamesListToString(uniprotEntry.getGenes())
@@ -70,10 +77,10 @@ public class HumanDataProcessor extends AbstractDataProcessor
 //				boolean speciesModified = false;
 				// Check to see if the ENSEMBL ID (Remember: the XSL only selects for "Ensembl" gene names)
 				// is in the list of ReferenceDNASequences.
-				if (referenceDNASequences.containsKey(ensemblGeneID))
+				if (getReferenceDNASequences(adaptor).containsKey(ensemblGeneID))
 				{
 					this.processForExistingENSEMBLID(
-						referenceDNASequences, uniprotEntry, referenceDNASequencesForThisUniprot, geneNames, ensemblGeneID
+						getReferenceDNASequences(adaptor), uniprotEntry, referenceDNASequencesForThisUniprot, geneNames, ensemblGeneID
 					);
 				}
 				// if the gene ID was NOT in the ReferenceDNASequences map, we may need to add it to the database.
@@ -102,18 +109,16 @@ public class HumanDataProcessor extends AbstractDataProcessor
 				}
 
 				String primaryAccession = uniprotEntry.getPrimaryAccession();
-				if (referenceGeneProducts.containsKey(primaryAccession))
+				if (getReferenceGeneProducts(adaptor).containsKey(primaryAccession))
 				{
-					GKInstance referenceGeneProduct = referenceGeneProducts.get(primaryAccession);
+					GKInstance referenceGeneProduct = getReferenceGeneProducts(adaptor).get(primaryAccession);
 					if (!referenceGeneProduct.getSchemClass().isa(ReactomeJavaConstants.ReferenceIsoform))
 					{
 
-						this.updateReferenceGeneProduct(referenceGeneProduct, uniprotEntry, primaryAccession);
+						this.updateReferenceGeneProduct(referenceGeneProduct, uniprotEntry);
 					}
-				}
-				else
-				{
-
+				} else {
+					createNewReferenceGeneProduct(uniprotEntry, referenceDNASequencesForThisUniprot);
 				}
 			}
 		}
@@ -137,7 +142,7 @@ public class HumanDataProcessor extends AbstractDataProcessor
 			"New UniProt: \"{}\" {} {}",
 			referenceGeneProduct.toString(), uniprotEntry.getPrimaryAccession(), newRefGeneProductDBID
 		);
-		addIsoformsIfNecessary(uniprotEntry, referenceGeneProduct);
+		new IsoformProcessor().updateOrCreateIsoforms(referenceGeneProduct, uniprotEntry);
 	}
 
 	/**
@@ -307,7 +312,4 @@ public class HumanDataProcessor extends AbstractDataProcessor
 			);
 		}
 	}
-
-
-
 }

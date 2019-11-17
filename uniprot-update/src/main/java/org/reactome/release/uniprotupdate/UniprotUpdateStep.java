@@ -15,8 +15,7 @@ import java.util.*;
 
 /**
  *
- * @author sshorser
- *
+ * @author sshorser, jweiser
  */
 public class UniprotUpdateStep extends ReleaseStep {
 	private static final String SAVEPOINT_NAME = "PRE_UNIPROT_UPDATE";
@@ -40,18 +39,11 @@ public class UniprotUpdateStep extends ReleaseStep {
 
 		// Extract data from UniProt XML
 		String pathToUniprotFile = props.getProperty("pathToUniprotFile");
-		List<UniprotData> uniprotData = ProcessUniprotXML.getDataFromUniprotFile(pathToUniprotFile, debugXML(props));
+		List<UniprotData> uniprotEntries = ProcessUniprotXML.getDataFromUniprotFile(pathToUniprotFile, debugXML(props));
 
-		UniprotUpdater updater = new UniprotUpdater();
+		UniprotUpdater updater = new UniprotUpdater(adaptor, uniprotEntries);
 		// Update UniProt ReferenceGeneProduct instances
-		updater.updateUniprotInstances(
-			adaptor,
-			uniprotData,
-			getReferenceDNASequences(adaptor),
-			getReferenceGeneProducts(adaptor),
-			getReferenceIsoforms(adaptor),
-			instanceEdit
-		);
+		updater.updateUniprotInstances(instanceEdit);
 
 		// Commit changes so far - deletion will be multithreaded, so each adaptor will need its own transaction.
 		adaptor.commit();
@@ -69,31 +61,12 @@ public class UniprotUpdateStep extends ReleaseStep {
 		logger.info("Done.");
 	}
 
-	private Map<String, GKInstance> getReferenceDNASequences(MySQLAdaptor adaptor) throws Exception {
-		return getIdentifierMappedCollectionOfType(ReactomeJavaConstants.ReferenceDNASequence, adaptor);
-	}
-
 	private Map<String, GKInstance> getReferenceGeneProducts(MySQLAdaptor adaptor) throws Exception {
 		return getIdentifierMappedCollectionOfType(ReactomeJavaConstants.ReferenceGeneProduct, "UniProt", adaptor);
 	}
 
 	private Map<String, GKInstance> getReferenceIsoforms(MySQLAdaptor adaptor) throws Exception {
 		return getIdentifierMappedCollectionOfType(ReactomeJavaConstants.ReferenceIsoform, "UniProt", adaptor);
-	}
-
-	/**
-	 * Gets a map of instances (keyed by identifier values) for a specified Reactome class name
-	 * @param reactomeClassName - the Reactome "type" to which the instances will be constrained.
-	 * @param adaptor - the database adaptor to use.
-	 * @return Map of String identifier to a GKInstance object containing the identifier
-	 * @throws Exception Thrown if unable to fetch instances by the provided reactomeClassName or if there is a problem
-	 * calling the cleanUp method on any MySQLAdaptor objects in the adaptorPool
-	 */
-	private Map<String, GKInstance> getIdentifierMappedCollectionOfType(
-		String reactomeClassName, MySQLAdaptor adaptor
-	) throws Exception {
-		final String ANY_REFERENCE_DATABASE_NAME = "";
-		return getIdentifierMappedCollectionOfType(reactomeClassName, ANY_REFERENCE_DATABASE_NAME, adaptor);
 	}
 
 	/**

@@ -64,7 +64,6 @@ pipeline {
 				}
 			}
 		}
-		*/
 		stage('Main: Old StableIdentifier Mapping'){
 			steps{
 				script{
@@ -76,6 +75,7 @@ pipeline {
 				}
 			}
 		}
+		*/
 		stage('Post: Run StableIdentifier QA'){
 			steps{
 				script{

@@ -63,7 +63,7 @@ pipeline {
 				}
 			}
 		}
-		stage('Main: Old StableIdentifier Mapping')}
+		stage('Main: Old StableIdentifier Mapping'){
 			steps{
 				script{
 					dir('ortho-stable-id-history'){

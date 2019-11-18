@@ -27,7 +27,6 @@ pipeline {
 				}
 			}
 		}
-		/*
 		stage('Setup: Back up DBs'){
 			steps{
 				script{
@@ -75,7 +74,6 @@ pipeline {
 				}
 			}
 		}
-		*/
 		stage('Post: Run StableIdentifier QA'){
 			steps{
 				script{

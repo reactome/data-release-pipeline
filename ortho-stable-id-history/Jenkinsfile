@@ -27,6 +27,7 @@ pipeline {
 				}
 			}
 		}
+		/*
 		stage('Setup: Back up DBs'){
 			steps{
 				script{
@@ -52,6 +53,7 @@ pipeline {
 				}
 			}
 		}
+		*/
 		stage('Main: Save StableIdentifier History'){
 			steps{
 				script{

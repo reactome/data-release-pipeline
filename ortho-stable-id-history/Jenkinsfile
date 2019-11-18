@@ -37,7 +37,7 @@ pipeline {
 							sh "mysqldump -u$user -p$pass ${env.RELEASE_CURRENT} > $release_current_before_ortho_stable_id_history_dump"
 							sh "gzip -f $release_current_before_ortho_stable_id_history_dump"
 							sh "mysqldump -u$user -p$pass ${env.STABLE_IDENTIFIERS} > $stable_identifiers_before_ortho_stable_id_history.dump"
-							sh "gzip -f $stable_identifiers_before_ortho_stable_id_history.dump"
+							sh "gzip -f $stable_identifiers_before_ortho_stable_id_history_dump"
 						}
 					}
 				}
@@ -95,7 +95,7 @@ pipeline {
 							sh "mysqldump -u$user -p$pass ${env.RELEASE_CURRENT} > $release_current_after_ortho_stable_id_history_dump"
 							sh "gzip -f $release_current_after_ortho_stable_id_history_dump"
 							sh "mysqldump -u$user -p$pass ${env.STABLE_IDENTIFIERS} > $stable_identifiers_after_ortho_stable_id_history.dump"
-							sh "gzip -f $stable_identifiers_after_ortho_stable_id_history.dump"
+							sh "gzip -f $stable_identifiers_after_ortho_stable_id_history_dump"
 						}
 					}
 				}

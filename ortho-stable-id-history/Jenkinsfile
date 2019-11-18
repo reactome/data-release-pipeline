@@ -104,7 +104,7 @@ pipeline {
 		stage('Post: Archive logs and backups'){
 			steps{
 				script{
-					dir('ortho-stable-id-history){
+					dir('ortho-stable-id-history'){
 						sh "mkdir -p archive/${currentRelease}/logs"
 						sh "mv --backup=numbered *_${currentRelease}_*.dump.gz archive/${currentRelease}/"
 						sh "gzip logs/*"

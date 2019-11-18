@@ -33,7 +33,7 @@ pipeline {
 					dir('ortho-stable-id-history'){
 						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
 							def release_current_before_ortho_stable_id_history_dump = "${env.RELEASE_CURRENT}_${currentRelease}_before_ortho_stable_id_history.dump"
-							def stable_identifiers_before_ortho_stable_id_history.dump = "${env.STABLE_IDENTIFIERS}_${currentRelease}_before_ortho_stable_id_history.dump"
+							def stable_identifiers_before_ortho_stable_id_history_dump = "${env.STABLE_IDENTIFIERS}_${currentRelease}_before_ortho_stable_id_history.dump"
 							sh "mysqldump -u$user -p$pass ${env.RELEASE_CURRENT} > $release_current_before_ortho_stable_id_history_dump"
 							sh "gzip -f $release_current_before_ortho_stable_id_history_dump"
 							sh "mysqldump -u$user -p$pass ${env.STABLE_IDENTIFIERS} > $stable_identifiers_before_ortho_stable_id_history.dump"
@@ -91,7 +91,7 @@ pipeline {
 					dir('ortho-stable-id-history'){
 						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
 							def release_current_after_ortho_stable_id_history_dump = "${env.RELEASE_CURRENT}_${currentRelease}_after_ortho_stable_id_history.dump"
-							def stable_identifiers_after_ortho_stable_id_history.dump = "${env.STABLE_IDENTIFIERS}_${currentRelease}_after_ortho_stable_id_history.dump"
+							def stable_identifiers_after_ortho_stable_id_history_dump = "${env.STABLE_IDENTIFIERS}_${currentRelease}_after_ortho_stable_id_history.dump"
 							sh "mysqldump -u$user -p$pass ${env.RELEASE_CURRENT} > $release_current_after_ortho_stable_id_history_dump"
 							sh "gzip -f $release_current_after_ortho_stable_id_history_dump"
 							sh "mysqldump -u$user -p$pass ${env.STABLE_IDENTIFIERS} > $stable_identifiers_after_ortho_stable_id_history.dump"

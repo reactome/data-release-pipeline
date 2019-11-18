@@ -59,7 +59,7 @@ pipeline {
 				script{
 					dir('ortho-stable-id-history'){
 						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
-							sh  "perl ${env.ABS_ORTHO_STABLE_IDENTIFIER_HISTORY_PATH}/generate_stable_ids_orthoinference/save_stable_id_history.pl -db ${env.RELEASE_CURRENT} -sdb ${env.STABLE_IDENTIFIERS} -host localhost -user $user -pass $pass -release ${currentRelease}" 
+							sh  "perl ${env.ABS_RELEASE_PATH}/generate_stable_ids_orthoinference/save_stable_id_history.pl -db ${env.RELEASE_CURRENT} -sdb ${env.STABLE_IDENTIFIERS} -host localhost -user $user -pass $pass -release ${currentRelease}" 
 						}
 					}
 				}

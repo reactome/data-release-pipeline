@@ -18,7 +18,7 @@ pipeline {
 					if (addLinksInsertionStatusUrl.getStatus() == 404) {
 						error("AddLinks-Insertion has not yet been run. Please complete a successful build.")
 					} else {
-						def addLinksInsertionJson = new JsonSlurper().parseText(addLinksInsertionUrl.getContent())
+						def addLinksInsertionJson = new JsonSlurper().parseText(addLinksInsertionStatusUrl.getContent())
 						if(addLinksInsertionJson['result'] != "SUCCESS"){
 							error("Most recent AddLinks-Insertion build status: " + addLinksInsertionJson['result'] + ". Please complete a successful build.")
 						}

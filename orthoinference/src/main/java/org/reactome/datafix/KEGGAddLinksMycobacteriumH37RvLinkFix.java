@@ -12,6 +12,13 @@ import java.io.FileReader;
 import java.util.*;
 
 public class KEGGAddLinksMycobacteriumH37RvLinkFix {
+
+    // In release 71, some of the links for the 'KEGG Gene M. tuberculosis H37Rv' ReferenceDatabase were reported as broken during
+    // the link-check phase of 'Addlinks-Insertion'. The problem was that historically M. tuberculosis H37Rv identifiers had been
+    // prepended with 'mtv', but now some had the prefix 'mtu'. This was due to the fact that KEGG now has two H37Rv species,
+    // denoted by mtu or mtv. The temporary solution was that the base url for the referenceDatabase was modified to remove the default
+    // 'mtv' string and the appropriate prefix added to the identifier attribute of the DatabaseIdentifier instances.
+
     public static void main(String[] args) throws Exception {
 
         Properties props = new Properties();

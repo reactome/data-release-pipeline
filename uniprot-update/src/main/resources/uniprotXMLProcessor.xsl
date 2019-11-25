@@ -1,13 +1,13 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet version="1.0"
+<?xml version='1.0'  encoding="UTF-8" ?>
+<xsl:stylesheet
+	xmlns:xsl='http://www.w3.org/1999/XSL/Transform'
 	xmlns:uniprot="http://uniprot.org/uniprot"
-	xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-	xmlns:xalan="http://xml.apache.org/xslt">
+	xmlns:xalan="http://xml.apache.org/xalan"
+	version='1.0'>
 
-	<xsl:output method="xml" omit-xml-declaration="yes"
-		indent="yes" encoding="utf-8" media-type="text/plain" standalone="yes"
+	<xsl:output method="xml"
+		indent="yes" encoding="utf-8" media-type="text/plain"
 		xalan:indent-amount="4" />
-
 	<xsl:variable name="featureTypes" select="'|chain|peptide|propeptide|signal peptide|transit peptide|'" />
 
 	<xsl:template match="/uniprot:uniprot">

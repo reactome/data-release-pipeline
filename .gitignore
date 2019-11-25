@@ -47,3 +47,5 @@ orthopairs/logs/
 orthoinference/logs/
 logs/
 data-exporter/archive/
+
+uniprot-update/simplified_uniprot_sprot.xml

@@ -1,4 +1,6 @@
 uniprot_sprot*
 uniprot-reviewed:no.list
 uniprot-update.properties
-
+simplified_uniprot_sprot.xml
+src/main/test/resources/*.xml
+!src/main/test/resources/UniProt_sample_entries.xml

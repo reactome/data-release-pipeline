@@ -83,8 +83,8 @@
 			<xsl:for-each select="./uniprot:name">
 				<xsl:element name="name">
 					<xsl:attribute name="type">
-					<xsl:value-of select="./@type" />
-				</xsl:attribute>
+						<xsl:value-of select="./@type" />
+					</xsl:attribute>
 					<xsl:value-of select="./text()" />
 				</xsl:element>
 			</xsl:for-each>

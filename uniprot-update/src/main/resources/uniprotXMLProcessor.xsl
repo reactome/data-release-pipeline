@@ -120,37 +120,37 @@
 	</xsl:template>
 
 	<xsl:template match="uniprot:feature[@type='initiator methionine']">
-		<xsl:element name="chain">
+		<xsl:element name="positionalChain">
 			<xsl:attribute name="type">
 				<xsl:value-of select="@type" />
 			</xsl:attribute>
 			<xsl:attribute name="position">
 				<xsl:value-of
-				select="./uniprot:location/uniprot:position/@position" />
+					select="./uniprot:location/uniprot:position/@position" />
 			</xsl:attribute>
 		</xsl:element>
 	</xsl:template>
 
 	<xsl:template match="uniprot:feature">
 		<xsl:if test=" contains($featureTypes, concat('|', @type, '|') ) ">
-			<xsl:element name="chain">
+			<xsl:element name="rangedChain">
 				<xsl:attribute name="type">
 					<xsl:value-of select="@type" />
 				</xsl:attribute>
 				<xsl:attribute name="begin">
 					<xsl:value-of
-					select="./uniprot:location/uniprot:begin/@position" />
+						select="./uniprot:location/uniprot:begin/@position" />
 				</xsl:attribute>
 				<xsl:attribute name="end">
 					<xsl:value-of
-					select="./uniprot:location/uniprot:end/@position" />
+						select="./uniprot:location/uniprot:end/@position" />
 				</xsl:attribute>
 			</xsl:element>
 		</xsl:if>
 	</xsl:template>
 
 	<xsl:template match="@* | node()">
-		<!-- no-op - ignore everything that gets matched to this template (we're 
+		<!-- no-op - ignore everything that gets matched to this template (we're
 			trying to SIMPLIFY the file - remember?) -->
 	</xsl:template>
 </xsl:stylesheet>

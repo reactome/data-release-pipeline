@@ -42,20 +42,29 @@
 	</xsl:template>
 
 	<xsl:template match="uniprot:protein">
-		<recommendedName>
-			<xsl:text>recommendedName: </xsl:text>
-			<xsl:value-of select="./uniprot:recommendedName/uniprot:fullName" />
-			<xsl:if test="./uniprot:recommendedName/uniprot:shortName">
-				<xsl:text> shortName: </xsl:text>
-				<xsl:value-of select="./uniprot:recommendedName/uniprot:shortName" />	
-			</xsl:if>
-		</recommendedName>
+		<xsl:for-each select="./uniprot:recommendedName">
+			<recommendedName>
+				<fullName>
+					<xsl:value-of select="./uniprot:fullName" />
+				</fullName>
+				<xsl:if test="./uniprot:shortName">
+					<shortName>
+						<xsl:value-of select="./uniprot:shortName" />
+					</shortName>
+				</xsl:if>
+			</recommendedName>
+		</xsl:for-each>
+
 		<xsl:for-each select="./uniprot:alternativeName">
 			<alternativeName>
-				<xsl:text>alternativeName: </xsl:text>
-				<xsl:value-of select="./uniprot:fullName" />
-				<xsl:text> shortName: </xsl:text>
-				<xsl:value-of select="./uniprot:shortName" />
+				<fullName>
+					<xsl:value-of select="./uniprot:fullName" />
+				</fullName>
+				<xsl:if test="./uniprot:shortName">
+					<shortName>
+						<xsl:value-of select="./uniprot:shortName" />
+					</shortName>
+				</xsl:if>
 			</alternativeName>
 		</xsl:for-each>
 	</xsl:template>

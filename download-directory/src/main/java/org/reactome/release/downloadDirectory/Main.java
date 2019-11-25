@@ -191,6 +191,7 @@ public class Main {
 		}
 
 		// Move files to downloadDirectory release folder
+		/*
 		logger.info("Moving all generated files to " + releaseDownloadDirWithNumber);
 		File folder = new File(releaseNumber);
 		File[] releaseFiles = folder.listFiles();
@@ -205,6 +206,7 @@ public class Main {
 				Files.move(Paths.get(releaseFile.toString()), Paths.get(releaseDownloadDirWithNumber + "/" + releaseFile.getName()), StandardCopyOption.REPLACE_EXISTING);
 			}
 		}
+		*/
 		if (failedSteps.size() > 0) {
 			String failedStepsString = StringUtils.join(failedSteps, ", ");
 			logger.warn("Errors were reported in the following step(s): " + failedStepsString + "\n");

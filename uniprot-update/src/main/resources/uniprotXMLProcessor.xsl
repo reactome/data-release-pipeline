@@ -35,9 +35,9 @@
 
 	<xsl:template match="uniprot:organism">
 		<xsl:for-each select="./uniprot:name[@type='scientific']">
-			<scientificName>
+			<organismName>
 				<xsl:value-of select="." />
-			</scientificName>
+			</organismName>
 		</xsl:for-each>
 	</xsl:template>
 

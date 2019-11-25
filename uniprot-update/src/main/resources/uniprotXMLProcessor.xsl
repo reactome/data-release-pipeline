@@ -18,10 +18,6 @@
 
 	<xsl:template match="uniprot:entry">
 		<entry>
-			<!-- The "name" element must be the first accession in the list, as per the old Perl code. -->
-			<accession>
-				<xsl:value-of select="./uniprot:name" />
-			</accession>
 			<xsl:for-each select="./uniprot:accession">
 				<accession>
 					<xsl:value-of select="." />
@@ -29,6 +25,12 @@
 			</xsl:for-each>
 			<xsl:apply-templates />
 		</entry>
+	</xsl:template>
+
+	<xsl:template match="uniprot:name">
+		<name>
+			<xsl:value-of select="." />
+		</name>
 	</xsl:template>
 
 	<xsl:template match="uniprot:organism">

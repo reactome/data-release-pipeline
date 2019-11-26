@@ -2,8 +2,6 @@ package org.reactome.release.uniprotupdate.instanceupdate;
 
 import org.reactome.release.uniprotupdate.dataschema.UniprotData;
 
-import java.util.stream.Collectors;
-
 public class DescriptionAttributeUpdater extends AttributeUpdater {
 	DescriptionAttributeUpdater(String attributeToUpdate) {
 		super(attributeToUpdate);
@@ -11,12 +9,19 @@ public class DescriptionAttributeUpdater extends AttributeUpdater {
 
 	@Override
 	protected String extractAttributeDataFromUniprot(UniprotData data) {
-		return data.getRecommendedName() != null ?
-			String.join(" ", data.getRecommendedName(), getAlternativeNames(data)) :
-			"";
+		StringBuilder description = new StringBuilder();
+
+		if (data.getRecommendedName() != null) {
+			description.append(data.getRecommendedName().toString());
+			description.append(" ");
+		}
+
+		description.append(getAlternativeNames(data));
+
+		return description.toString().trim();
 	}
 
 	private String getAlternativeNames(UniprotData data) {
-		return data.getAlternativeNames() != null ? String.join(" ", data.getAlternativeNames()) : "";
+		return String.join(" ", data.getAlternativeNamesAsStrings());
 	}
 }

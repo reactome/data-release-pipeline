@@ -5,7 +5,6 @@ import org.apache.logging.log4j.Logger;
 import org.gk.model.GKInstance;
 import org.gk.schema.InvalidAttributeException;
 import org.gk.schema.InvalidAttributeValueException;
-import org.reactome.release.uniprotupdate.dataschema.Chain;
 import org.reactome.release.uniprotupdate.dataschema.UniprotData;
 
 import java.time.LocalDateTime;
@@ -25,7 +24,7 @@ public class ChainAttributeUpdater extends AttributeUpdater {
 	}
 
 	@Override
-	protected List<Chain> extractAttributeDataFromUniprot(UniprotData data) {
+	protected List<String> extractAttributeDataFromUniprot(UniprotData data) {
 		return data.getChains() != null ? data.getChains() : new ArrayList<>();
 	}
 
@@ -47,10 +46,7 @@ public class ChainAttributeUpdater extends AttributeUpdater {
 	}
 
 	private List<String> getNewChains(UniprotData data) {
-		return data.getChains()
-			.stream()
-			.map(Chain::toString)
-			.collect(Collectors.toList());
+		return data.getChains();
 	}
 
 	/**

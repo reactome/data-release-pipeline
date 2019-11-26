@@ -10,7 +10,6 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.util.JAXBResult;
 import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.Source;
@@ -58,11 +57,11 @@ class ProcessUniprotXML {
 
 		long startTime = System.currentTimeMillis();
 		XMLStreamReader xmlStreamReader = getXMLStreamReader(pathToUniProtXMLFile);
-		while (xmlStreamReader.nextTag() == XMLStreamConstants.START_ELEMENT) {
-			// Check to see if we found "<entry>"
-			if (foundUniProtEntryTag(xmlStreamReader)) {
-				JAXBResult transformedUniProtXMLResult = transformUniProtEntry(xmlStreamReader);
 
+		while (xmlStreamReader.hasNext()) {
+			// Check to see if we found "<entry>"
+			if (xmlStreamReader.isStartElement() && foundUniProtEntryTag(xmlStreamReader)) {
+				JAXBResult transformedUniProtXMLResult = transformUniProtEntry(xmlStreamReader);
 				if (transformedUniProtXMLResult == null) {
 					// Hmmm... should I break the loop if something bad happens here?
 					// Or just print the stacktrace/some custom message, and then
@@ -83,9 +82,11 @@ class ProcessUniprotXML {
 					logProgressSince(startTime, uniprotData.size());
 				}
 			}
+			xmlStreamReader.next();
 		}
 		logProgressSince(startTime, uniprotData.size());
 		xmlStreamReader.close();
+
 		return uniprotData;
 	}
 

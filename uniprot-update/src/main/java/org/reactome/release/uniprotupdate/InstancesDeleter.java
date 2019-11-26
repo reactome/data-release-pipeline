@@ -28,19 +28,15 @@ import org.gk.schema.GKSchemaAttribute;
  * @author sshorser
  *
  */
-class InstancesDeleter
+class InstancesDeleter {
 {
 	private Map<String, MySQLAdaptor> adaptorPool = Collections.synchronizedMap(new HashMap<>());
 
-	private MySQLAdaptor getAdaptorForThread(MySQLAdaptor baseAdaptor, String threadIdentifier) throws SQLException
-	{
+	private MySQLAdaptor getAdaptorForThread(MySQLAdaptor baseAdaptor, String threadIdentifier) throws SQLException {
 		MySQLAdaptor adaptor;
-		if (adaptorPool.containsKey(threadIdentifier))
-		{
+		if (adaptorPool.containsKey(threadIdentifier)) {
 			adaptor = adaptorPool.get(threadIdentifier);
-		}
-		else
-		{
+		} else {
 			MySQLAdaptor adaptorForPool = new MySQLAdaptor(
 				baseAdaptor.getDBHost(),
 				baseAdaptor.getDBName(),
@@ -54,10 +50,8 @@ class InstancesDeleter
 		return adaptor;
 	}
 
-	private void cleanAdaptorPool() throws Exception
-	{
-		for (String k : adaptorPool.keySet())
-		{
+	private void cleanAdaptorPool() throws Exception {
+		for (String k : adaptorPool.keySet()) {
 			adaptorPool.get(k).cleanUp();
 		}
 		this.adaptorPool.clear();
@@ -73,8 +67,7 @@ class InstancesDeleter
 	 * a potential candidate for deletion (depending on referrer counts)
 	 * @throws Exception
 	 */
-	void deleteObsoleteInstances(MySQLAdaptor adaptor, String pathToUnreviewedUniprotIDsFile) throws Exception
-	{
+	void deleteObsoleteInstances(MySQLAdaptor adaptor, String pathToUnreviewedUniprotIDsFile) throws Exception {
 		logger.info("Preparing to delete obsolete instances...");
 		@SuppressWarnings("unchecked")
 		Collection<GKInstance> allReferenceGeneProducts = (Collection<GKInstance>) adaptor.fetchInstancesByClass(
@@ -82,11 +75,9 @@ class InstancesDeleter
 		);
 		logger.info("{} ReferenceGeneProducts need to be checked.", allReferenceGeneProducts.size());
 		Map<String, GKInstance> referenceGeneProductMap = new HashMap<>(allReferenceGeneProducts.size());
-		for (GKInstance referenceGeneProduct : allReferenceGeneProducts)
-		{
+		for (GKInstance referenceGeneProduct : allReferenceGeneProducts) {
 			String identifier = (String) referenceGeneProduct.getAttributeValue(ReactomeJavaConstants.identifier);
-			if (identifier != null)
-			{
+			if (identifier != null) {
 				referenceGeneProductMap.put(identifier, referenceGeneProduct);
 			}
 		}
@@ -136,17 +127,14 @@ class InstancesDeleter
 	 */
 	private List<GKInstance> findIdentifiersToDelete(
 		MySQLAdaptor adaptor, Map<String, GKInstance> referenceGeneProductMap, List<String> identifiersToCheck
-	)
-	{
+	) {
 		List<GKInstance> identifiersToDelete = new ArrayList<>();
 		// TODO: this loop is slow. Multithread it somehow.
 		//for (String identifier : identifiersToCheck)
 		// Check each identifier: If it has 0 referrers, no variantIdentifier, and is not in the
 		// unreviewed Uniprot IDs list, it can be deleted, so it will be added to identifiersToDelete.
-		identifiersToCheck.parallelStream().forEach( identifier ->
-		{
-			try
-			{
+		identifiersToCheck.parallelStream().forEach( identifier -> {
+			try {
 				MySQLAdaptor tmpAdaptor = this.getAdaptorForThread(adaptor, Thread.currentThread().getName());
 				GKInstance referenceGeneProduct = referenceGeneProductMap.get(identifier);
 				referenceGeneProduct.setDbAdaptor(tmpAdaptor);
@@ -158,8 +146,7 @@ class InstancesDeleter
 	//					(Collection<GKSchemaAttribute>) referenceGeneProduct.getSchemClass().getReferers();
 	//			}
 				int referrerCount = getReferrerCount(referenceGeneProduct);
-				if (referrerCount == 0)
-				{
+				if (referrerCount == 0) {
 					referenceDNASequenceLog.info(
 						"ReferenceGeneProduct " + referenceGeneProduct.toString() + " has 0 referrers, " +
 						"no variantIdentifier, and is not in the unreviewed Uniprot IDs list, so it will be deleted."
@@ -167,9 +154,7 @@ class InstancesDeleter
 					identifiersToDelete.add(referenceGeneProduct);
 				}
 				referenceGeneProduct.setDbAdaptor(adaptor);
-			}
-			catch (Exception e)
-			{
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		});
@@ -185,19 +170,16 @@ class InstancesDeleter
 	 */
 	private Set<String> findIdentifiersInFileAndDB(String pathToUnreviewedUniprotIDsFile,
 		Map<String, GKInstance> referenceGeneProductMap)
-			throws FileNotFoundException
-	{
+			throws FileNotFoundException {
+
 		Set<String> identifiersInFileAndDB = new HashSet<>();
 		logger.info("Loading file: {}", pathToUnreviewedUniprotIDsFile);
 		FileInputStream fis = new FileInputStream(pathToUnreviewedUniprotIDsFile);
 		BufferedInputStream bis = new BufferedInputStream(fis);
-		try (Scanner scanner = new Scanner(bis))
-		{
-			while (scanner.hasNextLine())
-			{
+		try (Scanner scanner = new Scanner(bis)) {
+			while (scanner.hasNextLine()) {
 				String identifierFromFile = scanner.nextLine().trim();
-				if (referenceGeneProductMap.containsKey(identifierFromFile))
-				{
+				if (referenceGeneProductMap.containsKey(identifierFromFile)) {
 					identifiersInFileAndDB.add(identifierFromFile);
 				}
 			}
@@ -211,15 +193,13 @@ class InstancesDeleter
 	 * @return The number of instances that refer to the given object.
 	 * @throws Exception
 	 */
-	private int getReferrerCount(GKInstance referenceGeneProduct) throws Exception
-	{
+	private int getReferrerCount(GKInstance referenceGeneProduct) throws Exception {
 		@SuppressWarnings("unchecked")
 		Collection<GKSchemaAttribute> referringAttributes =
 			(Collection<GKSchemaAttribute>) referenceGeneProduct.getSchemClass().getReferers();
 
 		int referrerCount = 0;
-		for (GKSchemaAttribute referringAttribute : referringAttributes)
-		{
+		for (GKSchemaAttribute referringAttribute : referringAttributes) {
 			@SuppressWarnings("unchecked")
 			Collection<GKInstance> referrers = referenceGeneProduct.getReferers(referringAttribute);
 			referrerCount += referrers.size();
@@ -236,35 +216,27 @@ class InstancesDeleter
 	 * @throws TransactionsNotSupportedException
 	 */
 	private int deleteInstances(MySQLAdaptor adaptor, List<GKInstance> identifiersToDelete)
-		throws SQLException, TransactionsNotSupportedException
-	{
+		throws SQLException, TransactionsNotSupportedException {
+
 		int deletedCount = 0;
 		int txnDeleteCount = 0;
 		adaptor.startTransaction();
-		for (GKInstance referenceGeneProuductToDelete : identifiersToDelete)
-		{
-			try
-			{
+		for (GKInstance referenceGeneProuductToDelete : identifiersToDelete) {
+			try {
 				// Deletion is SLOOOOOW... maybe have multiple threads to do deletion?
 				// ...tried that. It made things worse. :(
 				adaptor.deleteInstance(referenceGeneProuductToDelete);
-				if (txnDeleteCount == 1000)
-				{
+				if (txnDeleteCount == 1000) {
 					adaptor.commit();
 					txnDeleteCount = 0;
-				}
-				else
-				{
+				} else {
 					txnDeleteCount++;
 				}
 				int count = deletedCount;
-				if (count % 1000 == 0)
-				{
+				if (count % 1000 == 0) {
 					logger.info("{} instances have been deleted.", count);
 				}
-			}
-			catch (Exception e)
-			{
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}

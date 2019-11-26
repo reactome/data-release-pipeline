@@ -14,8 +14,7 @@ import java.util.List;
  * @author sshorser
  *
  */
-public class InstanceCreator
-{
+public class InstanceCreator {
 	private MySQLAdaptor adaptor;
 	private GKInstance creationInstanceEdit;
 
@@ -24,8 +23,7 @@ public class InstanceCreator
 	 * @param dbAdaptor - the datbase adaptor that will be used by this object to create instances.
 	 * @param instance - the InstanceEdit that will be associated with the created object.
 	 */
-	public InstanceCreator(MySQLAdaptor dbAdaptor, GKInstance instance)
-	{
+	public InstanceCreator(MySQLAdaptor dbAdaptor, GKInstance instance) {
 		this.adaptor = dbAdaptor;
 		this.creationInstanceEdit = instance;
 	}
@@ -38,8 +36,7 @@ public class InstanceCreator
 	 * @throws InvalidAttributeValueException
 	 */
 	GKInstance createNewReferenceGeneProduct(String accession)
-		throws InvalidAttributeException, InvalidAttributeValueException
-	{
+		throws InvalidAttributeException, InvalidAttributeValueException {
 		GKInstance referenceGeneProduct = new GKInstance(
 			this.adaptor.getSchema().getClassByName(ReactomeJavaConstants.ReferenceGeneProduct)
 		);
@@ -64,8 +61,7 @@ public class InstanceCreator
 	 * @throws InvalidAttributeValueException
 	 */
 	GKInstance createNewReferenceDNASequence(List<String> geneNames, String primaryGeneName, String ensemblGeneID)
-		throws InvalidAttributeException, InvalidAttributeValueException
-	{
+		throws InvalidAttributeException, InvalidAttributeValueException {
 		GKInstance newRefDNASequence = new GKInstance(
 			this.adaptor.getSchema().getClassByName(ReactomeJavaConstants.ReferenceDNASequence)
 		);
@@ -93,9 +89,8 @@ public class InstanceCreator
 	 * @throws Exception
 	 */
 	long createNewReferenceIsoform(String accession, GKInstance referenceGeneProduct, String isoformID)
-		throws InvalidAttributeException, InvalidAttributeValueException, Exception
-	{
-		long dbID;
+		throws InvalidAttributeException, InvalidAttributeValueException, Exception {
+
 		GKInstance referenceIsoform = new GKInstance(
 			this.adaptor.getSchema().getClassByName(ReactomeJavaConstants.ReferenceIsoform)
 		);
@@ -107,7 +102,7 @@ public class InstanceCreator
 		referenceIsoform.setAttributeValue(ReactomeJavaConstants.variantIdentifier, isoformID);
 		referenceIsoform.setDbAdaptor(this.adaptor);
 		// now update with the rest of the values in "data"...
-		dbID = adaptor.storeInstance(referenceIsoform);
+		long dbID = adaptor.storeInstance(referenceIsoform);
 		InstanceDisplayNameGenerator.setDisplayName(referenceIsoform);
 		this.adaptor.updateInstanceAttribute(referenceIsoform, ReactomeJavaConstants._displayName);
 		return dbID;

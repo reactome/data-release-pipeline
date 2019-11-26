@@ -12,11 +12,9 @@ import org.gk.persistence.MySQLAdaptor;
 import org.gk.persistence.MySQLAdaptor.AttributeQueryRequest;
 import org.reactome.util.compare.DBObjectComparer;
 
-public class JavaVsPerlComparison
-{
+public class JavaVsPerlComparison {
 
-	public static void main(String[] args) throws Exception
-	{
+	public static void main(String[] args) throws Exception {
 		MySQLAdaptor javaDBA = new MySQLAdaptor(
 			"localhost",
 			"gk_central_pre_R66.dump.sql",
@@ -49,8 +47,7 @@ public class JavaVsPerlComparison
 
 		List<String> classNames =
 			Arrays.asList(ReactomeJavaConstants.ReferenceGeneProduct, ReactomeJavaConstants.ReferenceIsoform);
-		for (String className : classNames)
-		{
+		for (String className : classNames) {
 			int sameCount = 0;
 			int diffCount = 0;
 			int totalComparisonsCount = 0;
@@ -68,12 +65,10 @@ public class JavaVsPerlComparison
 
 			for (GKInstance refEnt : javaReferenceEntities.stream().filter(
 				instance -> instance.getSchemClass().getName().equals(className)
-			).collect(Collectors.toList()))
-			{
+			).collect(Collectors.toList())) {
 				String identifier = (String) refEnt.getAttributeValue(ReactomeJavaConstants.identifier);
 				GKInstance refDB = (GKInstance) refEnt.getAttributeValue(ReactomeJavaConstants.referenceDatabase);
-				if (identifier != null && refDB != null)
-				{
+				if (identifier != null && refDB != null) {
 					AttributeQueryRequest identifierAqRequest = perlDBA.new AttributeQueryRequest(
 						className, ReactomeJavaConstants.identifier, "=", identifier
 					);
@@ -91,10 +86,8 @@ public class JavaVsPerlComparison
 					Set<GKInstance> perlInstances = perlDBA.fetchInstance(
 						Arrays.asList(identifierAqRequest, refDBAqRequest)
 					);
-					if (perlInstances != null && perlInstances.size() > 0)
-					{
-						if (perlInstances.size() > 1)
-						{
+					if (perlInstances != null && perlInstances.size() > 0) {
+						if (perlInstances.size() > 1) {
 							System.out.println(
 								perlInstances.size() + " Perl instances match identifier/refdb: " + identifier + "/" +
 								refDB.toString()
@@ -102,37 +95,28 @@ public class JavaVsPerlComparison
 						}
 						for (GKInstance perlInst : perlInstances.stream().filter(
 							instance -> instance.getSchemClass().getName().equals(className)
-						).collect(Collectors.toList()))
-						{
+						).collect(Collectors.toList())) {
 							StringBuilder sb = new StringBuilder();
 							totalComparisonsCount++;
 							int diffs = DBObjectComparer.compareInstances(refEnt, perlInst, sb, false);
-							if (diffs > 0)
-							{
+							if (diffs > 0) {
 								diffCount++;
 								System.out.println(
 									diffs + " differences for \"" + refEnt.toString() +
 									"\" vs Perl instance \""+perlInst.toString()+"\": \n"+sb.toString()
 								);
-							}
-							else
-							{
+							} else {
 								sameCount++;
 							}
 						}
-					}
-					else
-					{
+					} else {
 						System.out.println("Identifier " + identifier + " is not in Perl-modified database.");
 					}
-				}
-				else
-				{
+				} else {
 					System.out.println(className + " instance \""+refEnt.toString()+"\" has no identifier!");
 				}
 
-				if (totalComparisonsCount > 0 && totalComparisonsCount % 1000 == 0)
-				{
+				if (totalComparisonsCount > 0 && totalComparisonsCount % 1000 == 0) {
 					long endTime = System.currentTimeMillis();
 					System.out.println(totalComparisonsCount + " comparisons have been performed in " +
 						Duration.ofMillis(endTime - startTime).toString() );

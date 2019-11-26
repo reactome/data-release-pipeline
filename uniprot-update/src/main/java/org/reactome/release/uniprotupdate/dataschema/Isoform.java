@@ -32,4 +32,8 @@ public class Isoform {
 		this.isoformID = isoformID;
 	}
 
+	@Override
+	public String toString() {
+		return getIsoformID();
+	}
 }

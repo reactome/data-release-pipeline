@@ -136,7 +136,7 @@ class ENSEMBLQueryUtil {
 
 			List<String> geneBuffer = Collections.synchronizedList(new ArrayList<>(1000));
 			uniprotData.parallelStream()
-			.filter(data ->  data.getEnsembleGeneIDs()!=null && data.getScientificName().equals(speciesName))
+			.filter(data ->  data.getEnsembleGeneIDs()!=null && data.getOrganismName().equals(speciesName))
 			.forEach( data -> {
 				List<String> geneList = data.getEnsembleGeneIDs().stream().distinct().collect(Collectors.toList());
 				for(String ensemblGeneID : geneList) {

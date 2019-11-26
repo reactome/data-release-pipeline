@@ -17,7 +17,7 @@ public class SpeciesAttributeUpdater extends AttributeUpdater {
 
 	@Override
 	protected String extractAttributeDataFromUniprot(UniprotData data) {
-		return data.getScientificName() != null ? data.getScientificName() : "";
+		return data.getOrganismName() != null ? data.getOrganismName() : "";
 	}
 
 	@Override

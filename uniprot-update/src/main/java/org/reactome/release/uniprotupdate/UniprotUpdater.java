@@ -42,7 +42,7 @@ public class UniprotUpdater {
 	}
 
 	private boolean isUniProtEntryOfSpeciesToUpdate(UniprotData uniprotEntry) {
-		return SPECIES_TO_UPDATE.contains(uniprotEntry.getScientificName());
+		return SPECIES_TO_UPDATE.contains(uniprotEntry.getOrganismName());
 	}
 
 	public MySQLAdaptor getAdaptor() {
@@ -73,9 +73,9 @@ public class UniprotUpdater {
 		}
 	}
 
-	private void updateUniProtInstance(UniprotData uniprotEntry, GKInstance instanceEdit) throws Exception {
+	void updateUniProtInstance(UniprotData uniprotEntry, GKInstance instanceEdit) throws Exception {
 		// for human data, we may need to update a ReferenceDNASequence.
-		if (uniprotEntry.getScientificName().equals(HOMO_SAPIENS)) {
+		if (uniprotEntry.getOrganismName().equals(HOMO_SAPIENS)) {
 			HumanDataProcessor processor = new HumanDataProcessor(getAdaptor(), instanceEdit, getIncludedUniprotEntries());
 			processor.processData(uniprotEntry);
 		} else { // Not human, but still need to process it...

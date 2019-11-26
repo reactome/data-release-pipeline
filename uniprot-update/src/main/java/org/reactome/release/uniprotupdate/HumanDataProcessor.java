@@ -198,7 +198,7 @@ class HumanDataProcessor extends AbstractDataProcessor {
 		boolean modified = false;
 		// The old Perl code forces the species to be changed if the one in the
 		// database does not match the one in the file.
-		if (!speciesNamesFromDB.contains(data.getScientificName()))
+		if (!speciesNamesFromDB.contains(data.getOrganismName()))
 		{
 			referenceDNASequence.setAttributeValue(ReactomeJavaConstants.species, newSpecies);
 			adaptor.updateInstanceAttribute(referenceDNASequence, ReactomeJavaConstants.species);

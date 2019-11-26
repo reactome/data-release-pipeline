@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
@@ -12,14 +14,15 @@ import javax.xml.bind.annotation.XmlType;
  * @author sshorser
  */
 @XmlType(name="gene")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Gene {
+	@XmlElement(name="name")
 	private List<GeneName> names;
 
 	/**
 	 * Returns the list of names associated with this Gene object
 	 * @return List of GeneName objects or an empty list if there are none
 	 */
-	@XmlElement(name="name")
 	public List<GeneName> getNames() {
 		if (names == null) {
 			return new ArrayList<>();

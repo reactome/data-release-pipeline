@@ -259,13 +259,7 @@ public abstract class AbstractDataProcessor {
 		 * @throws Exception
 		 */
 		void updateOrCreateIsoforms(GKInstance referenceGeneProduct, UniprotData uniprotEntry) throws Exception {
-			List<Isoform> isoforms = uniprotEntry.getIsoforms();
-			if (isoforms == null) {
-				return;
-			}
-
-			for (Isoform isoform : isoforms) {
-				String isoformID = isoform.getIsoformID();
+			for (String isoformID : uniprotEntry.getIsoforms()) {
 				@SuppressWarnings("unchecked")
 				List<GKInstance> refIsoformsFromDB = new ArrayList<>(adaptor.fetchInstanceByAttribute(
 					ReactomeJavaConstants.ReferenceIsoform,

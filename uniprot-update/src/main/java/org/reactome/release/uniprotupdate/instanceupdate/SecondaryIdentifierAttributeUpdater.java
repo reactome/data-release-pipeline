@@ -12,6 +12,11 @@ public class SecondaryIdentifierAttributeUpdater extends AttributeUpdater {
 
 	@Override
 	protected List<String> extractAttributeDataFromUniprot(UniprotData data) {
-		return (data.getAccessions() != null) ? data.getAccessions() : new ArrayList<>();
+		List<String> secondaryIdentifiers = new ArrayList<>();
+
+		secondaryIdentifiers.add(data.getName());
+		secondaryIdentifiers.addAll(data.getSecondaryAccessions());
+
+		return secondaryIdentifiers;
 	}
 }

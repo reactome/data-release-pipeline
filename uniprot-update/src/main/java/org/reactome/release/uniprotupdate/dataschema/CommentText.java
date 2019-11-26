@@ -62,7 +62,7 @@ public class CommentText {
 	 */
 	@Override
 	public String toString() {
-		return getType() + " " + getText();
+		return getType().toUpperCase() + " " + getText();
 	}
 
 }

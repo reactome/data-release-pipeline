@@ -29,7 +29,9 @@ import org.gk.schema.GKSchemaAttribute;
  *
  */
 class InstancesDeleter {
-{
+	private static final Logger referenceDNASequenceLog = LogManager.getLogger("referenceDNASequenceLog");
+	private static final Logger logger = LogManager.getLogger();
+
 	private Map<String, MySQLAdaptor> adaptorPool = Collections.synchronizedMap(new HashMap<>());
 
 	private MySQLAdaptor getAdaptorForThread(MySQLAdaptor baseAdaptor, String threadIdentifier) throws SQLException {
@@ -56,8 +58,6 @@ class InstancesDeleter {
 		}
 		this.adaptorPool.clear();
 	}
-	private static final Logger referenceDNASequenceLog = LogManager.getLogger("referenceDNASequenceLog");
-	private static final Logger logger = LogManager.getLogger();
 
 	/**
 	 * Delete obsolete instances. An instance is considered "obsolete" if it has no referrers.

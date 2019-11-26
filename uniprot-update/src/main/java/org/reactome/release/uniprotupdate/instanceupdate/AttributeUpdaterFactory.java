@@ -1,6 +1,5 @@
 package org.reactome.release.uniprotupdate.instanceupdate;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 import static org.gk.model.ReactomeJavaConstants.*;

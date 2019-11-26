@@ -1,11 +1,13 @@
 package org.reactome.release.uniprotupdate.dataschema.chain;
 
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlType;
 
 /**
  * Class to represent a sequence chain with a specific range (i.e. a beginning and ending position) in a UniProt entry
  * @author jweiser
  */
+@XmlType(name="rangedChain")
 public class RangedSequenceChain extends SequenceChain {
 	private int begin;
 	private int end;

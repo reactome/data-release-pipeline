@@ -1,11 +1,13 @@
 package org.reactome.release.uniprotupdate.dataschema.chain;
 
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlType;
 
 /**
  * Class to represent a sequence chain of length 1 at a specific position in a UniProt entry
  * @author jweiser
  */
+@XmlType(name="positionalChain")
 public class PositionalSequenceChain extends SequenceChain {
 	private int position;
 

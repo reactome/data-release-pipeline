@@ -61,14 +61,6 @@ public class UniprotUpdateStep extends ReleaseStep {
 		logger.info("Done.");
 	}
 
-	private Map<String, GKInstance> getReferenceGeneProducts(MySQLAdaptor adaptor) throws Exception {
-		return getIdentifierMappedCollectionOfType(ReactomeJavaConstants.ReferenceGeneProduct, "UniProt", adaptor);
-	}
-
-	private Map<String, GKInstance> getReferenceIsoforms(MySQLAdaptor adaptor) throws Exception {
-		return getIdentifierMappedCollectionOfType(ReactomeJavaConstants.ReferenceIsoform, "UniProt", adaptor);
-	}
-
 	/**
 	 * Gets a map of instances (keyed by identifier values) for a specified Reactome class name and restricted
 	 * to a specific reference database.

@@ -27,6 +27,8 @@ public abstract class AbstractDataProcessor {
 	protected static final Logger referenceDNASequenceLog = LogManager.getLogger("referenceDNASequenceLog");
 
 	private Map<String, GKInstance> referenceGeneProducts;
+	private Map<String, GKInstance> referenceDNASequences;
+	private Map<String, GKInstance> referenceIsoforms;
 
 	public AbstractDataProcessor(MySQLAdaptor adaptor, GKInstance instanceEdit) {
 		this.adaptor = adaptor;
@@ -36,8 +38,24 @@ public abstract class AbstractDataProcessor {
 	abstract void processData(UniprotData data)
 		throws InvalidAttributeException, InvalidAttributeValueException, Exception;
 
+	private Map<String, GKInstance> getReferenceIsoforms(MySQLAdaptor adaptor) throws Exception {
+		if (this.referenceIsoforms == null) {
+			this.referenceIsoforms = getIdentifierMappedCollectionOfType(
+				ReactomeJavaConstants.ReferenceIsoform, "UniProt", adaptor
+			);
+		}
+
+		return this.referenceIsoforms;
+	}
+
 	Map<String, GKInstance> getReferenceDNASequences(MySQLAdaptor adaptor) throws Exception {
-		return getIdentifierMappedCollectionOfType(ReactomeJavaConstants.ReferenceDNASequence, adaptor);
+		if (this.referenceDNASequences == null) {
+			this.referenceDNASequences = getIdentifierMappedCollectionOfType(
+				ReactomeJavaConstants.ReferenceDNASequence, adaptor
+			);
+		}
+
+		return this.referenceDNASequences;
 	}
 
 	Map<String, GKInstance> getReferenceGeneProducts(MySQLAdaptor adaptor)
@@ -50,13 +68,6 @@ public abstract class AbstractDataProcessor {
 
 		return this.referenceGeneProducts;
 	}
-
-	Map<String, GKInstance> getReferenceIsoforms(MySQLAdaptor adaptor)
-			throws Exception, InvalidAttributeException {
-		return getIdentifierMappedCollectionOfType(ReactomeJavaConstants.ReferenceIsoform, "UniProt", adaptor);
-	}
-
-
 
 	/**
 	 * Gets a map of instances, keyed by identifier.

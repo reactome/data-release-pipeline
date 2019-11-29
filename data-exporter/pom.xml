@@ -15,7 +15,7 @@
 
 		<reactome-release-common-lib.version>1.1.1-SNAPSHOT</reactome-release-common-lib.version>
 		<reactome-graph-core.version>1.1.20</reactome-graph-core.version>
-		<neo4j.version>3.5.12</neo4j.version>
+		<neo4j.version>3.5.13</neo4j.version>
 		<neo4j-java-driver.version>1.7.5</neo4j-java-driver.version>
 		<junit.version>5.5.2</junit.version>
 

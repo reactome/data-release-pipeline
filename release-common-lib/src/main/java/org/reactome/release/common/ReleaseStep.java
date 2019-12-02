@@ -42,10 +42,9 @@ public abstract class ReleaseStep
 		String dbUser = props.getProperty("db.user");
 		String dbPassword = props.getProperty("db.password");
 		String dbName = props.getProperty("db.name");
-		int dbPort = new Integer(props.getProperty("db.port", "3306"));
+		int dbPort = Integer.parseInt(props.getProperty("db.port", "3306"));
 
-		MySQLAdaptor adaptor = new MySQLAdaptor(dbHost, dbName, dbUser, dbPassword, dbPort);
-		return adaptor;
+		return new MySQLAdaptor(dbHost, dbName, dbUser, dbPassword, dbPort);
 	}
 
 	/**
@@ -56,7 +55,7 @@ public abstract class ReleaseStep
 	 */
 	protected void loadTestModeFromProperties(Properties props)
 	{
-		this.testMode = new Boolean(props.getProperty("testMode", "true"));
+		this.testMode = Boolean.parseBoolean(props.getProperty("testMode", "true"));
 		if (!testMode)
 		{
 			logger.info("Test mode is OFF - database will be updated!");

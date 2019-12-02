@@ -30,18 +30,9 @@ public class InstanceEditUtils
 	public static GKInstance createInstanceEdit(MySQLAdaptor dba, long personID, String creatorName)
 		throws Exception
 	{
-		GKInstance instanceEdit = null;
-		try
-		{
-			instanceEdit = createDefaultIE(dba, personID, true, "Inserted by " + creatorName);
-			instanceEdit.getDBID();
-			dba.updateInstance(instanceEdit);
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-			throw e;
-		}
+		GKInstance instanceEdit = createDefaultIE(dba, personID, true, "Inserted by " + creatorName);
+		instanceEdit.getDBID();
+		dba.updateInstance(instanceEdit);
 		return instanceEdit;
 	}
 
@@ -57,7 +48,7 @@ public class InstanceEditUtils
 	 * @return InstanceEdit as a GKInstance object.
 	 * @throws Exception Thrown if unable to retrieve the Person instance associated with the defaultPersonId
 	 */
-	public static GKInstance createDefaultIE(MySQLAdaptor dba, Long defaultPersonId, boolean needStore, String note)
+	public static GKInstance createDefaultIE(MySQLAdaptor dba, long defaultPersonId, boolean needStore, String note)
 		throws Exception
 	{
 		GKInstance defaultPerson = dba.fetchInstance(defaultPersonId);
@@ -86,8 +77,11 @@ public class InstanceEditUtils
 	 *
 	 * @param person Person instance to associate as the InstanceEdit author
 	 * @return InstanceEdit as GKInstance object
+	 * @throws InvalidAttributeValueException Thrown if the person argument is an invalid value for the "author"
+	 * attribute of the InstanceEdit
 	 */
 	public static GKInstance createDefaultInstanceEdit(GKInstance person)
+		throws InvalidAttributeValueException
 	{
 		GKInstance instanceEdit = new GKInstance();
 		PersistenceAdaptor adaptor = person.getDbAdaptor();
@@ -99,11 +93,10 @@ public class InstanceEditUtils
 		{
 			instanceEdit.addAttributeValue(ReactomeJavaConstants.author, person);
 		}
-		catch (InvalidAttributeException | InvalidAttributeValueException e)
+		catch (InvalidAttributeException e)
 		{
-			e.printStackTrace();
-			// throw this back up the stack - no way to recover from in here.
-			throw new Error(e);
+			throw new RuntimeException("Fatal error: The 'author' attribute was invalid for the GKInstance object "
+				+ "created for the new InstanceEdit", e);
 		}
 
 		return instanceEdit;

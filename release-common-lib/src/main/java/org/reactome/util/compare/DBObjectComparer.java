@@ -321,11 +321,9 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 						// Strings/numbers/etc...)
 						else
 						{
-							List<Object> values1 = new ArrayList<Object>();
-							values1 = (List<Object>) getValuesFunction.apply(attrib.getName(), inst1);
+							List<Object> values1 = (List<Object>) getValuesFunction.apply(attrib.getName(), inst1);
 
-							List<Object> values2 = new ArrayList<Object>();
-							values2 = (List<Object>) getValuesFunction.apply(attrib.getName(), inst2);
+							List<Object> values2 = (List<Object>) getValuesFunction.apply(attrib.getName(), inst2);
 
 							if (values1 != null && values2 != null)
 							{

@@ -8,6 +8,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * This class provides helper methods for manipulation of collection data
+ * @author jweiser
+ */
 public class CollectionUtils {
 
 	/**

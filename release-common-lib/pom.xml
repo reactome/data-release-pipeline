@@ -5,13 +5,49 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.reactome.release</groupId>
 	<artifactId>release-common-lib</artifactId>
-	<version>1.1.1-SNAPSHOT</version>
+	<packaging>jar</packaging>
+	<version>1.1.1</version>
+	<name>Release Common Library</name>
 	<description>Common components used throughout the Release process.</description>
+	<url>https://reactome.org</url>
+
+	<licenses>
+		<license>
+			<name>GNU AFFERO GENERAL PUBLIC LICENSE</name>
+			<url>https://www.gnu.org/licenses/agpl-3.0.txt</url>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<name>Solomon Shorser</name>
+			<email>solomon.shorser@oicr.on.ca</email>
+			<organization>Reactome</organization>
+			<organizationUrl>https://reactome.org</organizationUrl>
+		</developer>
+		<developer>
+			<name>Joel Weiser</name>
+			<email>joel.weiser@oicr.on.ca</email>
+			<organization>Reactome</organization>
+			<organizationUrl>https://reactome.org</organizationUrl>
+		</developer>
+	</developers>
+
+	<scm>
+		<connection>scm:git:git://github.com/reactome/data-release-pipeline.git</connection>
+		<developerConnection>scm:git:ssh://github.com/reactome/data-release-pipeline.git</developerConnection>
+		<url>https://github.com/reactome/data-release-pipeline/tree/develop/release-common-lib</url>
+		<tag>release-common-lib-1.1.1</tag>
+	</scm>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
+
+		<hamcrest.version>2.1</hamcrest.version>
+		<junit.version>5.1.0</junit.version>
+		<junit.platform.version>1.1.0</junit.platform.version>
 		<mockito.version>2.18.3</mockito.version>
 	</properties>
 
@@ -20,7 +56,7 @@
 		<dependency>
 			<groupId>org.reactome.base</groupId>
 			<artifactId>reactome-base</artifactId>
-			<version>1.2.22-SNAPSHOT</version>
+			<version>1.2.22</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
@@ -37,37 +73,37 @@
 		<dependency>
 			<groupId>org.hamcrest</groupId>
 			<artifactId>hamcrest</artifactId>
-			<version>2.1</version>
+			<version>${hamcrest.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
-			<version>5.1.0</version>
+			<version>${junit.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-engine</artifactId>
-			<version>5.1.0</version>
+			<version>${junit.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.vintage</groupId>
 			<artifactId>junit-vintage-engine</artifactId>
-			<version>5.1.0</version>
+			<version>${junit.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.platform</groupId>
 			<artifactId>junit-platform-launcher</artifactId>
-			<version>1.1.0</version>
+			<version>${junit.platform.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.platform</groupId>
 			<artifactId>junit-platform-runner</artifactId>
-			<version>1.1.0</version>
+			<version>${junit.platform.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -84,40 +120,59 @@
 		</dependency>
 	</dependencies>
 
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.0.0</version>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>3.0.1</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<version>1.6</version>
+				<executions>
+					<execution>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
 	<distributionManagement>
 		<repository>
-			<id>oicr-central</id>
-			<name>artifacts.oicr.on.ca-releases</name>
-			<url>https://artifacts.oicr.on.ca/artifactory/reactome</url>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
 		</repository>
-
 		<snapshotRepository>
-			<id>oicr-snapshots</id>
-			<name>artifacts.oicr.on.ca-snapshots</name>
-			<url>https://artifacts.oicr.on.ca/artifactory/reactome</url>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
 		</snapshotRepository>
 	</distributionManagement>
-
-	<repositories>
-		<repository>
-			<id>sonatype-snapshots</id>
-			<name>Sonatype snapshot repository</name>
-			<url>https://oss.sonatype.org/content/groups/public</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-
-		<repository>
-			<id>sonatype-releases</id>
-			<name>Sonatype release repository</name>
-			<url>https://oss.sonatype.org/content/groups/staging</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-		</repository>
-	</repositories>
 </project>

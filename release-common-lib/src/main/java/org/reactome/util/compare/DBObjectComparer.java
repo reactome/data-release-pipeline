@@ -26,7 +26,7 @@ public class DBObjectComparer
 	 * Compares two GKInstances.
 	 * @param inst1 the first instance.
 	 * @param inst2 the second instance.
-	 * @param sb StringBuilder that will contain a detailed report of differences.
+	 * @param sb a StringBuilder that will contain a detailed report of differences.
 	 * @return The number of differences between the two instances.
 	 * A single-valued attribute that differs will count as 1 diff.
 	 * If the instances have different schema classes, that will count as 1 diff.

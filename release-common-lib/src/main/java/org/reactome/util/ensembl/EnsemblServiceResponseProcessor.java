@@ -2,7 +2,7 @@ package org.reactome.util.ensembl;
 
 import java.io.IOException;
 import java.net.URI;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -35,7 +35,7 @@ public final class EnsemblServiceResponseProcessor
 		private int status;
 
 		/**
-		 * Retreives the Duration object describing the amount of time to wait before retrying the request to the
+		 * Retrieves the Duration object describing the amount of time to wait before retrying the request to the
 		 * EnsEMBL service
 		 * @return Time to wait before retrying request (as a Duration object)
 		 */
@@ -159,25 +159,32 @@ public final class EnsemblServiceResponseProcessor
 		EnsemblServiceResult result = this.new EnsemblServiceResult();
 		result.setStatus(response.getStatusLine().getStatusCode());
 		boolean okToQuery = false;
-		// First check to see if we got a "Retry-After" header. This is most likely to happen if we send SO many requests
-		// that we used up our quota with the service, and need to wait for it to reset.
+		// First check to see if we got a "Retry-After" header. This is most likely to happen if we send SO many
+		// requests that we used up our quota with the service, and need to wait for it to reset.
 		if ( response.containsHeader("Retry-After") )
 		{
-			logger.debug("Response message: {} ; Reason code: {}; Headers: {}", response.getStatusLine().toString(),
-																				response.getStatusLine().getReasonPhrase(),
-										Arrays.stream(response.getAllHeaders()).map( h -> h.toString()).collect(Collectors.toList()));
+			logger.debug("Response message: {} ; Reason code: {}; Headers: {}",
+				response.getStatusLine().toString(),
+				response.getStatusLine().getReasonPhrase(),
+				Arrays.stream(response.getAllHeaders()).map(Object::toString).collect(Collectors.toList())
+			);
 
 
-			Duration waitTime = Duration.ofSeconds(Integer.valueOf(response.getHeaders("Retry-After")[0].getValue().toString()));
+			Duration waitTime = Duration.ofSeconds(Integer.parseInt(response.getHeaders("Retry-After")[0].getValue()));
 
-			logger.warn("The server told us to wait, so we will wait for {} * {} before trying again.",waitTime, waitMultiplier);
+			logger.warn("The server told us to wait, so we will wait for {} * {} before trying again.",
+				waitTime, this.waitMultiplier
+			);
 
 			result.setWaitTime(waitTime.multipliedBy(this.waitMultiplier));
 			this.waitMultiplier ++;
 			// If we get told to wait > 5 times, let's just take the hint and stop trying.
 			if (this.waitMultiplier >= 5)
 			{
-				logger.error("I've already waited {} times and I'm STILL getting told to wait. This will be the LAST attempt.");
+				logger.error(
+					"I've already waited {} times and I'm STILL getting told to wait. This will be the LAST attempt.",
+					this.waitMultiplier
+				);
 				okToQuery = false;
 			}
 			else
@@ -195,14 +202,9 @@ public final class EnsemblServiceResponseProcessor
 				case HttpStatus.SC_OK:
 					try
 					{
-						//ContentType.get(response.getEntity()).getCharset().name();
-						content = EntityUtils.toString(response.getEntity(), Charset.forName("UTF-8"));
+						content = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
 					}
-					catch (ParseException e)
-					{
-						e.printStackTrace();
-					}
-					catch (IOException e)
+					catch (ParseException | IOException e)
 					{
 						e.printStackTrace();
 					}
@@ -210,7 +212,9 @@ public final class EnsemblServiceResponseProcessor
 					okToQuery = false;
 					break;
 				case HttpStatus.SC_NOT_FOUND:
-					logger.error("Response code 404 (\"Not found\") received: ", response.getStatusLine().getReasonPhrase() );
+					logger.error("Response code 404 (\"Not found\") received: {}",
+						response.getStatusLine().getReasonPhrase()
+					);
 					// If we got 404, don't retry.
 					okToQuery = false;
 					break;
@@ -225,11 +229,7 @@ public final class EnsemblServiceResponseProcessor
 					{
 						s = EntityUtils.toString(response.getEntity());
 					}
-					catch (ParseException e)
-					{
-						e.printStackTrace();
-					}
-					catch (IOException e)
+					catch (ParseException | IOException e)
 					{
 						e.printStackTrace();
 					}
@@ -255,13 +255,9 @@ public final class EnsemblServiceResponseProcessor
 					okToQuery = false;
 					try
 					{
-						content = EntityUtils.toString(response.getEntity(), Charset.forName("UTF-8"));
+						content = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
 					}
-					catch (ParseException e)
-					{
-						e.printStackTrace();
-					}
-					catch (IOException e)
+					catch (ParseException | IOException e)
 					{
 						e.printStackTrace();
 					}
@@ -273,7 +269,7 @@ public final class EnsemblServiceResponseProcessor
 		result.setOkToRetry(okToQuery);
 		if (response.containsHeader("X-RateLimit-Remaining"))
 		{
-			int numRequestsRemaining = Integer.valueOf(response.getHeaders("X-RateLimit-Remaining")[0].getValue().toString());
+			int numRequestsRemaining = Integer.parseInt(response.getHeaders("X-RateLimit-Remaining")[0].getValue());
 			EnsemblServiceResponseProcessor.numRequestsRemaining.set(numRequestsRemaining);
 			numRequestsRemaining = EnsemblServiceResponseProcessor.numRequestsRemaining.get();
 			if (numRequestsRemaining % 1000 == 0)
@@ -283,20 +279,13 @@ public final class EnsemblServiceResponseProcessor
 		}
 		else
 		{
-			// actually, this is not so strange - I think that http://rest.ensemblgenomes.org/ *never* returns
-			// X-RateLimit-Remaining; I think that header *only* comes from rest.ensembl.org
-			// So only log a message if we didn't get a rate limit from rest.ensembl.org - if it didn't come from
-			// rest.ensemblGENOMES.org, that's OK.
-			if (!originalURI.toString().contains("rest.ensemblgenomes.org"))
-			{
-				logger.warn(
-					"No X-RateLimit-Remaining was returned. This is odd. Response message: {} ; "
-						+ "Headers returned are: {}\nLast known value for remaining was {}",
-					response.getStatusLine().toString(),
-					Arrays.stream(response.getAllHeaders()).map( h -> h.toString()).collect(Collectors.toList()),
-					EnsemblServiceResponseProcessor.numRequestsRemaining
-				);
-			}
+			logger.warn(
+				"No X-RateLimit-Remaining was returned. This is odd. Response message: {} ; "
+					+ "Headers returned are: {}\nLast known value for remaining was {}",
+				response.getStatusLine().toString(),
+				Arrays.stream(response.getAllHeaders()).map(Object::toString).collect(Collectors.toList()),
+				EnsemblServiceResponseProcessor.numRequestsRemaining
+			);
 		}
 		return result;
 	}

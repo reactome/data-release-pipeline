@@ -26,8 +26,10 @@ public abstract class ReleaseStep
 
 	/**
 	 * Parses a Properties object to obtain database connection information and return a database adaptor as a
-	 * MySQLAdaptor object.  Properties for db.host, db.user, db.password, db.name, and optionally db.port are
-	 * expected.
+	 * MySQLAdaptor object.
+	 *
+	 * Required properties are db.user, db.password, and db.name
+	 * Optional properties are db.port (3306 by default) and db.host (localhost by default)
 	 *
 	 * @param props Properties object containing database connection properties
 	 * @return Database adaptor as a MySQLAdaptor object

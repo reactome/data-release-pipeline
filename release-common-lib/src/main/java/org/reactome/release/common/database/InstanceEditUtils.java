@@ -39,8 +39,6 @@ public class InstanceEditUtils
 		}
 		catch (Exception e)
 		{
-			//logger.error("Exception caught while trying to create an InstanceEdit: {}",
-			//e.getMessage());
 			e.printStackTrace();
 			throw e;
 		}
@@ -74,10 +72,6 @@ public class InstanceEditUtils
 			{
 				dba.storeInstance(newIE);
 			}
-			//else
-			//{
-			//	logger.info("needStore set to false");
-			//}
 			return newIE;
 		}
 		else

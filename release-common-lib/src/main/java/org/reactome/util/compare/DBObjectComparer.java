@@ -35,7 +35,10 @@ public class DBObjectComparer
 	 */
 	public static int compareInstances(GKInstance instance1, GKInstance instance2, StringBuilder stringBuilder)
 	{
-		return compareInstances(instance1, instance2, stringBuilder, 5, false);
+		final int maxRecusionDepth = 5;
+		final boolean checkReferrers = false;
+
+		return compareInstances(instance1, instance2, stringBuilder, maxRecusionDepth, checkReferrers);
 	}
 
 	/**
@@ -58,14 +61,16 @@ public class DBObjectComparer
 		GKInstance instance1, GKInstance instance2, StringBuilder stringBuilder, boolean checkReferrers
 	)
 	{
-		return compareInstances(instance1, instance2, stringBuilder, 5, checkReferrers);
+		final int maxRecusionDepth = 5;
+
+		return compareInstances(instance1, instance2, stringBuilder, maxRecusionDepth, checkReferrers);
 	}
 
 	/**
 	 * Compares two GKInstances.
 	 * @param instance1 the first instance.
 	 * @param instance2 the second instance.
-	 * @param sb a StringBuilder that will contain a detailed report of differences.
+	 * @param stringBuilder a StringBuilder that will contain a detailed report of differences.
 	 * @param maxRecursionDepth the maximum depth of recursion that will be allowed. Normally a depth of 2 or 3 is
 	 * probably sufficient.
 	 * @param checkReferrers Should referring instances also be checked? If <b>true</b>, then referring attributes
@@ -80,17 +85,25 @@ public class DBObjectComparer
 	 * that will count as 1 diff and the elements will NOT be compared.
 	 */
 	public static int compareInstances(
-		GKInstance instance1, GKInstance instance2, StringBuilder sb, int maxRecursionDepth, boolean checkReferrers
+		GKInstance instance1, GKInstance instance2, StringBuilder stringBuilder,
+		int maxRecursionDepth, boolean checkReferrers
 	)
 	{
-		return compareInstances(instance1, instance2, sb, 0, 0, maxRecursionDepth, null, checkReferrers);
+		final int diffCount = 0;
+		final int initalRecursionDepth = 0;
+		final Predicate<? super SchemaAttribute> customAttributeNameFilter = null;
+
+		return compareInstances(
+			instance1, instance2, stringBuilder, diffCount, initalRecursionDepth,
+			maxRecursionDepth, customAttributeNameFilter, checkReferrers
+		);
 	}
 
 	/**
 	 * Compares two GKInstances.
 	 * @param instance1 the first instance.
 	 * @param instance2 the second instance.
-	 * @param sb a StringBuilder that will contain a detailed report of differences.
+	 * @param stringBuilder a StringBuilder that will contain a detailed report of differences.
 	 * @param maxRecursionDepth the maximum depth of recursion that will be allowed. Normally a depth of 2 or 3 is
 	 * probably sufficient.
 	 * @param customAttributeNameFilter A custom Predicate that will be used to filter attribute names. The default
@@ -114,12 +127,16 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 	 * that will count as 1 diff and the elements will NOT be compared.
 	 */
 	public static int compareInstances(
-		GKInstance instance1, GKInstance instance2, StringBuilder sb, int maxRecursionDepth,
+		GKInstance instance1, GKInstance instance2, StringBuilder stringBuilder, int maxRecursionDepth,
 		Predicate<? super SchemaAttribute> customAttributeNameFilter, boolean checkReferrers
 	)
 	{
+		final int diffCount = 0;
+		final int initalRecursionDepth = 0;
+
 		return compareInstances(
-			instance1, instance2, sb, 0, 0, maxRecursionDepth, customAttributeNameFilter, checkReferrers
+			instance1, instance2, stringBuilder, diffCount, initalRecursionDepth,
+			maxRecursionDepth, customAttributeNameFilter, checkReferrers
 		);
 	}
 

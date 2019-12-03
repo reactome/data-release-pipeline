@@ -2,11 +2,13 @@ package org.reactome.util.general;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.reactome.util.general.CollectionUtils.combineLists;
 import static org.reactome.util.general.CollectionUtils.safeList;
 import static org.reactome.util.general.CollectionUtils.safeSet;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -86,5 +88,49 @@ public class CollectionUtilsTest {
 		List<Integer> safeList = safeList(testSet);
 
 		assertThat(safeList, is(equalTo(testListWithUniqueValues)));
+	}
+
+	@Test
+	public void listsCombinedInExpectedOrder() {
+		final List<Integer> list1 = testListWithUniqueValues;
+		final List<Integer> list2 = Arrays.asList(4, 5, 6);
+		final List<Integer> EXPECTED_COMBINED_LIST = Arrays.asList(1, 2, 3, 4, 5, 6);
+
+		List<Integer> combinedList = combineLists(list1, list2);
+
+		assertThat(combinedList, is(equalTo(EXPECTED_COMBINED_LIST)));
+	}
+
+	@Test
+	public void listsCombinedAsExpectedWithEmptyList() {
+		final List<Integer> list1 = Collections.emptyList();
+		final List<Integer> list2 = testListWithUniqueValues;
+		final List<Integer> EXPECTED_COMBINED_LIST = testListWithUniqueValues;
+
+		List<Integer> combinedList = combineLists(list1, list2);
+
+		assertThat(combinedList, is(equalTo(EXPECTED_COMBINED_LIST)));
+	}
+
+	@Test
+	public void listsCombinedAsExpectedWithNullList() {
+		final List<Integer> list1 = null;
+		final List<Integer> list2 = testListWithUniqueValues;
+		final List<Integer> EXPECTED_COMBINED_LIST = testListWithUniqueValues;
+
+		List<Integer> combinedList = combineLists(list1, list2);
+
+		assertThat(combinedList, is(equalTo(EXPECTED_COMBINED_LIST)));
+	}
+
+	@Test
+	public void listCombinedAsExpectedWithNullElement() {
+		final List<Integer> list1 = testListWithUniqueValues;
+		final List<Integer> list2 = Arrays.asList(4, null, 5);
+		final List<Integer> EXPECTED_COMBINED_LIST = Arrays.asList(1, 2, 3, 4, null, 5);
+
+		List<Integer> combinedList = combineLists(list1, list2);
+
+		assertThat(combinedList, is(equalTo(EXPECTED_COMBINED_LIST)));
 	}
 }

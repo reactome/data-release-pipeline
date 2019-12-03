@@ -36,6 +36,25 @@ public class CollectionUtils {
 		return Optional.ofNullable(collection).map(CollectionUtils::convertToSet).orElse(Collections.emptySet());
 	}
 
+	/**
+	 * Returns a list with all the elements of the passed lists in the order the lists are received (i.e. flattens
+	 * multiple lists into one).
+	 * @param lists List objects of type E to be combined into a single list
+	 * @return Combined list of type E or an empty List of type E if the lists received are null or empty
+	 */
+	@SafeVarargs
+	public static <E> List<E> combineLists(List<E> ...lists) {
+		List<E> combinedList = new ArrayList<>();
+
+		for (List<E> list : lists) {
+			if (list != null) {
+				combinedList.addAll(list);
+			}
+		}
+
+		return combinedList;
+	}
+
 	private static <E> List<E> convertToList(Collection<E> collection) {
 		return new ArrayList<>(collection);
 	}

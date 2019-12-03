@@ -1,9 +1,11 @@
 package org.reactome.util.compare;
 
 import static org.reactome.util.general.CollectionUtils.combineLists;
+import static org.reactome.util.general.CollectionUtils.safeList;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -333,7 +335,9 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 		{
 			try
 			{
-				return instance.getAttributeValuesList(attribute);
+				@SuppressWarnings("unchecked")
+				List<Object> values = safeList((Collection<Object>) instance.getAttributeValuesList(attribute));
+				return values;
 			}
 			catch (Exception e)
 			{
@@ -351,7 +355,9 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 		{
 			try
 			{
-				return new ArrayList<Object>(instance.getReferers(attribute));
+				@SuppressWarnings("unchecked")
+				List<Object> referrerValues = safeList((Collection<Object>) instance.getReferers(attribute));
+				return referrerValues;
 			}
 			catch (Exception e)
 			{

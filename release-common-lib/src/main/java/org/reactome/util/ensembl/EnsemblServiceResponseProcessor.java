@@ -5,6 +5,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -31,7 +32,7 @@ public final class EnsemblServiceResponseProcessor
 	{
 		private Duration waitTime = Duration.ZERO;
 		private String result;
-		private boolean okToRetry;
+		private boolean okToRetry = false;
 		private int status;
 
 		/**
@@ -128,14 +129,10 @@ public final class EnsemblServiceResponseProcessor
 	 */
 	public EnsemblServiceResponseProcessor(Logger logger)
 	{
-		if (logger!=null)
-		{
-			this.logger = logger;
-		}
-		else
-		{
-			this.logger = LogManager.getLogger();
-		}
+		this.logger =
+			logger != null ?
+			logger :
+			LogManager.getLogger();
 	}
 
 	/**
@@ -153,140 +150,28 @@ public final class EnsemblServiceResponseProcessor
 	 * @param response HttpResponse from the EnsEMBL service
 	 * @param originalURI The URI of the EnsEMBL service queried (e.g rest.ensembl.org or rest.ensemblgenomes.org)
 	 * @return EnsemblServiceResult object containing the relevant information from the response
+	 * @deprecated use {@link #processResponse(HttpResponse) instead}
 	 */
+	@Deprecated
 	public EnsemblServiceResult processResponse(HttpResponse response, URI originalURI)
 	{
-		EnsemblServiceResult result = this.new EnsemblServiceResult();
-		result.setStatus(response.getStatusLine().getStatusCode());
-		boolean okToQuery = false;
-		// First check to see if we got a "Retry-After" header. This is most likely to happen if we send SO many
-		// requests that we used up our quota with the service, and need to wait for it to reset.
-		if ( response.containsHeader("Retry-After") )
-		{
-			logger.debug("Response message: {} ; Reason code: {}; Headers: {}",
-				response.getStatusLine().toString(),
-				response.getStatusLine().getReasonPhrase(),
-				Arrays.stream(response.getAllHeaders()).map(Object::toString).collect(Collectors.toList())
-			);
+		return processResponse(response);
+	}
 
+	/**
+	 * Processes the HttpResponse from the queried EnsEMBL service, logs relevant information for the end-user, and
+	 * returns the important information of the response as an EnsemblServiceResult object
+	 * @param response HttpResponse from the EnsEMBL service
+	 * @return EnsemblServiceResult object containing the relevant information from the response
+	 */
+	public EnsemblServiceResult processResponse(HttpResponse response)
+	{
+		EnsemblServiceResult result = response.containsHeader("Retry-After") ?
+			processResponseWithRetryAfter(response) :
+			processResponseWhenNotOverQueryQuota(response);
 
-			Duration waitTime = Duration.ofSeconds(Integer.parseInt(response.getHeaders("Retry-After")[0].getValue()));
+		processXRateLimitRemaining(response);
 
-			logger.warn("The server told us to wait, so we will wait for {} * {} before trying again.",
-				waitTime, this.waitMultiplier
-			);
-
-			result.setWaitTime(waitTime.multipliedBy(this.waitMultiplier));
-			this.waitMultiplier ++;
-			// If we get told to wait > 5 times, let's just take the hint and stop trying.
-			if (this.waitMultiplier >= 5)
-			{
-				logger.error(
-					"I've already waited {} times and I'm STILL getting told to wait. This will be the LAST attempt.",
-					this.waitMultiplier
-				);
-				okToQuery = false;
-			}
-			else
-			{
-				// It's ok to re-query the sevice, as long as you wait for the time the server wants you to wait.
-				okToQuery = true;
-			}
-		}
-		// Else... no "Retry-After" so we haven't gone over our quota.
-		else
-		{
-			String content = "";
-			switch (response.getStatusLine().getStatusCode())
-			{
-				case HttpStatus.SC_OK:
-					try
-					{
-						content = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-					}
-					catch (ParseException | IOException e)
-					{
-						e.printStackTrace();
-					}
-					result.setResult(content);
-					okToQuery = false;
-					break;
-				case HttpStatus.SC_NOT_FOUND:
-					logger.error("Response code 404 (\"Not found\") received: {}",
-						response.getStatusLine().getReasonPhrase()
-					);
-					// If we got 404, don't retry.
-					okToQuery = false;
-					break;
-				case HttpStatus.SC_INTERNAL_SERVER_ERROR:
-					logger.error("Error 500 detected! Message: {}",response.getStatusLine().getReasonPhrase());
-					// If we get 500 error then we should just get  out of here. Maybe throw an exception?
-					okToQuery = false;
-					break;
-				case HttpStatus.SC_BAD_REQUEST:
-					String s = "";
-					try
-					{
-						s = EntityUtils.toString(response.getEntity());
-					}
-					catch (ParseException | IOException e)
-					{
-						e.printStackTrace();
-					}
-					logger.trace("Response code was 400 (\"Bad request\"). Message from server: {}", s);
-					okToQuery = false;
-					break;
-				case HttpStatus.SC_GATEWAY_TIMEOUT:
-					timeoutRetriesRemaining--;
-					logger.error("Request timed out! {} retries remaining", timeoutRetriesRemaining);
-					if (timeoutRetriesRemaining > 0)
-					{
-						okToQuery = true;
-					}
-					else
-					{
-						logger.error("No more retries remaining.");
-						timeoutRetriesRemaining = 3;
-						okToQuery = false;
-					}
-					break;
-				default:
-					// Log any other kind of response.
-					okToQuery = false;
-					try
-					{
-						content = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-					}
-					catch (ParseException | IOException e)
-					{
-						e.printStackTrace();
-					}
-					result.setResult(content);
-					logger.info("Unexpected response {} with message: {}",response.getStatusLine().getStatusCode(), response.getStatusLine().getReasonPhrase());
-					break;
-			}
-		}
-		result.setOkToRetry(okToQuery);
-		if (response.containsHeader("X-RateLimit-Remaining"))
-		{
-			int numRequestsRemaining = Integer.parseInt(response.getHeaders("X-RateLimit-Remaining")[0].getValue());
-			EnsemblServiceResponseProcessor.numRequestsRemaining.set(numRequestsRemaining);
-			numRequestsRemaining = EnsemblServiceResponseProcessor.numRequestsRemaining.get();
-			if (numRequestsRemaining % 1000 == 0)
-			{
-				logger.debug("{} requests remaining", numRequestsRemaining);
-			}
-		}
-		else
-		{
-			logger.warn(
-				"No X-RateLimit-Remaining was returned. This is odd. Response message: {} ; "
-					+ "Headers returned are: {}\nLast known value for remaining was {}",
-				response.getStatusLine().toString(),
-				Arrays.stream(response.getAllHeaders()).map(Object::toString).collect(Collectors.toList()),
-				EnsemblServiceResponseProcessor.numRequestsRemaining
-			);
-		}
 		return result;
 	}
 
@@ -297,5 +182,149 @@ public final class EnsemblServiceResponseProcessor
 	public static int getNumRequestsRemaining()
 	{
 		return EnsemblServiceResponseProcessor.numRequestsRemaining.get();
+	}
+
+	// This is most likely to happen if we send SO many requests that we used up our quota with the service, and
+	// need to wait for it to reset.
+	private EnsemblServiceResult processResponseWithRetryAfter(HttpResponse response)
+	{
+		logger.debug("Response message: {} ; Reason code: {}; Headers: {}",
+			response.getStatusLine().toString(),
+			response.getStatusLine().getReasonPhrase(),
+			getHeaders(response)
+		);
+
+		EnsemblServiceResult result = this.new EnsemblServiceResult();
+		result.setStatus(response.getStatusLine().getStatusCode());
+		result.setWaitTime(processWaitTime(response));
+		result.setOkToRetry(timesWaitedThresholdNotExceeded());
+
+		return result;
+	}
+
+	// Called with no "Retry-After" header, so we haven't gone over our quota.
+	private EnsemblServiceResult processResponseWhenNotOverQueryQuota(HttpResponse response)
+	{
+		EnsemblServiceResult result = this.new EnsemblServiceResult();
+		result.setStatus(response.getStatusLine().getStatusCode());
+		switch (response.getStatusLine().getStatusCode())
+		{
+			case HttpStatus.SC_GATEWAY_TIMEOUT:
+				logger.error("Request timed out! {} retries remaining", timeoutRetriesRemaining);
+
+				timeoutRetriesRemaining--;
+				if (timeoutRetriesRemaining > 0)
+				{
+					result.setOkToRetry(true);
+				}
+				else
+				{
+					logger.error("No more retries remaining.");
+					timeoutRetriesRemaining = 3;
+				}
+				break;
+			case HttpStatus.SC_OK:
+				result.setResult(parseContent(response));
+				break;
+			case HttpStatus.SC_NOT_FOUND:
+				logger.error("Response code 404 ('Not found') received: {}",
+					response.getStatusLine().getReasonPhrase()
+				);
+				// If we got 404, don't retry.
+				break;
+			case HttpStatus.SC_INTERNAL_SERVER_ERROR:
+				logger.error("Error 500 detected! Message: {}",response.getStatusLine().getReasonPhrase());
+				// If we get 500 error then we should just get  out of here. Maybe throw an exception?
+				break;
+			case HttpStatus.SC_BAD_REQUEST:
+				logger.trace("Response code was 400 ('Bad request'). Message from server: {}", parseContent(response));
+				break;
+			default:
+				// Log any other kind of response.
+				result.setResult(parseContent(response));
+				logger.info("Unexpected response {} with message: {}",
+					response.getStatusLine().getStatusCode(),
+					response.getStatusLine().getReasonPhrase()
+				);
+				break;
+		}
+
+		return result;
+	}
+
+	private void processXRateLimitRemaining(HttpResponse response)
+	{
+		if (response.containsHeader("X-RateLimit-Remaining"))
+		{
+			numRequestsRemaining.set(parseIntegerHeaderValue(response, "X-RateLimit-Remaining"));
+			if (numRequestsRemaining.get() % 1000 == 0)
+			{
+				logger.debug("{} requests remaining", numRequestsRemaining.get());
+			}
+		}
+		else
+		{
+			logger.warn(
+				"No X-RateLimit-Remaining was returned. This is odd. Response message: {} ; "+
+					"Headers returned are: {} " + System.lineSeparator() +
+					"Last known value for remaining was {}",
+
+				response.getStatusLine().toString(),
+				getHeaders(response),
+				numRequestsRemaining
+			);
+		}
+	}
+
+	private Duration processWaitTime(HttpResponse response)
+	{
+		Duration waitTime = Duration.ofSeconds(parseIntegerHeaderValue(response,"Retry-After"));
+
+		logger.warn("The server told us to wait, so we will wait for {} * {} before trying again.",
+			waitTime, this.waitMultiplier
+		);
+
+		return waitTime.multipliedBy(this.waitMultiplier);
+	}
+
+	private boolean timesWaitedThresholdNotExceeded()
+	{
+		// If we get told to wait >= 5 times, let's just take the hint and stop trying.
+		if (this.waitMultiplier >= 5)
+		{
+			logger.error(
+				"I've already waited {} times and I'm STILL getting told to wait. This will be the LAST attempt.",
+				this.waitMultiplier
+			);
+
+			return false;
+		}
+
+		// It's ok to re-query the sevice, as long as you wait for the time the server wants you to wait.
+		this.waitMultiplier++;
+		return true;
+	}
+
+	private String parseContent(HttpResponse response)
+	{
+		try
+		{
+			return EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
+		}
+		catch (ParseException | IOException e)
+		{
+			e.printStackTrace();
+			return "";
+		}
+	}
+
+	private static int parseIntegerHeaderValue(HttpResponse response, String header)
+	{
+		return Integer.parseInt(response.getHeaders(header)[0].getValue());
+	}
+
+	private List<String> getHeaders(HttpResponse response)
+	{
+		return Arrays.stream(response.getAllHeaders()).map(Object::toString).collect(Collectors.toList());
 	}
 }

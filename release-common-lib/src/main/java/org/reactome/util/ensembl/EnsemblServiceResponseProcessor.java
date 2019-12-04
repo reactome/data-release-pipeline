@@ -117,7 +117,7 @@ public final class EnsemblServiceResponseProcessor
 	// Assume a quota of 10 to start. This will get set properly with every response from the service.
 	private static final AtomicInteger numRequestsRemaining = new AtomicInteger(10);
 
-	private Logger logger ;
+	private Logger logger;
 
 	// This can't be static because each request could have a different timeoutRetries counter.
 	private int timeoutRetriesRemaining = 3;
@@ -184,8 +184,19 @@ public final class EnsemblServiceResponseProcessor
 		return EnsemblServiceResponseProcessor.numRequestsRemaining.get();
 	}
 
-	// This is most likely to happen if we send SO many requests that we used up our quota with the service, and
-	// need to wait for it to reset.
+	/**
+	 * Process the query's response object when the response contains the header "Retry-After" which is most likely
+	 * to happen if too many requests are sent in a fixed time, using up our quota with the service resulting in a
+	 * need to wait before more requests can be sent.
+	 *
+	 * This method will create and return an EnsemblServiceResult object containing the status code of the response,
+	 * if it is okay to retry the request {@link #timesWaitedThresholdNotMet()}, and the duration of time to wait
+	 * before retrying.
+	 *
+	 * The response's status message, reason phrase, and headers will also be logged for debugging.
+	 * @param response Response object to process
+	 * @return EnsemblServiceResult object with the response status, isOkToRetry, and wait time to retry set
+	 */
 	private EnsemblServiceResult processResponseWithRetryAfter(HttpResponse response)
 	{
 		logger.debug("Response message: {} ; Reason code: {}; Headers: {}",
@@ -197,12 +208,20 @@ public final class EnsemblServiceResponseProcessor
 		EnsemblServiceResult result = this.new EnsemblServiceResult();
 		result.setStatus(response.getStatusLine().getStatusCode());
 		result.setWaitTime(processWaitTime(response));
-		result.setOkToRetry(timesWaitedThresholdNotExceeded());
+		result.setOkToRetry(timesWaitedThresholdNotMet());
 
 		return result;
 	}
 
-	// Called with no "Retry-After" header, so we haven't gone over our quota.
+	/**
+	 * Processes the query's response object when the response does not contain the header "Retry-After".  This method
+	 * will attempt to retrieve the content, and return it as the result value in an EnsemblServiceResult object.
+	 *
+	 * Certain HTTP response error codes (e.g. 400, 404, 500, 504) will cause the error to be logged and a
+	 * EnsemblServiceResult object without content set in the result value to be returned.
+	 * @param response Response object to process
+	 * @return EnsemblServiceResult object with the content set as its result value if the content was obtained
+	 */
 	private EnsemblServiceResult processResponseWhenNotOverQueryQuota(HttpResponse response)
 	{
 		EnsemblServiceResult result = this.new EnsemblServiceResult();
@@ -252,6 +271,16 @@ public final class EnsemblServiceResponseProcessor
 		return result;
 	}
 
+	/**
+	 * Sets the number of requests remaining the server will permit based on the response header
+	 * "X-RateLimit-Remaining".
+	 *
+	 * The number of requests remaining will be logged for debugging if it is a multiple of 1000.  If no
+	 * "X-RateLimit-Remaining" header is found in the response object, its absence will be logged along with
+	 * the HTTP response code received, the response headers received, and the last known number of requests
+	 * remaining.
+	 * @param response Response object from which to obtain the number of requests remaining
+	 */
 	private void processXRateLimitRemaining(HttpResponse response)
 	{
 		if (response.containsHeader("X-RateLimit-Remaining"))
@@ -276,6 +305,14 @@ public final class EnsemblServiceResponseProcessor
 		}
 	}
 
+	/**
+	 * Returns the duration to wait before retrying the query.  The wait time is determined from the "Retry-After"
+	 * header in the query response and is multiplied by the number of times the query has been requested to wait.
+	 * This is to give the increasing server buffer time on each failure requesting the query waits.
+	 * @param response Response object from which to obtain the base wait time
+	 * @return Wait time as Duration object ("Retry-After" value multiplied by the number of times the query has
+	 * requested to wait).
+	 */
 	private Duration processWaitTime(HttpResponse response)
 	{
 		Duration waitTime = Duration.ofSeconds(parseIntegerHeaderValue(response,"Retry-After"));
@@ -287,10 +324,23 @@ public final class EnsemblServiceResponseProcessor
 		return waitTime.multipliedBy(this.waitMultiplier);
 	}
 
-	private boolean timesWaitedThresholdNotExceeded()
+	/**
+	 * Returns <code>true</code> if the number of times the query the object for this class has been told to wait is
+	 * less than the threshold (set to a maximum of 5); <code>false</code> is returned otherwise and the maximum
+	 * number of times waiting being reached is logged.
+	 *
+	 * The counter for the number of times waited will be incremented each time this method is called when the
+	 * threshold has not been met.
+	 *
+	 * @return <code>true</code> if the number of times query has been told to wait is less than the threshold;
+	 * <code>false</code> otherwise.
+	 */
+	private boolean timesWaitedThresholdNotMet()
 	{
 		// If we get told to wait >= 5 times, let's just take the hint and stop trying.
-		if (this.waitMultiplier >= 5)
+		final int MAX_TIMES_TO_WAIT = 5;
+
+		if (this.waitMultiplier >= MAX_TIMES_TO_WAIT)
 		{
 			logger.error(
 				"I've already waited {} times and I'm STILL getting told to wait. This will be the LAST attempt.",
@@ -300,11 +350,18 @@ public final class EnsemblServiceResponseProcessor
 			return false;
 		}
 
-		// It's ok to re-query the sevice, as long as you wait for the time the server wants you to wait.
+		// It's ok to re-query the service, as long as you wait for the time the server wants you to wait.
 		this.waitMultiplier++;
 		return true;
 	}
 
+	/**
+	 * Parses and returns the content from the response object passed.  Content is parsed as UTF-8.  A stacktrace is
+	 * printed to STDERR and an empty String returned if an exception occurs during parsing of the response content.
+	 * @param response Response object to query for content
+	 * @return Content as String from the response object passed.  An empty String if an exception occurs during
+	 * parsing of the content.
+	 */
 	private String parseContent(HttpResponse response)
 	{
 		try
@@ -318,11 +375,22 @@ public final class EnsemblServiceResponseProcessor
 		}
 	}
 
-	private static int parseIntegerHeaderValue(HttpResponse response, String header)
+	/**
+	 * Returns the value of a header, which is an integer, as an integer.
+	 * @param response Response object to query for headers
+	 * @param header Specific header for which to get the value (which should be an integer)
+	 * @return Integer value of the header passed for the response object passed
+	 */
+	private static int parseIntegerHeaderValue(HttpResponse response, String header) throws NumberFormatException
 	{
 		return Integer.parseInt(response.getHeaders(header)[0].getValue());
 	}
 
+	/**
+	 * Returns the headers of the response object as a list of Strings
+	 * @param response Response object from which to get the headers
+	 * @return List of Strings representing the headers from the passed response object
+	 */
 	private List<String> getHeaders(HttpResponse response)
 	{
 		return Arrays.stream(response.getAllHeaders()).map(Object::toString).collect(Collectors.toList());

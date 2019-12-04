@@ -6,7 +6,9 @@ import static org.reactome.util.general.CollectionUtils.safeList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -24,6 +26,10 @@ import org.gk.schema.SchemaAttribute;
  */
 public class DBObjectComparer
 {
+	private static Map<GKInstance, Map<SchemaAttribute, List<Object>>> instanceAttributeToValuesMap = new HashMap<>();
+	private static Map<GKInstance, List<SchemaAttribute>> instanceToRegularAttributesMap = new HashMap<>();
+	private static Map<GKInstance, List<SchemaAttribute>> instanceToReferrerAttributesMap = new HashMap<>();
+
 	/**
 	 * Compares two GKInstances.
 	 * @param instance1 the first instance.
@@ -270,21 +276,27 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 		return filterAttributes(allAttributes, attributeNameFilter);
 	}
 
+	@SuppressWarnings("unchecked")
 	private static List<SchemaAttribute> getRegularAttributes(GKInstance instance)
 	{
-		@SuppressWarnings("unchecked")
-		List<SchemaAttribute> regularAttributes =
-			new ArrayList<SchemaAttribute>(instance.getSchemClass().getAttributes());
-
+		List<SchemaAttribute> regularAttributes = instanceToRegularAttributesMap.get(instance);
+		if (regularAttributes == null)
+		{
+			regularAttributes = new ArrayList<SchemaAttribute>(instance.getSchemClass().getAttributes());
+			instanceToRegularAttributesMap.put(instance, regularAttributes);
+		}
 		return regularAttributes;
 	}
 
+	@SuppressWarnings("unchecked")
 	private static List<SchemaAttribute> getReferrerAttributes(GKInstance instance)
 	{
-		@SuppressWarnings("unchecked")
-		List<SchemaAttribute> referrerAttributes =
-			new ArrayList<SchemaAttribute>(instance.getSchemClass().getReferers());
-
+		List<SchemaAttribute> referrerAttributes = instanceToReferrerAttributesMap.get(instance);
+		if (referrerAttributes == null)
+		{
+			referrerAttributes = new ArrayList<SchemaAttribute>(instance.getSchemClass().getReferers());
+			instanceToReferrerAttributesMap.put(instance, referrerAttributes);
+		}
 		return referrerAttributes;
 	}
 
@@ -314,8 +326,11 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 
 	private static List<Object> getValues(GKInstance instance, SchemaAttribute attribute)
 	{
-		List<Object> values =
-			getRegularAttributes(instance).contains(attribute) ?
+		List<Object> values = getCachedValuesFromInstanceAttributeToValuesMap(instance, attribute);
+
+		if (values.isEmpty())
+		{
+			values = getRegularAttributes(instance).contains(attribute) ?
 				constructGetValuesFunctionForRegularAttributes(instance).apply(attribute) :
 				constructGetValuesFunctionForReferrerAttributes(instance).apply(attribute);
 
@@ -324,7 +339,27 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 		// that don't have a rank/order attribute.
 		InstanceUtilities.sortInstances(values);
 
+			setCachedValuesFromInstanceAttributeToValuesMap(instance, attribute, values);
+		}
 		return values;
+	}
+
+	private static List<Object> getCachedValuesFromInstanceAttributeToValuesMap(
+		GKInstance instance, SchemaAttribute attribute
+	)
+	{
+		return instanceAttributeToValuesMap
+			.computeIfAbsent(instance, instanceKey -> new HashMap<>())
+			.computeIfAbsent(attribute, attributeKey -> new ArrayList<>());
+	}
+
+	private static void setCachedValuesFromInstanceAttributeToValuesMap(
+		GKInstance instance, SchemaAttribute attribute, List<Object> values
+	)
+	{
+		instanceAttributeToValuesMap
+			.computeIfAbsent(instance, instanceKey -> new HashMap<>())
+			.put(attribute, values);
 	}
 
 	private static Function<SchemaAttribute, List<Object>> constructGetValuesFunctionForRegularAttributes(

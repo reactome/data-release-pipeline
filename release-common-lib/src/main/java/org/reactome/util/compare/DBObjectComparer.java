@@ -32,9 +32,9 @@ public class DBObjectComparer
 
 	/**
 	 * Compares two GKInstances.
-	 * @param instance1 the first instance.
-	 * @param instance2 the second instance.
-	 * @param stringBuilder a StringBuilder that will contain a detailed report of differences.
+	 * @param instance1 The first instance.
+	 * @param instance2 The second instance.
+	 * @param stringBuilder A StringBuilder that will contain a detailed report of differences.
 	 * @return The number of differences between the two instances.
 	 * A single-valued attribute that differs will count as 1 diff.
 	 * If the instances have different schema classes, that will count as 1 diff.
@@ -51,9 +51,9 @@ public class DBObjectComparer
 
 	/**
 	 * Compares two GKInstances.
-	 * @param instance1 the first instance.
-	 * @param instance2 the second instance.
-	 * @param stringBuilder a StringBuilder that will contain a detailed report of differences.
+	 * @param instance1 The first instance.
+	 * @param instance2 The second instance.
+	 * @param stringBuilder A StringBuilder that will contain a detailed report of differences.
 	 * @param checkReferrers Should referring instances also be checked? If <b>true</b>, then referring attributes
 	 * will <em>also</em> be checked for differences. They will be followed to the same recursion depth as regular
 	 * attributes. Using this with a high maxRecursionDepth could lead to a very long execution time. Be careful!!
@@ -76,10 +76,10 @@ public class DBObjectComparer
 
 	/**
 	 * Compares two GKInstances.
-	 * @param instance1 the first instance.
-	 * @param instance2 the second instance.
-	 * @param stringBuilder a StringBuilder that will contain a detailed report of differences.
-	 * @param maxRecursionDepth the maximum depth of recursion that will be allowed. Normally a depth of 2 or 3 is
+	 * @param instance1 The first instance.
+	 * @param instance2 The second instance.
+	 * @param stringBuilder A StringBuilder that will contain a detailed report of differences.
+	 * @param maxRecursionDepth The maximum depth of recursion that will be allowed. Normally a depth of 2 or 3 is
 	 * probably sufficient.
 	 * @param checkReferrers Should referring instances also be checked? If <b>true</b>, then referring attributes
 	 * will <em>also</em> be checked for differences.  They will be followed to the same recursion depth as regular
@@ -109,10 +109,10 @@ public class DBObjectComparer
 
 	/**
 	 * Compares two GKInstances.
-	 * @param instance1 the first instance.
-	 * @param instance2 the second instance.
-	 * @param stringBuilder a StringBuilder that will contain a detailed report of differences.
-	 * @param maxRecursionDepth the maximum depth of recursion that will be allowed. Normally a depth of 2 or 3 is
+	 * @param instance1 The first instance.
+	 * @param instance2 The second instance.
+	 * @param stringBuilder A StringBuilder that will contain a detailed report of differences.
+	 * @param maxRecursionDepth The maximum depth of recursion that will be allowed. Normally a depth of 2 or 3 is
 	 * probably sufficient.
 	 * @param customAttributeNameFilter A custom Predicate that will be used to filter attribute names. The default
 	 * predicate looks like this:<pre>
@@ -150,9 +150,9 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 
 	/**
 	 * Recursively compares two GKInstances.
-	 * @param instance1 the first instance.
-	 * @param instance2 the second instance.
-	 * @param stringBuilder a StringBuilder that will contain a detailed report of differences.
+	 * @param instance1 The first instance.
+	 * @param instance2 The second instance.
+	 * @param stringBuilder A StringBuilder that will contain a detailed report of differences.
 	 * @param diffCount The number of differences so far. Should start at 0.
 	 * @param recursionDepth The depth of the recursion so far. Should start at 0.
 	 * @param customAttributeNameFilter A custom Predicate that will be used to filter attribute names.
@@ -226,11 +226,24 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 		return count;
 	}
 
+	/**
+	 * Checks passed GKInstance object to determine if it is an InstanceEdit instance or not.  Returns
+	 * <code>true</code> if the instance is an InstanceEdit; <code>false</code> otherwise
+	 * @param instance GKInstance object to check
+	 * @return <code>true</code> if instance is an InstanceEdit; <code>false</code> otherwise
+	 */
 	private static boolean isInstanceEdit(GKInstance instance)
 	{
 		return instance.getSchemClass().getName().equals("InstanceEdit");
 	}
 
+	/**
+	 * Compares two instances and determines if their schema class types are different.  Returns true if the instances
+	 * are of different types; false otherwise
+	 * @param instance1 First instance to compare
+	 * @param instance2 Second instance to compare
+	 * @return <code>true</code> if the instances are of different types; <code>false</code> otherwise
+	 */
 	private static boolean differentInstanceTypes(GKInstance instance1, GKInstance instance2)
 	{
 		String instanceType1 = instance1.getSchemClass().getName();
@@ -239,6 +252,13 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 		return !instanceType1.equals(instanceType2);
 	}
 
+	/**
+	 * Returns a String of empty spaces that is twice the length of the recursion depth passed.  This provides an
+	 * indentation for visualizing log statements at different levels of recursion in checking instances in the
+	 * compareInstances methods.
+	 * @param recursionDepth Level of recursion correlating to the indentation returned
+	 * @return String of empty spaces twice the length of the recursionDepth
+	 */
 	private static String getIndentString(int recursionDepth)
 	{
 		String[] indentArray = new String[recursionDepth * 2];
@@ -248,13 +268,31 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 		return indentString;
 	}
 
-	private static String getInstanceTypeMismatchMessage(GKInstance instance1, GKInstance instance2) {
+	/**
+	 * Returns a message detailing a mismatch in schema class type between two instances.  The schema class of each
+	 * instance passed will be mentioned in the message.
+	 * @param instance1 First instance in the mismatch
+	 * @param instance2 Second instance in the mismatch
+	 * @return Message as String detailing the schema class mismatch between the two instances.
+	 */
+	private static String getInstanceTypeMismatchMessage(GKInstance instance1, GKInstance instance2)
+	{
 		return "Schema classes don't match, so instances can't be compared! " +
 			"Instance 1 is a " + instance1.getSchemClass().getName() + " and " +
 			"Instance 2 is a " + instance2.getSchemClass().getName() +
 			System.lineSeparator();
 	}
 
+	/**
+	 * Returns a message detailing a mismatch in the number of values of a given attribute when comparing two
+	 * instances.  The instances, attribute name, and number of values obtained from each instance will be mentioned in
+	 * the message.
+	 * @param instance1 First instance in the mismatch
+	 * @param instance2 Second instance in the mismatch
+	 * @param attribute Attribute from which values were obtained
+	 * @return Message as String detailing the mismatch in the number of values for the passed attribute between the
+	 * passed instances
+	 */
 	private static String getCountMismatchMessage(
 		GKInstance instance1, GKInstance instance2, SchemaAttribute attribute
 	)
@@ -265,6 +303,14 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 			"') has " + getValues(instance2, attribute).size() + " elements." + System.lineSeparator();
 	}
 
+	/**
+	 * Retrieves all schema attributes for the passed instance with options to include referrer attributes and to
+	 * filter results.
+	 * @param instance Instance for which to get attributes
+	 * @param checkReferrers <code>true</code> if referrer attributes should be included; <code>false</code> otherwise
+	 * @param attributeNameFilter Predicate value used to determine which attributes should be included
+	 * @return List of SchemaAttributes of the instance passed
+	 */
 	private static List<SchemaAttribute> getAllAttributes(
 		GKInstance instance, boolean checkReferrers, Predicate<? super SchemaAttribute> attributeNameFilter
 	)
@@ -276,6 +322,12 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 		return filterAttributes(allAttributes, attributeNameFilter);
 	}
 
+	/**
+	 * Retrieves "regular" (i.e. not referrer) attributes for the passed instance.  Uses a cache for the attributes of
+	 * instances which have been previously queried.
+	 * @param instance Instance for which to get attributes
+	 * @return List of "regular" (i.e. not referrer) SchemaAttributes of the instance passed
+	 */
 	@SuppressWarnings("unchecked")
 	private static List<SchemaAttribute> getRegularAttributes(GKInstance instance)
 	{
@@ -288,6 +340,12 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 		return regularAttributes;
 	}
 
+	/**
+	 * Retrieves referrer attributes for the passed instance (i.e. attributes used by other instances to refer to the
+	 * passed instance).  Uses a cache for the attributes of instances which have been previously queried.
+	 * @param instance Instance for which to get referrer attributes
+	 * @return List of referrer SchemaAttributes of the instance passed
+	 */
 	@SuppressWarnings("unchecked")
 	private static List<SchemaAttribute> getReferrerAttributes(GKInstance instance)
 	{
@@ -300,6 +358,12 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 		return referrerAttributes;
 	}
 
+	/**
+	 * Filters the passed list of attributes based on the predicate function passed and returns the filtered list.
+	 * @param attributes List of attributes to filter
+	 * @param attributeNameFilter Predicate value used to determine which values should be included
+	 * @return List of SchemaAttributes after filtering
+	 */
 	private static List<SchemaAttribute> filterAttributes(
 		List<SchemaAttribute> attributes, Predicate<? super SchemaAttribute> attributeNameFilter
 	)
@@ -310,6 +374,11 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 			.collect(Collectors.toList());
 	}
 
+	/**
+	 * Returns the default attribute filter as a Predicate function.  By default, the attributes "DB_ID", "dateTime",
+	 * "modified", and "created" are filtered out (i.e. ignored).
+	 * @return Predicate function used to filter out SchemaAttributes value by their names
+	 */
 	private static Predicate<? super SchemaAttribute> getDefaultAttributeNameFilter()
 	{
 		/*
@@ -324,6 +393,13 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 		};
 	}
 
+	/**
+	 * Retrieves the values for the passed attribute of the passed instance.  Uses a cache for the values of attributes
+	 * (cached by the combination of instance and attribute) which have been previously queried.
+	 * @param instance Instance to query for the values of one of its attributes
+	 * @param attribute Attribute to query for its values from the instance
+	 * @return List of generic Objects containing the values of the specific instance and attribute
+	 */
 	private static List<Object> getValues(GKInstance instance, SchemaAttribute attribute)
 	{
 		List<Object> values = getCachedValuesFromInstanceAttributeToValuesMap(instance, attribute);
@@ -334,16 +410,24 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 				constructGetValuesFunctionForRegularAttributes(instance).apply(attribute) :
 				constructGetValuesFunctionForReferrerAttributes(instance).apply(attribute);
 
-		// Make sure the lists are sorted so that you are always comparing objects in the same
-		// sequence: I don't think the database adaptor applies any explicit order to Instances
-		// that don't have a rank/order attribute.
-		InstanceUtilities.sortInstances(values);
+			// Make sure the lists are sorted so that you are always comparing objects in the same
+			// sequence: I don't think the database adaptor applies any explicit order to Instances
+			// that don't have a rank/order attribute.
+			InstanceUtilities.sortInstances(values);
 
 			setCachedValuesFromInstanceAttributeToValuesMap(instance, attribute, values);
 		}
 		return values;
 	}
 
+	/**
+	 * Retrieves cached values for a specific attribute in a specific instance.  An empty list is returned if nothing
+	 * has yet been cached.
+	 * @param instance Instance to query for the cached values of one of its attributes
+	 * @param attribute Attribute to query for its cached values in the instance
+	 * @return List of generic Objects containing the values of the specific instance and attribute that are cached.
+	 * An empty list is returned if nothing has yet been cached.
+	 */
 	private static List<Object> getCachedValuesFromInstanceAttributeToValuesMap(
 		GKInstance instance, SchemaAttribute attribute
 	)
@@ -353,6 +437,12 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 			.computeIfAbsent(attribute, attributeKey -> new ArrayList<>());
 	}
 
+	/**
+	 * Caches the values passed, associating them to the specific instance and attribute passed
+	 * @param instance Instance associated with the values being cached
+	 * @param attribute Attribute associated with the values being cached
+	 * @param values Values to cache
+	 */
 	private static void setCachedValuesFromInstanceAttributeToValuesMap(
 		GKInstance instance, SchemaAttribute attribute, List<Object> values
 	)
@@ -362,6 +452,13 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 			.put(attribute, values);
 	}
 
+	/**
+	 * Returns a function for the passed instance to retrieve values for the "regular" (i.e. not referrer) attribute
+	 * used as input to the function.
+	 * @param instance Instance the function will use to retrieve attribute values
+	 * @return Function which accepts a SchemaAttribute and returns values for the instance passed during its
+	 * construction
+	 */
 	private static Function<SchemaAttribute, List<Object>> constructGetValuesFunctionForRegularAttributes(
 		GKInstance instance
 	)
@@ -382,6 +479,13 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 		};
 	}
 
+	/**
+	 * Returns a function for the passed instance to retrieve values for the referrer attribute (i.e. attributes used
+	 * by other instances to refer to the passed instance) used as input to the function.
+	 * @param instance Instance the function will use to retrieve referrer attribute values
+	 * @return Function which accepts a referrer SchemaAttribute and returns values for the instance passed during its
+	 * construction
+	 */
 	private static Function<SchemaAttribute, List<Object>> constructGetValuesFunctionForReferrerAttributes(
 		GKInstance instance
 	)
@@ -402,7 +506,33 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 		};
 	}
 
-	private static int compareInstanceValues(
+	/**
+	 * Compares the value of the passed attribute between two instances and returns the number of differences.  For an
+	 * value which is a GKInstance, differences are checked for recursively (up to the passed maxRecursionDepth).
+	 * For the base case of "simple" value (i.e. Strings, numbers, etc..., arrays of Strings/numbers/etc...), a count
+	 * of 1 is returned for any difference found between the values compared.
+	 * @param attribute Attribute for which values are being compared
+	 * @param value1 First value to compare
+	 * @param value2 Second value to compare
+	 * @param instance1 First instance from which value was obtained
+	 * @param instance2 Second instance from which value was obtained
+	 * @param stringBuilder a StringBuilder that will contain a detailed report of differences.
+	 * @param diffCount The number of differences so far. Should start at 0.
+	 * @param recursionDepth The depth of the recursion so far. Should start at 0.
+	 * @param maxRecursionDepth The maximum depth of recursion that will be allowed. Normally a depth of 2 or 3 is
+	 * probably sufficient.
+	 * @param customAttributeNameFilter A custom Predicate that will be used to filter attribute names. The default
+	 * predicate looks like this:<pre>
+	Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
+	return !a.getName().equals("DB_ID")
+	&& !a.getName().equals("dateTime")
+	&& !a.getName().equals("modified")
+	&& !a.getName().equals("created");
+	};
+	</pre>
+	 * @param checkReferrers <code>true</code> if referrer attributes should be included; <code>false</code> otherwise
+	 * @return The total number of differences between the values compared (after recursion for GKInstance values)
+	 */
 	private static int compareValuesOfAttributeBetweenInstances(
 		SchemaAttribute attribute, Object value1, Object value2, GKInstance instance1, GKInstance instance2,
 		StringBuilder stringBuilder, int diffCount, int recursionDepth, int maxRecursionDepth,
@@ -444,7 +574,12 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 		return count;
 	}
 
-	private static boolean isInstanceAttribute(SchemaAttribute attribute)
+	/**
+	 * Returns <code>true</code> if the attribute passed is an "instance attribute" (i.e. its value(s) is/are
+	 * instance(s)); <code>false otherwise</code>
+	 * @param attribute Attribute to check for the type of value it holds
+	 * @return <code>true</code> if the attribute passed holds instances; <code>false</code> otherwise
+	 */
 	private static boolean isAttributeContainingInstances(SchemaAttribute attribute)
 	{
 		Class<?> attributeType = attribute.getType();
@@ -452,6 +587,15 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 		return attributeType.equals(GKInstance.class) || attributeType.equals(Instance.class);
 	}
 
+	/**
+	 * Returns a String describing the type of the relationship the passed attribute has to the passed instance.  The
+	 * String will be "referrer attribute" if the attribute passed is a referrer attribute for the instance passed.
+	 * Otherwise, the String will be "attribute" to indicate it is a 'regular' attribute.
+	 * @param instance Instance to check to determine the relationship of the attribute passed
+	 * @param attribute Attribute to check for the relationship to the instance passed
+	 * @return String describing the attribute's relationship to the instance. "referrer attribute" for a referrer
+	 * attribute or "attribute" for a 'regular' attribute.
+	 */
 	private static String getAttributeRelationshipType(GKInstance instance, SchemaAttribute attribute)
 	{
 		return getReferrerAttributes(instance).contains(attribute) ? "referrer attribute" : "attribute";

@@ -106,7 +106,7 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 	 * will <em>also</em> be checked for differences.  They will be followed to the same recursion depth as regular
 	 * attributes. Using this with a high maxRecursionDepth could lead to a very long execution time. Be careful!!
 	 * You might also want to use a custom predicate to filter out attributes that could lead to a cyclical difference
-	 * check.  See the customeAttributeNameFilter parameter above for the default.
+	 * check.  See the customAttributeNameFilter parameter above for the default.
 	 * @return The number of differences between the two instances.
 	 * A single-valued attribute that differs will count as 1 diff.
 	 * If the instances have different schema classes, that will count as 1 diff.
@@ -141,7 +141,7 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 	 * will <em>also</em> be checked for differences.  They will be followed to the same recursion depth as regular
 	 * attributes. Using this with a high maxRecursionDepth could lead to a very long execution time. Be careful!!
 	 * You might also want to use a custom predicate to filter out attributes that could lead to a cyclical difference
-	 * check.  See the customeAttributeNameFilter parameter above for the default.
+	 * check.  See the customAttributeNameFilter parameter above for the default.
 	 * @return The number of differences between the two instances.
 	 * A single-valued attribute that differs will count as 1 diff.
 	 * If the instances have different schema classes, that will count as 1 diff.

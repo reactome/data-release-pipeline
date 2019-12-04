@@ -37,6 +37,10 @@ target
 *.report
 .attach_pid*
 
+# ignore for IntelliJ
+\.idea/
+*.iml
+
 ## Release-specific files
 normal_event_skip_list.txt
 config.properties
@@ -48,5 +52,4 @@ ensembl_1_to_1.txt
 doisToBeUpdated-v*.txt
 
 logs/
-\.idea/
 archive/

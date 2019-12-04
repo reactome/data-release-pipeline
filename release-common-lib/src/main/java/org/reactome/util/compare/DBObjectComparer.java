@@ -209,7 +209,7 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 					Object value1 = instance1AttributeValues.get(i);
 					Object value2 = instance2AttributeValues.get(i);
 
-					count = compareInstanceValues(
+					count = compareValuesOfAttributeBetweenInstances(
 						attribute, value1, value2, instance1, instance2, stringBuilder, count, recursionDepth,
 						maxRecursionDepth, customAttributeNameFilter, checkReferrers
 					);
@@ -403,24 +403,25 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 	}
 
 	private static int compareInstanceValues(
+	private static int compareValuesOfAttributeBetweenInstances(
 		SchemaAttribute attribute, Object value1, Object value2, GKInstance instance1, GKInstance instance2,
-		StringBuilder sb, int diffCount, int recursionDepth, int maxRecursionDepth,
+		StringBuilder stringBuilder, int diffCount, int recursionDepth, int maxRecursionDepth,
 		Predicate<? super SchemaAttribute> customAttributeNameFilter, boolean checkReferrers
 	) {
 		int count = diffCount;
 		// Deal with attributes that return GKInstance objects.
-		if (isInstanceAttribute(attribute))
+		if (isAttributeContainingInstances(attribute))
 		{
 			if (recursionDepth < maxRecursionDepth)
 			{
-				sb.append(getIndentString(recursionDepth))
+				stringBuilder.append(getIndentString(recursionDepth))
 					.append(" Recursing on ")
 					.append(attribute.getName())
 					.append(" attribute...")
 					.append(System.lineSeparator());
 
 				return compareInstances(
-					(GKInstance) value1, (GKInstance) value2, sb, count, recursionDepth + 1,
+					(GKInstance) value1, (GKInstance) value2, stringBuilder, count, recursionDepth + 1,
 					maxRecursionDepth, customAttributeNameFilter, checkReferrers
 				);
 			}
@@ -429,7 +430,7 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 		// Strings/numbers/etc...)
 		else if (!value1.equals(value2))
 		{
-			sb.append(
+			stringBuilder.append(
 				getIndentString(recursionDepth) + "Mismatch on" +
 					getAttributeRelationshipType(instance1, attribute) + " attribute " +
 					"'" + attribute.getName() + "'" + System.lineSeparator() +
@@ -444,6 +445,7 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 	}
 
 	private static boolean isInstanceAttribute(SchemaAttribute attribute)
+	private static boolean isAttributeContainingInstances(SchemaAttribute attribute)
 	{
 		Class<?> attributeType = attribute.getType();
 

@@ -43,10 +43,10 @@ public class DBObjectComparer
 	 */
 	public static int compareInstances(GKInstance instance1, GKInstance instance2, StringBuilder stringBuilder)
 	{
-		final int maxRecusionDepth = 5;
+		final int maxRecursionDepth = 5;
 		final boolean checkReferrers = false;
 
-		return compareInstances(instance1, instance2, stringBuilder, maxRecusionDepth, checkReferrers);
+		return compareInstances(instance1, instance2, stringBuilder, maxRecursionDepth, checkReferrers);
 	}
 
 	/**
@@ -69,9 +69,9 @@ public class DBObjectComparer
 		GKInstance instance1, GKInstance instance2, StringBuilder stringBuilder, boolean checkReferrers
 	)
 	{
-		final int maxRecusionDepth = 5;
+		final int maxRecursionDepth = 5;
 
-		return compareInstances(instance1, instance2, stringBuilder, maxRecusionDepth, checkReferrers);
+		return compareInstances(instance1, instance2, stringBuilder, maxRecursionDepth, checkReferrers);
 	}
 
 	/**
@@ -98,11 +98,11 @@ public class DBObjectComparer
 	)
 	{
 		final int diffCount = 0;
-		final int initalRecursionDepth = 0;
+		final int initialRecursionDepth = 0;
 		final Predicate<? super SchemaAttribute> customAttributeNameFilter = null;
 
 		return compareInstances(
-			instance1, instance2, stringBuilder, diffCount, initalRecursionDepth,
+			instance1, instance2, stringBuilder, diffCount, initialRecursionDepth,
 			maxRecursionDepth, customAttributeNameFilter, checkReferrers
 		);
 	}
@@ -140,10 +140,10 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 	)
 	{
 		final int diffCount = 0;
-		final int initalRecursionDepth = 0;
+		final int initialRecursionDepth = 0;
 
 		return compareInstances(
-			instance1, instance2, stringBuilder, diffCount, initalRecursionDepth,
+			instance1, instance2, stringBuilder, diffCount, initialRecursionDepth,
 			maxRecursionDepth, customAttributeNameFilter, checkReferrers
 		);
 	}

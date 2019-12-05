@@ -237,7 +237,7 @@ public final class EnsemblServiceResponseProcessor
 	 * @param response Response object to process
 	 * @return EnsemblServiceResult object with the response status, isOkToRetry, and wait time to retry set
 	 */
-	private EnsemblServiceResult processResponseWithRetryAfter(HttpResponse response)
+	EnsemblServiceResult processResponseWithRetryAfter(HttpResponse response)
 	{
 		logger.debug("Response message: {} ; Reason code: {}; Headers: {}",
 			response.getStatusLine().toString(),
@@ -267,7 +267,7 @@ public final class EnsemblServiceResponseProcessor
 	 * @param response Response object to process
 	 * @return EnsemblServiceResult object with the content set as its result value if the content was obtained
 	 */
-	private EnsemblServiceResult processResponseWhenNotOverQueryQuota(HttpResponse response)
+	EnsemblServiceResult processResponseWhenNotOverQueryQuota(HttpResponse response)
 	{
 		EnsemblServiceResult result = this.new EnsemblServiceResult();
 		result.setStatus(response.getStatusLine().getStatusCode());
@@ -326,7 +326,7 @@ public final class EnsemblServiceResponseProcessor
 	 * remaining.
 	 * @param response Response object from which to obtain the number of requests remaining
 	 */
-	private void processXRateLimitRemaining(HttpResponse response)
+	void processXRateLimitRemaining(HttpResponse response)
 	{
 		if (response.containsHeader("X-RateLimit-Remaining"))
 		{

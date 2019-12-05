@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.ParseException;
@@ -24,96 +25,6 @@ import org.apache.logging.log4j.Logger;
 public final class EnsemblServiceResponseProcessor
 {
 	public static final int MAX_TIMES_TO_WAIT = 5;
-	/**
-	 * Contains the relevant information of the HTTP response from a query to EnsEMBL's service (e.g. status of the
-	 * response, if the request should be retried, time to wait before retrying, content of the response if successful)
-	 */
-	public class EnsemblServiceResult
-	{
-		private Duration waitTime = Duration.ZERO;
-		private String result;
-		private boolean okToRetry = false;
-		private int status;
-
-		/**
-		 * Retrieves the Duration object describing the amount of time to wait before retrying the request to the
-		 * EnsEMBL service
-		 * @return Time to wait before retrying request (as a Duration object)
-		 */
-		public Duration getWaitTime()
-		{
-			return this.waitTime;
-		}
-
-		/**
-		 * Sets the duration object describing the amount of time to wait before retrying the request to the EnsEMBL
-		 * service
-		 * @param waitTime Wait time as Duration object
-		 */
-		public void setWaitTime(Duration waitTime)
-		{
-			this.waitTime = waitTime;
-		}
-
-		/**
-		 * Retrieves the content of the response from the EnsEMBL service
-		 * @return Content of the response as a String (empty String if no content)
-		 */
-		public String getResult()
-		{
-			return this.result;
-		}
-
-		/**
-		 * Sets the content of the response from the EnsEMBL service
-		 * @param result Content of the response as a String (empty String if no content)
-		 */
-		public void setResult(String result)
-		{
-			this.result = result;
-		}
-
-		/**
-		 * Retrieves if it is permitted to retry the request to the EnsEMBL service
-		 * @return true if okay to retry the request; false otherwise
-		 */
-		public boolean isOkToRetry()
-		{
-			return this.okToRetry;
-		}
-
-		/**
-		 * Sets if it is permitted to retry to the request to the EnsEMBL service
-		 * @param okToRetry true if okay to retry the request; false otherwise
-		 */
-		public void setOkToRetry(boolean okToRetry)
-		{
-			this.okToRetry = okToRetry;
-		}
-
-		/**
-		 * Retrieves the <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status">HTTP status code</a> of
-		 * the response from the EnsEMBL service
-		 * @return Response status code from the EnsEMBL service
-		 */
-		public int getStatus()
-		{
-			return this.status;
-		}
-
-		/**
-		 * Sets the <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status">HTTP status code</a> of
-		 * the response from the EnsEMBL service
-		 * @param status Response status code from the EnsEMBL service
-		 */
-		public void setStatus(int status)
-		{
-			this.status = status;
-		}
-	}
-
-	private int waitMultiplier = 1;
-
 	// Assume a quota of 10 to start. This will get set properly with every response from the service.
 	private static final AtomicInteger numRequestsRemaining = new AtomicInteger(10);
 
@@ -330,8 +241,10 @@ public final class EnsemblServiceResponseProcessor
 	{
 		if (response.containsHeader("X-RateLimit-Remaining"))
 		{
-			numRequestsRemaining.set(parseIntegerHeaderValue(response, "X-RateLimit-Remaining"));
-			if (numRequestsRemaining.get() % 1000 == 0)
+			EnsemblServiceResponseProcessor.numRequestsRemaining.set(
+				parseIntegerHeaderValue(response, "X-RateLimit-Remaining")
+			);
+			if (EnsemblServiceResponseProcessor.numRequestsRemaining.get() % 1000 == 0)
 			{
 				logger.debug("{} requests remaining", numRequestsRemaining.get());
 			}
@@ -345,7 +258,7 @@ public final class EnsemblServiceResponseProcessor
 
 				response.getStatusLine().toString(),
 				getHeaders(response),
-				numRequestsRemaining
+				EnsemblServiceResponseProcessor.numRequestsRemaining
 			);
 		}
 	}
@@ -432,5 +345,103 @@ public final class EnsemblServiceResponseProcessor
 	private List<String> getHeaders(HttpResponse response)
 	{
 		return Arrays.stream(response.getAllHeaders()).map(Object::toString).collect(Collectors.toList());
+	}
+
+	/**
+	 * Contains the relevant information of the HTTP response from a query to EnsEMBL's service (e.g. status of the
+	 * response, if the request should be retried, time to wait before retrying, content of the response if successful)
+	 */
+	public class EnsemblServiceResult
+	{
+		private Duration waitTime;
+		private String result;
+		private boolean okToRetry = false;
+		private int status;
+
+		/**
+		 * Retrieves the Duration object describing the amount of time to wait before retrying the request to the
+		 * EnsEMBL service
+		 * @return Time to wait before retrying request (as a Duration object)
+		 */
+		public Duration getWaitTime()
+		{
+			if (this.waitTime == null)
+			{
+				return Duration.ZERO;
+			}
+
+			return this.waitTime;
+		}
+
+		/**
+		 * Sets the duration object describing the amount of time to wait before retrying the request to the EnsEMBL
+		 * service
+		 * @param waitTime Wait time as Duration object
+		 */
+		public void setWaitTime(Duration waitTime)
+		{
+			this.waitTime = waitTime;
+		}
+
+		/**
+		 * Retrieves the content of the response from the EnsEMBL service
+		 * @return Content of the response as a String (empty String if no content)
+		 */
+		public String getResult()
+		{
+			if (this.result == null)
+			{
+				return StringUtils.EMPTY;
+			}
+
+			return this.result;
+		}
+
+		/**
+		 * Sets the content of the response from the EnsEMBL service
+		 * @param result Content of the response as a String (empty String if no content)
+		 */
+		public void setResult(String result)
+		{
+			this.result = result;
+		}
+
+		/**
+		 * Retrieves if it is permitted to retry the request to the EnsEMBL service
+		 * @return true if okay to retry the request; false otherwise
+		 */
+		public boolean isOkToRetry()
+		{
+			return this.okToRetry;
+		}
+
+		/**
+		 * Sets if it is permitted to retry to the request to the EnsEMBL service
+		 * @param okToRetry true if okay to retry the request; false otherwise
+		 */
+		public void setOkToRetry(boolean okToRetry)
+		{
+			this.okToRetry = okToRetry;
+		}
+
+		/**
+		 * Retrieves the <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status">HTTP status code</a> of
+		 * the response from the EnsEMBL service
+		 * @return Response status code from the EnsEMBL service
+		 */
+		public int getStatus()
+		{
+			return this.status;
+		}
+
+		/**
+		 * Sets the <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status">HTTP status code</a> of
+		 * the response from the EnsEMBL service
+		 * @param status Response status code from the EnsEMBL service
+		 */
+		public void setStatus(int status)
+		{
+			this.status = status;
+		}
 	}
 }

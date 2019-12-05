@@ -23,7 +23,7 @@ import org.apache.logging.log4j.Logger;
  */
 public final class EnsemblServiceResponseProcessor
 {
-
+	public static final int MAX_TIMES_TO_WAIT = 5;
 	/**
 	 * Contains the relevant information of the HTTP response from a query to EnsEMBL's service (e.g. status of the
 	 * response, if the request should be retried, time to wait before retrying, content of the response if successful)
@@ -118,9 +118,9 @@ public final class EnsemblServiceResponseProcessor
 	private static final AtomicInteger numRequestsRemaining = new AtomicInteger(10);
 
 	private Logger logger;
-
+	private int waitMultiplier = 1;
 	// This can't be static because each request could have a different timeoutRetries counter.
-	private int timeoutRetriesRemaining = 3;
+	private int timeoutRetriesRemaining;
 
 	/**
 	 * Constructs a new EnsemblServiceResponseProcessor object with the specified logger
@@ -133,6 +133,8 @@ public final class EnsemblServiceResponseProcessor
 			logger != null ?
 			logger :
 			LogManager.getLogger();
+
+		initializeTimeoutRetriesRemaining();
 	}
 
 	/**
@@ -185,6 +187,44 @@ public final class EnsemblServiceResponseProcessor
 	}
 
 	/**
+	 * Returns the factor by which the response's recommended wait time is multiplied.  The value starts at 1 and
+	 * is incremented each time the response to the request is to wait.  This gives the server some buffer time before
+	 * the request is retried.
+	 * @return Factor by which to multiply the server's response recommended wait time
+	 */
+	public int getWaitMultiplier()
+	{
+		return this.waitMultiplier;
+	}
+
+	/**
+	 * Increase the factor by which the response's recommended wait time it multiplied by one.
+	 */
+	private void incrementWaitMultiplier()
+	{
+		this.waitMultiplier++;
+	}
+
+	/**
+	 * Returns the number of request retries remaining when the server's response is a gateway timeout (status code
+	 * 504)
+	 * @return Number of retries remaining
+	 */
+	public int getTimeoutRetriesRemaining()
+	{
+		return this.timeoutRetriesRemaining;
+	}
+
+	/**
+	 * Sets/resets the starting number of request retries permitted when the server's response is a gateway timeout
+	 * (status code 504)
+	 */
+	private void initializeTimeoutRetriesRemaining()
+	{
+		this.timeoutRetriesRemaining = 3;
+	}
+
+	/**
 	 * Process the query's response object when the response contains the header "Retry-After" which is most likely
 	 * to happen if too many requests are sent in a fixed time, using up our quota with the service resulting in a
 	 * need to wait before more requests can be sent.
@@ -209,6 +249,11 @@ public final class EnsemblServiceResponseProcessor
 		result.setStatus(response.getStatusLine().getStatusCode());
 		result.setWaitTime(processWaitTime(response));
 		result.setOkToRetry(timesWaitedThresholdNotMet());
+
+		if (result.isOkToRetry())
+		{
+			incrementWaitMultiplier();
+		}
 
 		return result;
 	}
@@ -239,7 +284,7 @@ public final class EnsemblServiceResponseProcessor
 				else
 				{
 					logger.error("No more retries remaining.");
-					timeoutRetriesRemaining = 3;
+					initializeTimeoutRetriesRemaining();
 				}
 				break;
 			case HttpStatus.SC_OK:
@@ -318,10 +363,10 @@ public final class EnsemblServiceResponseProcessor
 		Duration waitTime = Duration.ofSeconds(parseIntegerHeaderValue(response,"Retry-After"));
 
 		logger.warn("The server told us to wait, so we will wait for {} * {} before trying again.",
-			waitTime, this.waitMultiplier
+			waitTime, getWaitMultiplier()
 		);
 
-		return waitTime.multipliedBy(this.waitMultiplier);
+		return waitTime.multipliedBy(getWaitMultiplier());
 	}
 
 	/**
@@ -329,18 +374,13 @@ public final class EnsemblServiceResponseProcessor
 	 * less than the threshold (set to a maximum of 5); <code>false</code> is returned otherwise and the maximum
 	 * number of times waiting being reached is logged.
 	 *
-	 * The counter for the number of times waited will be incremented each time this method is called when the
-	 * threshold has not been met.
-	 *
 	 * @return <code>true</code> if the number of times query has been told to wait is less than the threshold;
 	 * <code>false</code> otherwise.
 	 */
 	private boolean timesWaitedThresholdNotMet()
 	{
 		// If we get told to wait >= 5 times, let's just take the hint and stop trying.
-		final int MAX_TIMES_TO_WAIT = 5;
-
-		if (this.waitMultiplier >= MAX_TIMES_TO_WAIT)
+		if (getWaitMultiplier() >= MAX_TIMES_TO_WAIT)
 		{
 			logger.error(
 				"I've already waited {} times and I'm STILL getting told to wait. This will be the LAST attempt.",
@@ -350,8 +390,6 @@ public final class EnsemblServiceResponseProcessor
 			return false;
 		}
 
-		// It's ok to re-query the service, as long as you wait for the time the server wants you to wait.
-		this.waitMultiplier++;
 		return true;
 	}
 

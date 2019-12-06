@@ -9,7 +9,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -404,8 +403,8 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 		if (values.isEmpty())
 		{
 			values = getRegularAttributes(instance).contains(attribute) ?
-				constructGetValuesFunctionForRegularAttributes(instance).apply(attribute) :
-				constructGetValuesFunctionForReferrerAttributes(instance).apply(attribute);
+				getValuesFunctionForRegularAttributes(instance, attribute) :
+				getValuesFunctionForReferrerAttributes(instance, attribute);
 
 			// Make sure the lists are sorted so that you are always comparing objects in the same
 			// sequence: I don't think the database adaptor applies any explicit order to Instances
@@ -450,57 +449,53 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 	}
 
 	/**
-	 * Returns a function for the passed instance to retrieve values for the "regular" (i.e. not referrer) attribute
-	 * used as input to the function.
-	 * @param instance Instance the function will use to retrieve attribute values
-	 * @return Function which accepts a SchemaAttribute and returns values for the instance passed during its
-	 * construction
+	 * Returns the values on the passed instance for the "regular" (i.e. not referrer) attribute
+	 * passed to the method.
+	 * @param instance Instance from which to retrieve values on the passed attribute
+	 * @param attribute Attribute from which to retrieve values for the passed instance
+	 * @return List of values for the instance and attribute passed or an empty list if there is an issue retrieving
+	 * the values
 	 */
-	private static Function<SchemaAttribute, List<Object>> constructGetValuesFunctionForRegularAttributes(
-		GKInstance instance
+	private static List<Object> getValuesFunctionForRegularAttributes(
+		GKInstance instance, SchemaAttribute attribute
 	)
 	{
-		return (attribute) ->
+		try
 		{
-			try
-			{
-				@SuppressWarnings("unchecked")
-				List<Object> values = safeList((Collection<Object>) instance.getAttributeValuesList(attribute));
-				return values;
-			}
-			catch (Exception e)
-			{
-				e.printStackTrace();
-				return new ArrayList<>();
-			}
-		};
+			@SuppressWarnings("unchecked")
+			List<Object> values = safeList((Collection<Object>) instance.getAttributeValuesList(attribute));
+			return values;
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+			return new ArrayList<>();
+		}
 	}
 
 	/**
-	 * Returns a function for the passed instance to retrieve values for the referrer attribute (i.e. attributes used
-	 * by other instances to refer to the passed instance) used as input to the function.
-	 * @param instance Instance the function will use to retrieve referrer attribute values
-	 * @return Function which accepts a referrer SchemaAttribute and returns values for the instance passed during its
-	 * construction
+	 * Returns the values connected to the passed instance for the referrer attribute (i.e. attributes used
+	 * by other instances to refer to the passed instance) passed to the method.
+	 * @param instance Instance for which to retrieve values connected via the passed referrer attribute
+	 * @param attribute Referrer attribute for which to retrieve values connected to the passed instance
+	 * @return List of values for the instance and referrer attribute passed or an empty list if there is an issue
+	 * retrieving the values
 	 */
-	private static Function<SchemaAttribute, List<Object>> constructGetValuesFunctionForReferrerAttributes(
-		GKInstance instance
+	private static List<Object> getValuesFunctionForReferrerAttributes(
+		GKInstance instance, SchemaAttribute attribute
 	)
 	{
-		return (attribute) ->
+		try
 		{
-			try
-			{
-				@SuppressWarnings("unchecked")
-				List<Object> referrerValues = safeList((Collection<Object>) instance.getReferers(attribute));
-				return referrerValues;
-			}
-			catch (Exception e)
-			{
-				e.printStackTrace();
-				return new ArrayList<>();
-			}
-		};
+			@SuppressWarnings("unchecked")
+			List<Object> referrerValues = safeList((Collection<Object>) instance.getReferers(attribute));
+			return referrerValues;
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+			return new ArrayList<>();
+		}
 	}
 
 	/**

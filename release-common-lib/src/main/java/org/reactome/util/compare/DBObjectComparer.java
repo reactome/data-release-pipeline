@@ -30,6 +30,10 @@ public class DBObjectComparer
 	private static Map<GKInstance, List<SchemaAttribute>> instanceToRegularAttributesMap = new HashMap<>();
 	private static Map<GKInstance, List<SchemaAttribute>> instanceToReferrerAttributesMap = new HashMap<>();
 
+	private static final int MAX_RECURSION_DEPTH = 5;
+	private static final int INITIAL_INSTANCES_DIFFERENCES_COUNT = 0;
+	private static final int INITIAL_RECURSION_DEPTH = 0;
+
 	/**
 	 * Compares two GKInstances.
 	 * @param instance1 The first instance.
@@ -43,10 +47,9 @@ public class DBObjectComparer
 	 */
 	public static int compareInstances(GKInstance instance1, GKInstance instance2, StringBuilder stringBuilder)
 	{
-		final int maxRecursionDepth = 5;
 		final boolean checkReferrers = false;
 
-		return compareInstances(instance1, instance2, stringBuilder, maxRecursionDepth, checkReferrers);
+		return compareInstances(instance1, instance2, stringBuilder, MAX_RECURSION_DEPTH, checkReferrers);
 	}
 
 	/**
@@ -69,9 +72,7 @@ public class DBObjectComparer
 		GKInstance instance1, GKInstance instance2, StringBuilder stringBuilder, boolean checkReferrers
 	)
 	{
-		final int maxRecursionDepth = 5;
-
-		return compareInstances(instance1, instance2, stringBuilder, maxRecursionDepth, checkReferrers);
+		return compareInstances(instance1, instance2, stringBuilder, MAX_RECURSION_DEPTH, checkReferrers);
 	}
 
 	/**
@@ -97,12 +98,11 @@ public class DBObjectComparer
 		int maxRecursionDepth, boolean checkReferrers
 	)
 	{
-		final int diffCount = 0;
-		final int initialRecursionDepth = 0;
+		// Given named constant for context in using this value as an argument
 		final Predicate<? super SchemaAttribute> customAttributeNameFilter = null;
 
 		return compareInstances(
-			instance1, instance2, stringBuilder, diffCount, initialRecursionDepth,
+			instance1, instance2, stringBuilder, INITIAL_INSTANCES_DIFFERENCES_COUNT, INITIAL_RECURSION_DEPTH,
 			maxRecursionDepth, customAttributeNameFilter, checkReferrers
 		);
 	}
@@ -139,11 +139,8 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 		Predicate<? super SchemaAttribute> customAttributeNameFilter, boolean checkReferrers
 	)
 	{
-		final int diffCount = 0;
-		final int initialRecursionDepth = 0;
-
 		return compareInstances(
-			instance1, instance2, stringBuilder, diffCount, initialRecursionDepth,
+			instance1, instance2, stringBuilder, INITIAL_INSTANCES_DIFFERENCES_COUNT, INITIAL_RECURSION_DEPTH,
 			maxRecursionDepth, customAttributeNameFilter, checkReferrers
 		);
 	}

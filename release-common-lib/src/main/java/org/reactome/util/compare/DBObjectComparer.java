@@ -409,7 +409,10 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 			// Make sure the lists are sorted so that you are always comparing objects in the same
 			// sequence: I don't think the database adaptor applies any explicit order to Instances
 			// that don't have a rank/order attribute.
-			InstanceUtilities.sortInstances(values);
+			if (isAttributeContainingInstances(attribute))
+			{
+				InstanceUtilities.sortInstances(values);
+			}
 
 			setCachedValuesFromInstanceAttributeToValuesMap(instance, attribute, values);
 		}

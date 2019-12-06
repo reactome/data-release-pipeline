@@ -6,7 +6,7 @@
 	<groupId>org.reactome.release</groupId>
 	<artifactId>release-common-lib</artifactId>
 	<packaging>jar</packaging>
-	<version>1.1.1</version>
+	<version>1.2.0</version>
 	<name>Release Common Library</name>
 	<description>Common components used throughout the Release process.</description>
 	<url>https://reactome.org</url>

@@ -117,9 +117,9 @@ public class DBObjectComparer
 	 * predicate looks like this:<pre>
 Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 						return !a.getName().equals("DB_ID")
-							&& !a.getName().equals("dateTime")
-							&& !a.getName().equals("modified")
-							&& !a.getName().equals("created");
+							&amp;&amp; !a.getName().equals("dateTime")
+							&amp;&amp; !a.getName().equals("modified")
+							&amp;&amp; !a.getName().equals("created");
 					};
 	 </pre>
 	 * @param checkReferrers Should referring instances also be checked? If <b>true</b>, then referring attributes
@@ -155,9 +155,9 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 	 * The default predicate looks like this:<pre>
 Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 						return !a.getName().equals("DB_ID")
-							&& !a.getName().equals("dateTime")
-							&& !a.getName().equals("modified")
-							&& !a.getName().equals("created");
+							&amp;&amp; !a.getName().equals("dateTime")
+							&amp;&amp; !a.getName().equals("modified")
+							&amp;&amp; !a.getName().equals("created");
 					};
 	 </pre>
 	 * @param checkReferrers Should referring instances also be checked? If <b>true</b>, then referring attributes
@@ -517,9 +517,9 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 	 * predicate looks like this:<pre>
 	Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 	return !a.getName().equals("DB_ID")
-	&& !a.getName().equals("dateTime")
-	&& !a.getName().equals("modified")
-	&& !a.getName().equals("created");
+	&amp;&amp; !a.getName().equals("dateTime")
+	&amp;&amp; !a.getName().equals("modified")
+	&amp;&amp; !a.getName().equals("created");
 	};
 	</pre>
 	 * @param checkReferrers <code>true</code> if referrer attributes should be included; <code>false</code> otherwise

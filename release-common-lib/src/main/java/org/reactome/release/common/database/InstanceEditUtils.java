@@ -45,6 +45,7 @@ public class InstanceEditUtils
 	 * @param dba MySQLAdaptor connecting to the database for which the InstanceEdit will be created and stored
 	 * @param defaultPersonId ID of the associated Person instance in the database
 	 * @param needStore true if the created InstanceEdit should be stored in the database; false otherwise
+	 * @param note Text added to the InstanceEdit to describe its purpose (e.g. what was changed or by whom)
 	 * @return InstanceEdit as a GKInstance object.
 	 * @throws Exception Thrown if unable to retrieve the Person instance associated with the defaultPersonId
 	 */

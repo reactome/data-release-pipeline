@@ -18,6 +18,7 @@ public class CollectionUtils {
 	 * Returns a list with the elements in the passed collection or an empty list if the passed collection is
 	 * null.  This method is meant to guard against null values to eliminate the need for conditionals checking
 	 * for null and to allow uses such as iteration in loops directly.
+	 * @param <E> Type of the elements for the passed collection and returned list
 	 * @param collection Collection of type E
 	 * @return List of type E with the elements in the collection or an empty List of type E if the collection is null
 	 */
@@ -29,6 +30,7 @@ public class CollectionUtils {
 	 * Returns a set with the elements in the passed collection or an empty set if the passed collection is
 	 * null.  This method is meant to guard against null values to eliminate the need for conditionals checking
 	 * for null and to allow uses such as iteration in loops directly.
+	 * @param <E> Type of the elements for the passed collection and returned set
 	 * @param collection Collection of type E
 	 * @return Set of type E with the elements in the collection or an empty Set of type E if the collection is null
 	 */
@@ -39,6 +41,7 @@ public class CollectionUtils {
 	/**
 	 * Returns a list with all the elements of the passed lists in the order the lists are received (i.e. flattens
 	 * multiple lists into one).
+	 * @param <E> Type of the elements for the passed lists and returned list
 	 * @param lists List objects of type E to be combined into a single list
 	 * @return Combined list of type E or an empty List of type E if the lists received are null or empty
 	 */

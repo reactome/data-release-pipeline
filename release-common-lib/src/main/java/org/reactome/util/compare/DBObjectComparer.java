@@ -382,11 +382,11 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 		 * Used for filtering out attributes that you don't want to compare because they will
 		 * probably create too much noise if you do.
 		 */
-		return a -> {
-			return !a.getName().equals(ReactomeJavaConstants.DB_ID)
-				&& !a.getName().equals(ReactomeJavaConstants.dateTime)
-				&& !a.getName().equals(ReactomeJavaConstants.modified)
-				&& !a.getName().equals(ReactomeJavaConstants.created);
+		return attribute -> {
+			return !attribute.getName().equals(ReactomeJavaConstants.DB_ID)
+				&& !attribute.getName().equals(ReactomeJavaConstants.dateTime)
+				&& !attribute.getName().equals(ReactomeJavaConstants.modified)
+				&& !attribute.getName().equals(ReactomeJavaConstants.created);
 		};
 	}
 

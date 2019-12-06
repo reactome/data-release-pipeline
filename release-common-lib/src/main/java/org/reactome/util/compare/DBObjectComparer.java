@@ -31,8 +31,8 @@ public class DBObjectComparer
 	private static Map<GKInstance, List<SchemaAttribute>> instanceToReferrerAttributesMap = new HashMap<>();
 
 	private static final int MAX_RECURSION_DEPTH = 5;
-	private static final int INITIAL_INSTANCES_DIFFERENCES_COUNT = 0;
-	private static final int INITIAL_RECURSION_DEPTH = 0;
+	private static final int DEFAULT_INITIAL_INSTANCES_DIFFERENCES_COUNT = 0;
+	private static final int DEFAULT_INITIAL_RECURSION_DEPTH = 0;
 
 	/**
 	 * Compares two GKInstances.
@@ -102,8 +102,8 @@ public class DBObjectComparer
 		final Predicate<? super SchemaAttribute> customAttributeNameFilter = null;
 
 		return compareInstances(
-			instance1, instance2, stringBuilder, INITIAL_INSTANCES_DIFFERENCES_COUNT, INITIAL_RECURSION_DEPTH,
-			maxRecursionDepth, customAttributeNameFilter, checkReferrers
+			instance1, instance2, stringBuilder, DEFAULT_INITIAL_INSTANCES_DIFFERENCES_COUNT,
+			DEFAULT_INITIAL_RECURSION_DEPTH, maxRecursionDepth, customAttributeNameFilter, checkReferrers
 		);
 	}
 
@@ -140,8 +140,8 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 	)
 	{
 		return compareInstances(
-			instance1, instance2, stringBuilder, INITIAL_INSTANCES_DIFFERENCES_COUNT, INITIAL_RECURSION_DEPTH,
-			maxRecursionDepth, customAttributeNameFilter, checkReferrers
+			instance1, instance2, stringBuilder, DEFAULT_INITIAL_INSTANCES_DIFFERENCES_COUNT,
+			DEFAULT_INITIAL_RECURSION_DEPTH, maxRecursionDepth, customAttributeNameFilter, checkReferrers
 		);
 	}
 

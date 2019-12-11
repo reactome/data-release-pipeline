@@ -28,8 +28,8 @@ import org.gk.schema.SchemaClass;
 public class DBObjectComparer
 {
 	private static Map<GKInstance, Map<SchemaAttribute, List<Object>>> instanceAttributeToValuesMap = new HashMap<>();
-	private static Map<SchemaClass, List<SchemaAttribute>> schemaClassToRegularAttributesMap = new HashMap<>();
-	private static Map<SchemaClass, List<SchemaAttribute>> schemaClassToReferrerAttributesMap = new HashMap<>();
+	private static Map<String, List<SchemaAttribute>> schemaClassToRegularAttributesMap = new HashMap<>();
+	private static Map<String, List<SchemaAttribute>> schemaClassToReferrerAttributesMap = new HashMap<>();
 
 	private static final int DEFAULT_MAX_RECURSION_DEPTH = 5;
 	private static final int DEFAULT_INSTANCES_DIFFERENCES_COUNT = 0;
@@ -313,8 +313,8 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 
 	/**
 	 * Retrieves all schema attributes for the passed schema class with options to include referrer attributes and to
-	 * filter results.  Uses a cache for the attributes of schema class objects (before filtering) which have been
-	 * previously queried.
+	 * filter results.  Uses a cache for the attributes (before filtering) of schema classes which have been previously
+	 * queried.
 	 * @param schemaClass Schema class for which to get attributes
 	 * @param checkReferrers <code>true</code> if referrer attributes should be included; <code>false</code> otherwise
 	 * @param attributeNameFilter Predicate value used to determine which attributes should be included
@@ -333,25 +333,25 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 
 	/**
 	 * Retrieves "regular" (i.e. not referrer) attributes for the passed schema class.  Uses a cache for the
-	 * attributes of schema class objects which have been previously queried.
+	 * attributes of schema classes which have been previously queried.
 	 * @param schemaClass Schema class for which to get attributes
 	 * @return List of "regular" (i.e. not referrer) SchemaAttributes of the schema class object passed
 	 */
 	@SuppressWarnings("unchecked")
 	private static List<SchemaAttribute> getRegularAttributes(SchemaClass schemaClass)
 	{
-		List<SchemaAttribute> regularAttributes = schemaClassToRegularAttributesMap.get(schemaClass);
+		List<SchemaAttribute> regularAttributes = schemaClassToRegularAttributesMap.get(schemaClass.getName());
 		if (regularAttributes == null)
 		{
 			regularAttributes = new ArrayList<SchemaAttribute>(schemaClass.getAttributes());
-			schemaClassToRegularAttributesMap.put(schemaClass, regularAttributes);
+			schemaClassToRegularAttributesMap.put(schemaClass.getName(), regularAttributes);
 		}
 		return regularAttributes;
 	}
 
 	/**
 	 * Retrieves referrer attributes for the passed schema class (i.e. attributes used by instances to refer to the
-	 * passed schema class).  Uses a cache for the attributes of schema class objects which have been previously
+	 * passed schema class).  Uses a cache for the attributes of schema classes which have been previously
 	 * queried.
 	 * @param schemaClass Schema class for which to get referrer attributes
 	 * @return List of referrer SchemaAttributes of the schema class object passed
@@ -359,11 +359,11 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 	@SuppressWarnings("unchecked")
 	private static List<SchemaAttribute> getReferrerAttributes(SchemaClass schemaClass)
 	{
-		List<SchemaAttribute> referrerAttributes = schemaClassToReferrerAttributesMap.get(schemaClass);
+		List<SchemaAttribute> referrerAttributes = schemaClassToReferrerAttributesMap.get(schemaClass.getName());
 		if (referrerAttributes == null)
 		{
 			referrerAttributes = new ArrayList<SchemaAttribute>(schemaClass.getReferers());
-			schemaClassToReferrerAttributesMap.put(schemaClass, referrerAttributes);
+			schemaClassToReferrerAttributesMap.put(schemaClass.getName(), referrerAttributes);
 		}
 		return referrerAttributes;
 	}

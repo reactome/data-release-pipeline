@@ -17,6 +17,7 @@ import org.gk.model.Instance;
 import org.gk.model.InstanceUtilities;
 import org.gk.model.ReactomeJavaConstants;
 import org.gk.schema.SchemaAttribute;
+import org.gk.schema.SchemaClass;
 
 /**
  * This class can be used to perform comparisons on any two DatabaseObjects across two different databases.
@@ -26,8 +27,8 @@ import org.gk.schema.SchemaAttribute;
 public class DBObjectComparer
 {
 	private static Map<GKInstance, Map<SchemaAttribute, List<Object>>> instanceAttributeToValuesMap = new HashMap<>();
-	private static Map<GKInstance, List<SchemaAttribute>> instanceToRegularAttributesMap = new HashMap<>();
-	private static Map<GKInstance, List<SchemaAttribute>> instanceToReferrerAttributesMap = new HashMap<>();
+	private static Map<SchemaClass, List<SchemaAttribute>> schemaClassToRegularAttributesMap = new HashMap<>();
+	private static Map<SchemaClass, List<SchemaAttribute>> schemaClassToReferrerAttributesMap = new HashMap<>();
 
 	private static final int DEFAULT_MAX_RECURSION_DEPTH = 5;
 	private static final int DEFAULT_INSTANCES_DIFFERENCES_COUNT = 0;
@@ -191,7 +192,10 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 		}
 
 		int count = diffCount;
-		for (SchemaAttribute attribute : getAllAttributes(instance1, checkReferrers, customAttributeNameFilter))
+		List<SchemaAttribute> allAttributes = getAllAttributes(
+			instance1.getSchemClass(), checkReferrers, customAttributeNameFilter
+		);
+		for (SchemaAttribute attribute : allAttributes)
 		{
 			List<Object> instance1AttributeValues = getValues(instance1, attribute);
 			List<Object> instance2AttributeValues = getValues(instance2, attribute);
@@ -300,56 +304,58 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 	}
 
 	/**
-	 * Retrieves all schema attributes for the passed instance with options to include referrer attributes and to
-	 * filter results.
-	 * @param instance Instance for which to get attributes
+	 * Retrieves all schema attributes for the passed schema class with options to include referrer attributes and to
+	 * filter results.  Uses a cache for the attributes of schema class objects (before filtering) which have been
+	 * previously queried.
+	 * @param schemaClass Schema class for which to get attributes
 	 * @param checkReferrers <code>true</code> if referrer attributes should be included; <code>false</code> otherwise
 	 * @param attributeNameFilter Predicate value used to determine which attributes should be included
-	 * @return List of SchemaAttributes of the instance passed
+	 * @return List of SchemaAttributes of the schema class passed
 	 */
 	private static List<SchemaAttribute> getAllAttributes(
-		GKInstance instance, boolean checkReferrers, Predicate<? super SchemaAttribute> attributeNameFilter
+		SchemaClass schemaClass, boolean checkReferrers, Predicate<? super SchemaAttribute> attributeNameFilter
 	)
 	{
 		List<SchemaAttribute> allAttributes = checkReferrers ?
-			combineLists(getRegularAttributes(instance), getReferrerAttributes(instance)) :
-			getRegularAttributes(instance);
+			combineLists(getRegularAttributes(schemaClass), getReferrerAttributes(schemaClass)) :
+			getRegularAttributes(schemaClass);
 
 		return filterAttributes(allAttributes, attributeNameFilter);
 	}
 
 	/**
-	 * Retrieves "regular" (i.e. not referrer) attributes for the passed instance.  Uses a cache for the attributes of
-	 * instances which have been previously queried.
-	 * @param instance Instance for which to get attributes
-	 * @return List of "regular" (i.e. not referrer) SchemaAttributes of the instance passed
+	 * Retrieves "regular" (i.e. not referrer) attributes for the passed schema class.  Uses a cache for the
+	 * attributes of schema class objects which have been previously queried.
+	 * @param schemaClass Schema class for which to get attributes
+	 * @return List of "regular" (i.e. not referrer) SchemaAttributes of the schema class object passed
 	 */
 	@SuppressWarnings("unchecked")
-	private static List<SchemaAttribute> getRegularAttributes(GKInstance instance)
+	private static List<SchemaAttribute> getRegularAttributes(SchemaClass schemaClass)
 	{
-		List<SchemaAttribute> regularAttributes = instanceToRegularAttributesMap.get(instance);
+		List<SchemaAttribute> regularAttributes = schemaClassToRegularAttributesMap.get(schemaClass);
 		if (regularAttributes == null)
 		{
-			regularAttributes = new ArrayList<SchemaAttribute>(instance.getSchemClass().getAttributes());
-			instanceToRegularAttributesMap.put(instance, regularAttributes);
+			regularAttributes = new ArrayList<SchemaAttribute>(schemaClass.getAttributes());
+			schemaClassToRegularAttributesMap.put(schemaClass, regularAttributes);
 		}
 		return regularAttributes;
 	}
 
 	/**
-	 * Retrieves referrer attributes for the passed instance (i.e. attributes used by other instances to refer to the
-	 * passed instance).  Uses a cache for the attributes of instances which have been previously queried.
-	 * @param instance Instance for which to get referrer attributes
-	 * @return List of referrer SchemaAttributes of the instance passed
+	 * Retrieves referrer attributes for the passed schema class (i.e. attributes used by instances to refer to the
+	 * passed schema class).  Uses a cache for the attributes of schema class objects which have been previously
+	 * queried.
+	 * @param schemaClass Schema class for which to get referrer attributes
+	 * @return List of referrer SchemaAttributes of the schema class object passed
 	 */
 	@SuppressWarnings("unchecked")
-	private static List<SchemaAttribute> getReferrerAttributes(GKInstance instance)
+	private static List<SchemaAttribute> getReferrerAttributes(SchemaClass schemaClass)
 	{
-		List<SchemaAttribute> referrerAttributes = instanceToReferrerAttributesMap.get(instance);
+		List<SchemaAttribute> referrerAttributes = schemaClassToReferrerAttributesMap.get(schemaClass);
 		if (referrerAttributes == null)
 		{
-			referrerAttributes = new ArrayList<SchemaAttribute>(instance.getSchemClass().getReferers());
-			instanceToReferrerAttributesMap.put(instance, referrerAttributes);
+			referrerAttributes = new ArrayList<SchemaAttribute>(schemaClass.getReferers());
+			schemaClassToReferrerAttributesMap.put(schemaClass, referrerAttributes);
 		}
 		return referrerAttributes;
 	}
@@ -402,7 +408,7 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 
 		if (values.isEmpty())
 		{
-			values = getRegularAttributes(instance).contains(attribute) ?
+			values = getRegularAttributes(instance.getSchemClass()).contains(attribute) ?
 				getValuesFunctionForRegularAttributes(instance, attribute) :
 				getValuesFunctionForReferrerAttributes(instance, attribute);
 
@@ -557,7 +563,7 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 		{
 			stringBuilder.append(
 				getIndentString(recursionDepth) + "Mismatch on" +
-					getAttributeRelationshipType(instance1, attribute) + " attribute " +
+					getAttributeRelationshipType(instance1.getSchemClass(), attribute) + " attribute " +
 					"'" + attribute.getName() + "'" + System.lineSeparator() +
 					getIndentString(recursionDepth) + "Instance 1 ('" + instance1 + "') has value:\t" +
 					value1 + System.lineSeparator() +
@@ -583,16 +589,17 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 	}
 
 	/**
-	 * Returns a String describing the type of the relationship the passed attribute has to the passed instance.  The
-	 * String will be "referrer attribute" if the attribute passed is a referrer attribute for the instance passed.
-	 * Otherwise, the String will be "attribute" to indicate it is a 'regular' attribute.
-	 * @param instance Instance to check to determine the relationship of the attribute passed
-	 * @param attribute Attribute to check for the relationship to the instance passed
-	 * @return String describing the attribute's relationship to the instance. "referrer attribute" for a referrer
+	 * Returns a String describing the type of the relationship the passed attribute has to the passed schema class.
+	 *
+	 * The String will be "referrer attribute" if the attribute passed is a referrer attribute for the schema class
+	 * passed.  Otherwise, the String will be "attribute" to indicate it is a 'regular' attribute.
+	 * @param schemaClass SchemaClass to check to determine the relationship of the attribute passed
+	 * @param attribute Attribute to check for the relationship to the schema class passed
+	 * @return String describing the attribute's relationship to the schema class. "referrer attribute" for a referrer
 	 * attribute or "attribute" for a 'regular' attribute.
 	 */
-	private static String getAttributeRelationshipType(GKInstance instance, SchemaAttribute attribute)
+	private static String getAttributeRelationshipType(SchemaClass schemaClass, SchemaAttribute attribute)
 	{
-		return getReferrerAttributes(instance).contains(attribute) ? "referrer attribute" : "attribute";
+		return getReferrerAttributes(schemaClass).contains(attribute) ? "referrer attribute" : "attribute";
 	}
 }

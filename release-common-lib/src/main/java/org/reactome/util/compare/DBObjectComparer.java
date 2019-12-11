@@ -16,6 +16,7 @@ import org.gk.model.GKInstance;
 import org.gk.model.Instance;
 import org.gk.model.InstanceUtilities;
 import org.gk.model.ReactomeJavaConstants;
+import org.gk.persistence.MySQLAdaptor;
 import org.gk.schema.SchemaAttribute;
 import org.gk.schema.SchemaClass;
 
@@ -297,10 +298,17 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 		GKInstance instance1, GKInstance instance2, SchemaAttribute attribute
 	)
 	{
-		return "Count mismatch for multi-valued" + getAttributeRelationshipType(instance1, attribute) +
-			" attribute '" + attribute.getName() + "' Instance 1 ('" + instance1 +
-			"') has " + getValues(instance1, attribute).size() + " elements but Instance 2 ('" + instance2 +
-			"') has " + getValues(instance2, attribute).size() + " elements." + System.lineSeparator();
+		return "Count mismatch for " + getAttributeRelationshipType(instance1.getSchemClass(), attribute) +
+			" '" + attribute.getName() + "'" + System.lineSeparator() +
+			" Instance 1 ('" + instance1 + "' from " + getDBName(instance1) + ") has " +
+			getValues(instance1, attribute).size() + " elements " + System.lineSeparator() +
+			" Instance 2 ('" + instance2 + "' from " + getDBName(instance2) + ") has " +
+			getValues(instance2, attribute).size() + " elements" + System.lineSeparator() + System.lineSeparator();
+	}
+
+	private static String getDBName(GKInstance instance)
+	{
+		return ((MySQLAdaptor) instance.getDbAdaptor()).getDBName();
 	}
 
 	/**

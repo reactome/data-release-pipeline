@@ -472,7 +472,7 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 		try
 		{
 			@SuppressWarnings("unchecked")
-			List<Object> values = safeList((Collection<Object>) instance.getAttributeValuesList(attribute));
+			List<Object> values = safeList((Collection<Object>) instance.getAttributeValuesList(attribute.getName()));
 			return values;
 		}
 		catch (Exception e)
@@ -497,7 +497,7 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 		try
 		{
 			@SuppressWarnings("unchecked")
-			List<Object> referrerValues = safeList((Collection<Object>) instance.getReferers(attribute));
+			List<Object> referrerValues = safeList((Collection<Object>) instance.getReferers(attribute.getName()));
 			return referrerValues;
 		}
 		catch (Exception e)

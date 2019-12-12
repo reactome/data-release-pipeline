@@ -252,10 +252,6 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 			customAttributeNameFilter
 		);
 
-		if (attributeRelationshipType.equals(AttributeRelationshipType.REVERSE_ATTRIBUTE)) {
-			System.out.println(attributes);
-		}
-
 		int count = diffCount;
 		for (SchemaAttribute attribute : attributes)
 		{

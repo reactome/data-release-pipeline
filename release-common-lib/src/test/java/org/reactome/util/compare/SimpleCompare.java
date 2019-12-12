@@ -4,10 +4,10 @@ import org.gk.model.GKInstance;
 import org.gk.persistence.MySQLAdaptor;
 
 /**
- * Prints the differences between the version of instance obtained from two databases
+ * Prints the attribute differences between the version of instance obtained from two databases
  */
 public class SimpleCompare {
-	private static final long INSTANCE_DB_ID_TO_COMPARE = 5263264;
+	private static final long INSTANCE_DB_ID_TO_COMPARE = 1;
 
 	public static void main(String[] args) throws Exception {
 		MySQLAdaptor database1 = new MySQLAdaptor("localhost", "perl_gk_central", "root", "root",
@@ -22,7 +22,7 @@ public class SimpleCompare {
 		int i = DBObjectComparer.compareInstances(instance1, instance2, sb, 0, true);
 		System.out.println(
 			"\n***\n" +
-			"For instance " + instance1.toString() + " there are " + i + " differences:\n" +
+			"For instance " + instance1.toString() + " there is/are " + i + " difference(s):\n" +
 			sb.toString()
 		);
 	}

@@ -202,7 +202,7 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 
 		if (checkReferrers) {
 			count = compareValuesOfInstancesForAttributes(
-				AttributeRelationshipType.REVERSE_ATTRIBUTE, instance1, instance2, stringBuilder, diffCount,
+				AttributeRelationshipType.REVERSE_ATTRIBUTE, instance1, instance2, stringBuilder, count,
 				recursionDepth, maxRecursionDepth, customAttributeNameFilter, checkReferrers
 			);
 		}
@@ -266,7 +266,7 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 			{
 				count = compareEachValueOfAttributeBetweenInstances(
 					attribute, attributeRelationshipType, instance1, instance2, instance1AttributeValues,
-					instance2AttributeValues, stringBuilder, diffCount, recursionDepth, maxRecursionDepth,
+					instance2AttributeValues, stringBuilder, count, recursionDepth, maxRecursionDepth,
 					customAttributeNameFilter, checkReferrers
 				);
 			}

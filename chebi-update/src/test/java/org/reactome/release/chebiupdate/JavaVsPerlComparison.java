@@ -15,15 +15,13 @@ import org.reactome.util.compare.DBObjectComparer;
 
 public class JavaVsPerlComparison
 {
+	private static final int MAX_COMPARISON_RECURSION_DEPTH = 1;
+	private static final boolean CHECK_REFERRERS = true;
 
 	public static void main(String[] args) throws Exception
 	{
-		MySQLAdaptor javaUpdatedDB = new MySQLAdaptor(
-			"localhost", "perl_gk_central", "root", "root", 3306
-		);
-		MySQLAdaptor perlUpdatedDB = new MySQLAdaptor(
-			"localhost", "java_gk_central", "root", "root", 3306
-		);
+		MySQLAdaptor javaUpdatedDB = new MySQLAdaptor("localhost", "perl_gk_central", "root", "root", 3306);
+		MySQLAdaptor perlUpdatedDB = new MySQLAdaptor("localhost", "java_gk_central", "root", "root", 3306);
 		int diffCount = 0;
 		int sameCount = 0;
 
@@ -74,7 +72,8 @@ public class JavaVsPerlComparison
 			};
 
 			int currentDiff = DBObjectComparer.compareInstances(
-				javaInstance, perlInstance, sb, 1, customAttributeNameFilter, true
+				javaInstance, perlInstance, sb, MAX_COMPARISON_RECURSION_DEPTH, customAttributeNameFilter,
+				CHECK_REFERRERS
 			);
 
 			if (currentDiff > 0)

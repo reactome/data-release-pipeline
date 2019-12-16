@@ -13,6 +13,7 @@ import java.util.function.Predicate;
 
 import org.gk.model.GKInstance;
 import org.gk.model.InstanceUtilities;
+import org.gk.model.ReactomeJavaConstants;
 import org.gk.persistence.MySQLAdaptor;
 import org.gk.schema.SchemaAttribute;
 import org.reactome.util.compare.AttributeProcessor.AttributeRelationshipType;
@@ -420,7 +421,7 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 	 */
 	private static boolean isInstanceEdit(GKInstance instance)
 	{
-		return instance.getSchemClass().getName().equals("InstanceEdit");
+		return instance.getSchemClass().getName().equals(ReactomeJavaConstants.InstanceEdit);
 	}
 
 	/**

@@ -2,9 +2,9 @@ package org.reactome.release.dataexport;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.Result;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -40,7 +40,7 @@ public class PathwayHierarchyUtilities {
 
 		logger.info("Computing RLE id to Pathway id");
 
-		StatementResult statementResult = graphDBSession.run(
+		Result statementResult = graphDBSession.run(
 			String.join(System.lineSeparator(),
 				"MATCH (rle:ReactionLikeEvent)<-[:hasEvent*]-(p:Pathway)",
 				"RETURN DISTINCT rle.dbId, p.dbId"
@@ -85,7 +85,7 @@ public class PathwayHierarchyUtilities {
 
 		logger.info("Computing Pathway Hierarchy");
 
-		StatementResult statementResult = graphDBSession.run(
+		Result statementResult = graphDBSession.run(
 			String.join(System.lineSeparator(),
 				"MATCH (p:Pathway)<-[:hasEvent]-(pp:Pathway)",
 				"RETURN DISTINCT p.dbId, pp.dbId"

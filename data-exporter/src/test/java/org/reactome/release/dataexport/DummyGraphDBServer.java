@@ -1,8 +1,8 @@
 package org.reactome.release.dataexport;
 
 import org.junit.jupiter.api.TestInstance;
-import org.neo4j.driver.v1.GraphDatabase;
-import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.GraphDatabase;
+import org.neo4j.driver.Session;
 import org.neo4j.harness.ServerControls;
 import org.neo4j.harness.TestServerBuilders;
 

@@ -2,9 +2,9 @@ package org.reactome.release.dataexport;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.Result;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -63,7 +63,7 @@ public class NCBIEntry implements Comparable<NCBIEntry> {
 	public static List<NCBIEntry> getUniProtToNCBIGeneEntries(Session graphDBSession) {
 		logger.info("Generating UniProt accession to NCBI Gene mapping");
 
-		StatementResult result = graphDBSession.run(
+		Result result = graphDBSession.run(
 			String.join(System.lineSeparator(),
 				"MATCH (rgp:ReferenceGeneProduct)-[:referenceDatabase]->(rd:ReferenceDatabase)",
 				"MATCH (rgp)-[:referenceGene]->(rds:ReferenceDNASequence)",

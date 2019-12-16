@@ -6,9 +6,9 @@ import java.util.Map.Entry;
 import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.neo4j.driver.v1.Record;
-import org.neo4j.driver.v1.Session;
-import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.Result;
 
 import javax.annotation.Nonnull;
 import java.time.LocalTime;
@@ -382,7 +382,7 @@ public class UniProtReactomeEntry implements Comparable<UniProtReactomeEntry> {
 
 		logger.info("Computing UniProt to RLE id");
 
-		StatementResult statementResult = graphDBSession.run(
+		Result statementResult = graphDBSession.run(
 			String.join(System.lineSeparator(),
 				"MATCH " + referenceGeneProductToReactionLikeEventPath(),
 				"MATCH (rgp)-[:referenceDatabase]->(rd:ReferenceDatabase)",

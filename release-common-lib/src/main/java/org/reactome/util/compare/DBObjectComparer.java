@@ -333,27 +333,43 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 			Object value1 = values1.get(i);
 			Object value2 = values2.get(i);
 
-			count = compareIndividualValuesOfAttributeBetweenInstances(
-				attribute, attributeRelationshipType, value1, value2, instance1, instance2, stringBuilder, count,
-				recursionDepth, maxRecursionDepth, customAttributeNameFilter, checkReferrers
-			);
+			if (isAttributeContainingInstances(attribute))
+			{
+				String attributeDescription = attribute.getName() + " " + attributeRelationshipType;
+
+				count = compareIndividualValuesOfAttributeBetweenInstances(
+					attributeDescription, (GKInstance) value1, (GKInstance) value2, stringBuilder,
+					count, recursionDepth, maxRecursionDepth, customAttributeNameFilter, checkReferrers
+				);
+			}
+			// Deal with attributes that return "simple" things (Strings, numbers, etc..., arrays of
+			// Strings/numbers/etc...)
+			else if (!value1.equals(value2))
+			{
+				stringBuilder.append(
+					getIndentString(recursionDepth) + "Mismatch on " + attributeRelationshipType +
+						" '" + attribute.getName() + "'" + System.lineSeparator() +
+						getIndentString(recursionDepth) + "Instance 1 ('" + instance1 + "') has value:\t" +
+						value1 + System.lineSeparator() +
+						getIndentString(recursionDepth) + "Instance 2 ('" + instance2 + "') has value:\t" +
+						value2 + System.lineSeparator()
+				);
+				count++;
+			}
 		}
 
 		return count;
 	}
 
 	/**
-	 * Compares the value of the passed attribute between two instances and returns the number of differences.  For an
-	 * value which is a GKInstance, differences are checked for recursively (up to the passed maxRecursionDepth).
-	 * For the base case of "simple" value (i.e. Strings, numbers, etc..., arrays of Strings/numbers/etc...), a count
+	 * Compares a value, which is a GKInstance, of the passed attribute between two instances and returns the number
+	 * of differences.  Differences are checked for recursively (up to the passed maxRecursionDepth).
+	 * For the base case of a "simple" value (i.e. Strings, numbers, etc..., arrays of Strings/numbers/etc...), a count
 	 * of 1 is returned for any difference found between the values compared.
-	 * @param attribute Attribute for which values are being compared
-	 * @param attributeRelationshipType Relationship between the attribute and the instances passed (i.e. 'regular' or
-	 * referrer attribute
-	 * @param value1 First value to compare
-	 * @param value2 Second value to compare
-	 * @param instance1 Instance from which the first value was obtained
-	 * @param instance2 Instance from which the second value was obtained
+	 * @param attributeDescription String describing the attribute and relationship of to the instances for which
+	 * values were obtained and are being compared
+	 * @param value1 First GKInstance value to compare
+	 * @param value2 Second GKInstance value to compare
 	 * @param stringBuilder a StringBuilder that will contain a detailed report of differences.
 	 * @param diffCount The number of differences so far. Should start at 0.
 	 * @param recursionDepth The depth of the recursion so far. Should start at 0.
@@ -372,45 +388,23 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 	 * @return The total number of differences between the values compared (after recursion for GKInstance values)
 	 */
 	private static int compareIndividualValuesOfAttributeBetweenInstances(
-		SchemaAttribute attribute, AttributeRelationshipType attributeRelationshipType, Object value1, Object value2,
-		GKInstance instance1, GKInstance instance2, StringBuilder stringBuilder, int diffCount, int recursionDepth,
-		int maxRecursionDepth, Predicate<? super SchemaAttribute> customAttributeNameFilter, boolean checkReferrers
+		String attributeDescription, GKInstance value1, GKInstance value2, StringBuilder stringBuilder, int diffCount,
+		int recursionDepth, int maxRecursionDepth, Predicate<? super SchemaAttribute> customAttributeNameFilter,
+		boolean checkReferrers
 	) {
-		int count = diffCount;
-		// Deal with attributes that return GKInstance objects.
-		if (isAttributeContainingInstances(attribute))
+		if (recursionDepth >= maxRecursionDepth)
 		{
-			if (recursionDepth < maxRecursionDepth)
-			{
-				String recursionMessage =
-					"Recursing on " + attribute.getName() + " " + attributeRelationshipType + "..." +
-					System.lineSeparator();
-
-				stringBuilder
-					.append(getIndentString(recursionDepth))
-					.append(recursionMessage);
-
-				return compareInstances(
-					(GKInstance) value1, (GKInstance) value2, stringBuilder, count, recursionDepth + 1,
-					maxRecursionDepth, customAttributeNameFilter, checkReferrers
-				);
-			}
+			return diffCount;
 		}
-		// Deal with attributes that return "simple" things (Strings, numbers, etc..., arrays of
-		// Strings/numbers/etc...)
-		else if (!value1.equals(value2))
-		{
-			stringBuilder.append(
-				getIndentString(recursionDepth) + "Mismatch on " + attributeRelationshipType +
-					" '" + attribute.getName() + "'" + System.lineSeparator() +
-					getIndentString(recursionDepth) + "Instance 1 ('" + instance1 + "') has value:\t" +
-					value1 + System.lineSeparator() +
-					getIndentString(recursionDepth) + "Instance 2 ('" + instance2 + "') has value:\t" +
-					value2 + System.lineSeparator()
-			);
-			count++;
-		}
-		return count;
+
+		stringBuilder
+			.append(getIndentString(recursionDepth))
+			.append("Recursing on " + attributeDescription + "..." +System.lineSeparator());
+
+		return compareInstances(
+			value1, value2, stringBuilder, diffCount, recursionDepth + 1,
+			maxRecursionDepth, customAttributeNameFilter, checkReferrers
+		);
 	}
 
 	/**

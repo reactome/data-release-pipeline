@@ -400,8 +400,8 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 		else if (!value1.equals(value2))
 		{
 			stringBuilder.append(
-				getIndentString(recursionDepth) + "Mismatch on" + attributeRelationshipType + " attribute " +
-					"'" + attribute.getName() + "'" + System.lineSeparator() +
+				getIndentString(recursionDepth) + "Mismatch on " + attributeRelationshipType +
+					" '" + attribute.getName() + "'" + System.lineSeparator() +
 					getIndentString(recursionDepth) + "Instance 1 ('" + instance1 + "') has value:\t" +
 					value1 + System.lineSeparator() +
 					getIndentString(recursionDepth) + "Instance 2 ('" + instance2 + "') has value:\t" +

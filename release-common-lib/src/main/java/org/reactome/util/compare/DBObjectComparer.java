@@ -381,11 +381,13 @@ Predicate&lt;? super SchemaAttribute&gt; attributeNameFilter = a -&gt; {
 		{
 			if (recursionDepth < maxRecursionDepth)
 			{
-				stringBuilder.append(getIndentString(recursionDepth))
-					.append(" Recursing on ")
-					.append(attribute.getName())
-					.append(" attribute...")
-					.append(System.lineSeparator());
+				String recursionMessage =
+					"Recursing on " + attribute.getName() + " " + attributeRelationshipType + "..." +
+					System.lineSeparator();
+
+				stringBuilder
+					.append(getIndentString(recursionDepth))
+					.append(recursionMessage);
 
 				return compareInstances(
 					(GKInstance) value1, (GKInstance) value2, stringBuilder, count, recursionDepth + 1,

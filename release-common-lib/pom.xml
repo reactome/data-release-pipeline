@@ -37,7 +37,7 @@
 		<connection>scm:git:git://github.com/reactome/data-release-pipeline.git</connection>
 		<developerConnection>scm:git:ssh://github.com/reactome/data-release-pipeline.git</developerConnection>
 		<url>https://github.com/reactome/data-release-pipeline/tree/develop/release-common-lib</url>
-		<tag>release-common-lib-1.1.1</tag>
+		<tag>release-common-lib-1.2.0</tag>
 	</scm>
 
 	<properties>
@@ -170,7 +170,7 @@
 				<configuration>
 					<serverId>ossrh</serverId>
 					<nexusUrl>https://oss.sonatype.org/</nexusUrl>
-					<autoReleaseAfterClose>true</autoReleaseAfterClose>
+					<autoReleaseAfterClose>false</autoReleaseAfterClose>
 				</configuration>
 			</plugin>
 			<plugin>

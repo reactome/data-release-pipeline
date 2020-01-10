@@ -1,0 +1,14 @@
+### Sample config.properties file for Orthoinference
+username=react-app-user
+password=react-app-user_pw
+currentDatabase=test_slice_oryza_sativa_19_ortho_osat_all
+previousDatabase=test_slice_oryza_sativa_18_ortho_osat_all
+host=floret.cgrb.oregonstate.edu
+port=3306
+referenceSpeciesName=Oryza sativa
+pathToSpeciesConfig=src/main/resources/PlantReactomeSpecies_test_esc_abbv.json
+pathToOrthopairs=src/main/resources/orthopairs/
+releaseNumber=19
+dateOfRelease=2019-08-12
+inferenceThreshold=1
+personId=1385632

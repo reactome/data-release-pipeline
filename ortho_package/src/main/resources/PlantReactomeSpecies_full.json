@@ -1,0 +1,1195 @@
+{
+   "achi" : {
+      "name" : [
+         "Actinidia chinensis"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Actinidia_chinensis_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "adur" : {
+      "alt_refdb" : {
+         "access" : "http://peanutbase.org/feature/Arachis/duranensis/gene/###ID###",
+         "dbname" : [
+            "PeanutBase_Ad"
+         ],
+         "url" : "http://peanutbase.org/"
+      },
+      "name" : [
+         "Arachis duranensis"
+      ]
+   },
+   "ahal" : {
+      "name" : [
+         "Arabidopsis halleri"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Arabidopsis_halleri_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "aipa" : {
+      "alt_refdb" : {
+         "access" : "http://peanutbase.org/feature/Arachis/ipaensis/gene/###ID###",
+         "dbname" : [
+            "PeanutBase_Ai"
+         ],
+         "url" : "http://peanutbase.org/"
+      },
+      "name" : [
+         "Arachis ipaensis"
+      ]
+   },
+   "alyr" : {
+      "name" : [
+         "Arabidopsis lyrata"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Arabidopsis_lyrata_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "atau" : {
+      "name" : [
+         "Aegilops tauschii"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Aegilops_tauschii_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "atha" : {
+      "alt_refdb" : {
+         "access" : "http://www.arabidopsis.org/servlets/TairObject?type=locus&name=###ID###",
+         "dbname" : [
+            "TAIR"
+         ],
+         "url" : "http://www.arabidopsis.org"
+      },
+      "name" : [
+         "Arabidopsis thaliana"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Arabidopsis_thaliana_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "atri" : {
+      "name" : [
+         "Amborella trichopoda"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Amborella_trichopoda_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "bdis" : {
+      "name" : [
+         "Brachypodium distachyon"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Brachypodium_distachyon_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "bnap" : {
+      "name" : [
+         "Brassica napus"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Brassica_napus_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "bole" : {
+      "name" : [
+         "Brassica oleracea"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Brassica_oleracea_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "brap" : {
+      "name" : [
+         "Brassica rapa"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Brassica_rapa_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "bvul" : {
+      "name" : [
+         "Beta vulgaris"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Beta_vulgaris_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "cann" : {
+      "alt_refdb" : {
+         "access" : "/pages/content/release-summary/",
+         "dbname" : [
+            "Jaiswal"
+         ],
+         "url" : "http://jaiswallab.cgrb.oregonstate.edu/"
+      },
+      "name" : [
+         "Capsicum annuum"
+      ]
+   },
+   "cari" : {
+      "alt_refdb" : {
+         "access" : "http://www.ncbi.nlm.nih.gov/protein/###ID###",
+         "dbname" : [
+            "NCBI"
+         ],
+         "url" : "http://www.ncbi.nlm.nih.gov/"
+      },
+      "name" : [
+         "Cicer arietinum"
+      ]
+   },
+   "ccaj" : {
+      "alt_refdb" : {
+         "access" : "https://legumeinfo.org/feature/Cajanus/cajan/gene/###ID###_gene",
+         "dbname" : [
+            "LegumeInfo"
+         ],
+         "url" : "https://legumeinfo.org/"
+      },
+      "name" : [
+         "Cajanus cajan"
+      ]
+   },
+   "ccan" : {
+      "alt_refdb" : {
+         "access" : "/pages/content/release-summary/",
+         "dbname" : [
+            "Jaiswal"
+         ],
+         "url" : "http://jaiswallab.cgrb.oregonstate.edu/"
+      },
+      "name" : [
+         "Coffea canephora"
+      ]
+   },
+   "ccap" : {
+      "name" : [
+         "Corchorus capsularis"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Corchorus_capsularis_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "ccri" : {
+      "name" : [
+         "Chondrus crispus"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Chondrus_crispus_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "cmer" : {
+      "name" : [
+         "Cyanidioschyzon merolae"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Cyanidioschyzon_merolae_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "crei" : {
+      "name" : [
+         "Chlamydomonas reinhardtii"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Chlamydomonas_reinhardtii_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "csat" : {
+      "name" : [
+         "Cucumis sativus"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Cucumis_sativus_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "csin" : {
+      "alt_refdb" : {
+         "access" : "http://phytozome.jgi.doe.gov/pz/portal.html#!results?search=0&crown=1&star=1&method=2312&searchText=###ID###",
+         "dbname" : [
+            "Phytozome_Cs"
+         ],
+         "url" : "http://phytozome.jgi.doe.gov/"
+      },
+      "name" : [
+         "Citrus sinensis"
+      ]
+   },
+   "dcar" : {
+      "name" : [
+         "Daucus carota"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Daucus_carota_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "drot" : {
+      "name" : [
+         "Dioscorea rotundata"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Dioscorea_rotundata_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "egra" : {
+      "alt_refdb" : {
+         "access" : "http://phytozome.jgi.doe.gov/pz/portal.html#!results?search=0&crown=1&star=1&method=4908&searchText=###ID###",
+         "dbname" : [
+            "Phytozome_Eg"
+         ],
+         "url" : "http://phytozome.jgi.doe.gov/"
+      },
+      "name" : [
+         "Eucalyptus grandis"
+      ]
+   },
+   "fves" : {
+      "alt_refdb" : {
+         "access" : "http://phytozome.jgi.doe.gov/pz/portal.html#!results?search=0&crown=1&star=1&method=3309&searchText=###ID###",
+         "dbname" : [
+            "Phytozome_Fv"
+         ],
+         "url" : "http://phytozome.jgi.doe.gov/"
+      },
+      "name" : [
+         "Fragaria vesca"
+      ]
+   },
+   "gmax" : {
+      "name" : [
+         "Glycine max"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Glycine_max_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "grai" : {
+      "name" : [
+         "Gossypium raimondii"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Gossypium_raimondii_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "gsul" : {
+      "name" : [
+         "Galdieria sulphuraria"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Galdieria_sulphuraria_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "hann" : {
+      "name" : [
+         "Helianthus annuus"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Helianthus_annuus_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "hvul" : {
+      "name" : [
+         "Hordeum vulgare"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Hordeum_vulgare_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "jcur" : {
+      "alt_refdb" : {
+         "access" : "http://www.kazusa.or.jp/jatropha/cgi-bin/orfinfo.cgi?db=jatropha&id=###ID###",
+         "dbname" : [
+            "KDRI_Jc"
+         ],
+         "url" : "http://www.kazusa.or.jp/jatropha/"
+      },
+      "name" : [
+         "Jatropha curcas"
+      ]
+   },
+   "lang" : {
+      "name" : [
+         "Lupinus angustifolius"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Lupinus_angustifolius_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "lper" : {
+      "name" : [
+         "Leersia perrieri"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Leersia_perrieri_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "macu" : {
+      "name" : [
+         "Musa acuminata"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Musa_acuminata_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "mdom" : {
+      "alt_refdb" : {
+         "access" : "http://phytozome.jgi.doe.gov/pz/portal.html#!results?search=0&crown=1&star=1&method=3124&searchText=###ID###",
+         "dbname" : [
+            "Phytozome_Md"
+         ],
+         "url" : "http://phytozome.jgi.doe.gov/"
+      },
+      "name" : [
+         "Malus domestica"
+      ]
+   },
+   "mesc" : {
+      "name" : [
+         "Manihot esculenta"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Manihot_esculenta_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "mgut" : {
+      "alt_refdb" : {
+         "access" : "http://phytozome.jgi.doe.gov/pz/portal.html#!results?search=0&crown=1&star=1&method=3464&searchText=###ID###",
+         "dbname" : [
+            "Phytozome_Mg"
+         ],
+         "url" : "http://phytozome.jgi.doe.gov/"
+      },
+      "name" : [
+         "Mimulus guttatus"
+      ]
+   },
+   "mtru" : {
+      "name" : [
+         "Medicago truncatula"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Medicago_truncatula_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "natt" : {
+      "name" : [
+         "Nicotiana attenuata"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Nicotiana_attenuata_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "oaus" : {
+      "alt_refdb" : {
+         "access" : "/pages/content/release-summary/",
+         "dbname" : [
+            "Jaiswal"
+         ],
+         "url" : "http://jaiswallab.cgrb.oregonstate.edu/"
+      },
+      "name" : [
+         "Oryza australiensis"
+      ]
+   },
+   "obar" : {
+      "name" : [
+         "Oryza barthii"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Oryza_barthii_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "obra" : {
+      "name" : [
+         "Oryza brachyantha"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Oryza_brachyantha_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "ogla" : {
+      "name" : [
+         "Oryza glaberrima"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Oryza_glaberrima_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "oglu" : {
+      "name" : [
+         "Oryza glumaepatula"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Oryza_glumaepatula_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "ogra" : {
+      "alt_refdb" : {
+         "access" : "/pages/content/release-summary/",
+         "dbname" : [
+            "Jaiswal"
+         ],
+         "url" : "http://jaiswallab.cgrb.oregonstate.edu/"
+      },
+      "name" : [
+         "Oryza granulata"
+      ]
+   },
+   "okas" : {
+      "alt_refdb" : {
+         "access" : "/pages/content/release-summary/",
+         "dbname" : [
+            "Jaiswal"
+         ],
+         "url" : "http://jaiswallab.cgrb.oregonstate.edu/"
+      },
+      "name" : [
+         "Oryza kasalath"
+      ]
+   },
+   "olon" : {
+      "name" : [
+         "Oryza longistaminata"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Oryza_longistaminata_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "oluc" : {
+      "name" : [
+         "Ostreococcus lucimarinus"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Ostreococcus_lucimarinus_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "omer" : {
+      "name" : [
+         "Oryza meridionalis"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Oryza_meridionalis_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "omin" : {
+      "alt_refdb" : {
+         "access" : "/pages/content/release-summary/",
+         "dbname" : [
+            "Jaiswal"
+         ],
+         "url" : "http://jaiswallab.cgrb.oregonstate.edu/"
+      },
+      "name" : [
+         "Oryza minuta"
+      ]
+   },
+   "oniv" : {
+      "name" : [
+         "Oryza nivara"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Oryza_nivara_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "ooff" : {
+      "alt_refdb" : {
+         "access" : "/pages/content/release-summary/",
+         "dbname" : [
+            "Jaiswal"
+         ],
+         "url" : "http://jaiswallab.cgrb.oregonstate.edu/"
+      },
+      "name" : [
+         "Oryza officinalis"
+      ]
+   },
+   "opun" : {
+      "name" : [
+         "Oryza punctata"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Oryza_punctata_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "oruf" : {
+      "name" : [
+         "Oryza rufipogon"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Oryza_rufipogon_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "osai" : {
+      "name" : [
+         "Oryza sativa subsp. Indica"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Oryza_sativa_Indica_Group_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "osat" : {
+      "name" : [
+         "Oryza sativa"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Oryza_sativa_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "pabi" : {
+      "alt_refdb" : {
+         "access" : "http://congenie.org/gene?id=###ID###",
+         "dbname" : [
+            "Congenie"
+         ],
+         "url" : "http://congenie.org/"
+      },
+      "name" : [
+         "Picea abies"
+      ]
+   },
+   "pdac" : {
+      "alt_refdb" : {
+         "access" : "/pages/content/release-summary/",
+         "dbname" : [
+            "Jaiswal"
+         ],
+         "url" : "http://jaiswallab.cgrb.oregonstate.edu/"
+      },
+      "name" : [
+         "Phoenix dactylifera"
+      ]
+   },
+   "phal" : {
+      "name" : [
+         "Panicum hallii"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Panicum_hallii_fil2_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "phvh" : {
+      "name" : [
+         "Panicum halliivarhallii"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_panicum_hallii_hal2_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "ppat" : {
+      "name" : [
+         "Physcomitrella patens"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Physcomitrella_patens_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "pper" : {
+      "name" : [
+         "Prunus persica"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Prunus_persica_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "ptae" : {
+      "alt_refdb" : {
+         "access" : "/pages/content/release-summary/",
+         "dbname" : [
+            "Jaiswal"
+         ],
+         "url" : "http://jaiswallab.cgrb.oregonstate.edu/"
+      },
+      "name" : [
+         "Pinus taeda"
+      ]
+   },
+   "ptri" : {
+      "name" : [
+         "Populus trichocarpa"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Populus_trichocarpa_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "pvul" : {
+      "name" : [
+         "Phaseolus vulgaris"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Phaseolus_vulgaris_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "sbic" : {
+      "name" : [
+         "Sorghum bicolor"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Sorghum_bicolor_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "sita" : {
+      "name" : [
+         "Setaria italica"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Setaria_italica_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "slyc" : {
+      "name" : [
+         "Solanum lycopersicum"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Solanum_lycopersicum_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "smoe" : {
+      "name" : [
+         "Selaginella moellendorffii"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Selaginella_moellendorffii_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "spcc" : {
+      "alt_refdb" : {
+         "access" : "http://cyano.genome.jp/cgi-bin/cyorf_view.cgi?ORG=syn&ACCESSION=###ID###",
+         "dbname" : [
+            "MicrobeDB"
+         ],
+         "url" : "http://cyano.genome.jp"
+      },
+      "name" : [
+         "Synechocystis pcc6803"
+      ]
+   },
+   "stub" : {
+      "name" : [
+         "Solanum tuberosum"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Solanum_tuberosum_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "taes" : {
+      "name" : [
+         "Triticum aestivum"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Triticum_aestivum_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "tcac" : {
+      "name" : [
+         "Theobroma cacao"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Theobroma_cacao_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "tdic" : {
+      "name" : [
+         "Triticum dicoccoides"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Triticum_dicoccoides_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "tpra" : {
+      "name" : [
+         "Trifolium pratense"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Trifolium_pratense_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "ttur" : {
+      "alt_refdb" : {
+         "access" : "/pages/content/release-summary/",
+         "dbname" : [
+            "Jaiswal"
+         ],
+         "url" : "http://jaiswallab.cgrb.oregonstate.edu/"
+      },
+      "name" : [
+         "Triticum turgidum"
+      ]
+   },
+   "tura" : {
+      "name" : [
+         "Triticum urartu"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Triticum_urartu_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "vang" : {
+      "name" : [
+         "Vigna angularis"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Vigna_angularis_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "vrad" : {
+      "name" : [
+         "Vigna radiata"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Vigna_radiata_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "vvin" : {
+      "name" : [
+         "Vitis vinifera"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Vitis_vinifera_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   },
+   "zmay" : {
+      "alt_refdb" : {
+         "access" : "http://www.maizegdb.org/gene_center/gene/###ID###",
+         "dbname" : [
+            "MaizeGDB"
+         ],
+         "url" : "http://maizegdb.org/"
+      },
+      "name" : [
+         "Zea mays"
+      ],
+      "refdb" : {
+         "access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Zea_mays_PROTEIN"
+         ],
+         "ensg_access" : "http://ensembl.gramene.org/Gene/Summary?g=###ID###",
+         "url" : "http://ensembl.gramene.org"
+      }
+   }
+}

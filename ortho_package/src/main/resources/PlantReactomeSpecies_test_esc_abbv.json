@@ -1,0 +1,54 @@
+{
+   "atha" : {
+      "alt_refdb" : {
+         "access" : "http:\/\/www.arabidopsis.org\/servlets\/TairObject?type=locus&name=###ID###",
+         "dbname" : [
+            "TAIR"
+         ],
+         "url" : "http:\/\/www.arabidopsis.org"
+      },
+      "name" : [
+         "Arabidopsis thaliana"
+      ],
+      "refdb" : {
+         "access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Arabidopsis_thaliana_PROTEIN"
+         ],
+         "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
+         "url" : "http:\/\/ensembl.gramene.org"
+      },
+      "abbreviation": "ATH"
+   },
+   "adur" : {
+      "refdb" : {
+         "access" : "http:\/\/peanutbase.org\/feature\/Arachis\/duranensis\/gene\/###ID###",
+         "dbname" : [
+            "PeanutBase_Ad"
+         ],
+         "url" : "http:\/\/peanutbase.org\/"
+      },
+      "name" : [
+         "Arachis duranensis"
+      ],
+      "abbreviation": "ADU"
+   },
+   "osat" : {
+      "name" : [
+         "Oryza sativa"
+      ],
+      "refdb" : {
+         "access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
+         "dbname" : [
+            "ENSEMBL",
+            "Ensembl",
+            "ENSEMBL_Oryza_sativa_PROTEIN"
+         ],
+         "ensg_access" : "http:\/\/ensembl.gramene.org\/Gene\/Summary?g=###ID###",
+         "url" : "http:\/\/ensembl.gramene.org"
+      },
+      "abbreviation": "OSA"
+   }
+}

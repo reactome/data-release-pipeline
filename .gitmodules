@@ -20,3 +20,6 @@
 [submodule "go-update"]
 	path = go-update
 	url = https://github.com/reactome/release-go-update
+[submodule "orthoinference"]
+	path = orthoinference
+	url = https://github.com/reactome/release-orthoinference

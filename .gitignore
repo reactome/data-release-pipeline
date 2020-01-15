@@ -42,14 +42,7 @@ target
 *.iml
 
 ## Release-specific files
-normal_event_skip_list.txt
 config.properties
-orthoinference*out
-GENES_RAT.txt
-GenePageEnsemblModelMapping.txt
-HGNC_homologene.rpt
-ensembl_1_to_1.txt
-doisToBeUpdated-v*.txt
 
 logs/
 archive/

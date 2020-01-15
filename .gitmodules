@@ -26,3 +26,6 @@
 [submodule "orthopairs"]
 	path = orthopairs
 	url = https://github.com/reactome/release-orthopairs
+[submodule "other-identifiers"]
+	path = other-identifiers
+	url = https://github.com/reactome/release-other-identifiers

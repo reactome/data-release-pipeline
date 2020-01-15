@@ -11,3 +11,6 @@
 [submodule "release-common-lib"]
 	path = release-common-lib
 	url = https://github.com/reactome/release-common-lib
+[submodule "data-exporter"]
+	path = data-exporter
+	url = https://github.com/reactome/release-data-exporter

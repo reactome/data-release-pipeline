@@ -23,3 +23,6 @@
 [submodule "orthoinference"]
 	path = orthoinference
 	url = https://github.com/reactome/release-orthoinference
+[submodule "orthopairs"]
+	path = orthopairs
+	url = https://github.com/reactome/release-orthopairs

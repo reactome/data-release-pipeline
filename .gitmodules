@@ -17,3 +17,6 @@
 [submodule "download-directory"]
 	path = download-directory
 	url = https://github.com/reactome/release-download-directory
+[submodule "go-update"]
+	path = go-update
+	url = https://github.com/reactome/release-go-update

@@ -14,3 +14,6 @@
 [submodule "data-exporter"]
 	path = data-exporter
 	url = https://github.com/reactome/release-data-exporter
+[submodule "download-directory"]
+	path = download-directory
+	url = https://github.com/reactome/release-download-directory

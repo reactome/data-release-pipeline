@@ -29,3 +29,6 @@
 [submodule "other-identifiers"]
 	path = other-identifiers
 	url = https://github.com/reactome/release-other-identifiers
+[submodule "update-dois"]
+	path = update-dois
+	url = https://github.com/reactome/release-update-dois

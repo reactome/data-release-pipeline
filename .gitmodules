@@ -2,3 +2,6 @@
 	path = add-links
 	url = https://github.com/reactome/add-links
 	branch = develop
+[submodule "biomodels"]
+	path = biomodels
+	url = https://github.com/reactome/release-biomodels

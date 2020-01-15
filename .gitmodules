@@ -8,3 +8,6 @@
 [submodule "chebi-update"]
 	path = chebi-update
 	url = https://github.com/reactome/release-chebi-update
+[submodule "release-common-lib"]
+	path = release-common-lib
+	url = https://github.com/reactome/release-common-lib

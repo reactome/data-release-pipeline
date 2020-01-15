@@ -32,3 +32,6 @@
 [submodule "update-dois"]
 	path = update-dois
 	url = https://github.com/reactome/release-update-dois
+[submodule "update-stable-ids"]
+	path = update-stable-ids
+	url = https://github.com/reactome/release-update-stable-ids

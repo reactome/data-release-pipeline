@@ -79,7 +79,7 @@ pipeline {
 				script{
 					dir('ortho-stable-id-history') {
 						withCredentials([file(credentialsId: 'Config', variable: 'ConfigFile')]) {
-							sh "java -jar target/OrthoStableIdHistory-${env.ORTHO_STABLE_IDS_HISTORY_VERSION}-jar-with-dependencies.jar $ConfigFile"
+							sh "java -jar target/OrthoStableIdHistory-*-jar-with-dependencies.jar $ConfigFile"
 						}
 					}
 				}

@@ -43,7 +43,6 @@ pipeline {
 				}
 			}
 		}
-		/*
 		stage('Setup: Build jar file'){
 			steps{
 				script{
@@ -102,6 +101,7 @@ pipeline {
 				}
 			}
 		}
+		/*
 		stage('Post: Archive logs and backups'){
 			steps{
 				script{

@@ -15,7 +15,7 @@ pipeline {
 					currentRelease = (pwd() =~ /Releases\/(\d+)\//)[0][1];
 					previousRelease = (pwd() =~ /Releases\/(\d+)\//)[0][1].toInteger() - 1;
 					// This queries the Jenkins API to confirm that the most recent build of Orthoinference was successful.
-					def orthoinferenceUrl = httpRequest authentication: 'jenkinsKey', validResponseCodes: "${env.VALID_RESPONSE_CODES}", url: "${env.JENKINS_JOB_URL}/job/$currentRelease/job/Orthoinference/lastBuild/api/json"
+					def orthoinferenceUrl = httpRequest authentication: 'jenkinsKey', validResponseCodes: "${env.VALID_RESPONSE_CODES}", url: "${env.JENKINS_JOB_URL}/job/${currentRelease}/Relational-Database-Updates/job/Orthoinference//lastBuild/api/json"
 					if (orthoinferenceUrl.getStatus() == 404) {
 						error("Orthoinference has not yet been run. Please complete a successful build.")
 					} else {
@@ -43,6 +43,7 @@ pipeline {
 				}
 			}
 		}
+		/*
 		stage('Setup: Build jar file'){
 			steps{
 				script{
@@ -113,5 +114,6 @@ pipeline {
 				}
 			}
 		}
+		*/
 	}		
 }

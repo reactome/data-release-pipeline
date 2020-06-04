@@ -27,7 +27,6 @@ pipeline {
 				}
 			}
 		}
-		/*
 		stage('Setup: Back up DBs'){
 			steps{
 				script{
@@ -102,7 +101,6 @@ pipeline {
 				}
 			}
 		}
-		*/
 		// This stage archives all logs and database backups produced by OrthoinferenceStableIdentifierHistory.
 		stage('Post: Archive Outputs'){
 			steps{

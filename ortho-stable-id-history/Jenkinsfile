@@ -1,4 +1,3 @@
-
 import groovy.json.JsonSlurper
 // This Jenkinsfile is used by Jenkins to run the OrthoinferenceStableIdentifierHistory step of Reactome's release.
 // It requires that the Orthoinference step has been run successfully before it can be run.

@@ -107,15 +107,17 @@ pipeline {
 		stage('Post: Archive Outputs'){
 			steps{
 				script{
-					def s3Path = "${env.S3_RELEASE_DIRECTORY_URL}/${currentRelease}/ortho_stable_id_history"
-					sh "mkdir -p databases/"
-					sh "mv --backup=numbered *_${currentRelease}_*.dump.gz databases/"
-					sh "mv ${env.ABS_RELEASE_PATH}/generate_stable_ids_orthoinference/*.log logs/"
-					sh "mv ${env.ABS_RELEASE_PATH}/generate_stable_ids_orthoinference/*.err logs/"
-					sh "gzip -r logs/*"
-					sh "aws s3 --no-progress --recursive cp databases/ $s3Path/databases/"
-					sh "aws s3 --no-progress --recursive cp logs/ $s3Path/logs/"
-					sh "rm -r logs databases stable_id_mapping.stored_data*"
+					dir('ortho-stable-id-history'){
+						def s3Path = "${env.S3_RELEASE_DIRECTORY_URL}/${currentRelease}/ortho_stable_id_history"
+						sh "mkdir -p databases/"
+						sh "mv --backup=numbered *_${currentRelease}_*.dump.gz databases/"
+						sh "mv ${env.ABS_RELEASE_PATH}/generate_stable_ids_orthoinference/*.log logs/"
+						sh "mv ${env.ABS_RELEASE_PATH}/generate_stable_ids_orthoinference/*.err logs/"
+						sh "gzip -r logs/*"
+						sh "aws s3 --no-progress --recursive cp databases/ $s3Path/databases/"
+						sh "aws s3 --no-progress --recursive cp logs/ $s3Path/logs/"
+						sh "rm -r logs databases stable_id_mapping.stored_data*"
+					}
 				}
 			}
 		}

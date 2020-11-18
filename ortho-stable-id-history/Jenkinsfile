@@ -1,4 +1,3 @@
-import groovy.json.JsonSlurper
 // This Jenkinsfile is used by Jenkins to run the OrthoinferenceStableIdentifierHistory step of Reactome's release.
 // It requires that the Orthoinference step has been run successfully before it can be run.
 
@@ -12,20 +11,20 @@ pipeline {
 
 	stages {
 		// This stage checks that an upstream project, Orthoinference, was run successfully for its last build.
-		stage('Check if Orthoinference build succeeded'){
-			steps{
-				script{
-					utils.checkUpstreamBuildsSucceeded("Relational-Database-Updates/job/Orthoinference")
-				}
-			}
-		}
-		stage('Setup: Download stable_id_mapping.stored_data from S3'){
-			script{
-				dir('ortho-stable-id-history'){
-					def stableIdStoredDataFile = "stable_id_mapping.stored_data.zip"
-					sh "aws s3 --no-progress cp --recursive ${env.S3_RELEASE_DIRECTORY_URL}/${stableIdStoredDataFile} ."
-					sh "unzip ${stableIdStoredDataFile}"
-				}
+ 		stage('Check if Orthoinference build succeeded'){
+ 			steps{
+ 				script{
+ 					utils.checkUpstreamBuildsSucceeded("Relational-Database-Updates/job/Orthoinference")
+ 				}
+ 			}
+ 		}
+		stage('Setup: Download stable_id_mapping.stored_data.zip from S3'){
+		    steps{
+    			script{
+    				dir('ortho-stable-id-history'){
+    					sh "aws s3 --no-progress cp --recursive ${env.S3_RELEASE_DIRECTORY_URL}/stable_id_mapping.stored_data.zip ."
+    				}
+			    }
 			}
 		}
 		stage('Setup: Back up DBs'){

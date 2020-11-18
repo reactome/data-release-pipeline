@@ -19,10 +19,12 @@ pipeline {
 				}
 			}
 		}
-		stage('Setup: Download stable_id_mapping.stored_data.zip from S3'){
+		stage('Setup: Download stable_id_mapping.stored_data from S3'){
 			script{
 				dir('ortho-stable-id-history'){
-					sh "aws s3 --no-progress cp --recursive ${env.S3_RELEASE_DIRECTORY_URL}/stable_id_mapping.stored_data.zip ."
+					def stableIdStoredDataFile = "stable_id_mapping.stored_data.zip"
+					sh "aws s3 --no-progress cp --recursive ${env.S3_RELEASE_DIRECTORY_URL}/${stableIdStoredDataFile} ."
+					sh "unzip ${stableIdStoredDataFile}"
 				}
 			}
 		}

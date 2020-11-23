@@ -22,7 +22,7 @@ pipeline {
 		    steps{
     			script{
     				dir('ortho-stable-id-history'){
-    					sh "aws s3 --no-progress cp --recursive ${env.S3_RELEASE_DIRECTORY_URL}/stable_id_mapping.stored_data.zip ."
+    					sh "aws s3 --no-progress cp --recursive ${env.S3_RELEASE_DIRECTORY_URL}/supplementary_files/stable_id_mapping.stored_data.zip ."
     				}
 			    }
 			}

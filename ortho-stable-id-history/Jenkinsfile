@@ -18,7 +18,8 @@ pipeline {
  				}
  			}
  		}
-		stage('Setup: Download stable_id_mapping.stored_data.zip from S3'){
+		// TODO: This file should be downloaded at the step that uses it to reduce complexity and confusion.
+/*		stage('Setup: Download stable_id_mapping.stored_data.zip from S3'){
 		    steps{
     			script{
     				dir('ortho-stable-id-history'){
@@ -27,6 +28,8 @@ pipeline {
 			    }
 			}
 		}
+*/
+		// Backs up the release_current and stable_identifiers databases.
 		stage('Setup: Back up DBs'){
 			steps{
 				script{
@@ -39,6 +42,7 @@ pipeline {
 				}
 			}
 		}
+		// Builds the jar file that will be used.
 		stage('Setup: Build jar file'){
 			steps{
 				script{
@@ -48,6 +52,8 @@ pipeline {
 				}
 			}
 		}
+		// Runs the perl 'save_stable_id_history.pl' script. 
+		// NOTE: Good spot to download the stable_id_mapping.stored data?
 		stage('Main: Save StableIdentifier History'){
 			steps{
 				script{
@@ -60,6 +66,7 @@ pipeline {
 				}
 			}
 		}
+		// Runs the perl 'old_stable_id_mapping.pl' script.
 		stage('Main: Old StableIdentifier Mapping'){
 			steps{
 				script{
@@ -71,6 +78,7 @@ pipeline {
 				}
 			}
 		}
+		// Runs the StableIdentifier QA.
 		stage('Post: Run StableIdentifier QA'){
 			steps{
 				script{
@@ -82,6 +90,7 @@ pipeline {
 				}
 			}
 		}
+		// Backs up the 'release_current' and 'stable_identifier' databases after the step has run.
 		stage('Post: Backup DBs'){
 			steps{
 				script{

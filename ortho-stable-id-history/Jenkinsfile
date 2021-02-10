@@ -87,11 +87,16 @@ pipeline {
 			steps{
 				script{
 					dir('ortho-stable-id-history'){
+						// Download 'stable_id_mapping.stored_data' from S3
+						def stableIdMappingStorFile = "stable_id_mapping.stored_data"
+						sh "aws s3 --no-progress cp ${env.S3_RELEASE_DIRECTORY_URL}/supplementary_files/${stableIdMappingStorFile}.zip ."
+						sh "unzip ${stableIdMappingStorFile}.zip"
+						sh "mv ${stableIdMappingStorFile} ${env.ABS_RELEASE_PATH}/generate_stable_ids_orthoinference/"
 						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
-							utils.takeDatabaseDumpAndGzip("${env.RELEASE_CURRENT_DB}", "ortho_stable_id_history", "after", "${env.RELEASE_SERVER}")
-							utils.takeDatabaseDumpAndGzip("${env.STABLE_IDENTIFIERS_DB}", "ortho_stable_id_history", "after", "${env.RELEASE_SERVER}")
-
+							sh "perl ${env.ABS_RELEASE_PATH}/generate_stable_ids_orthoinference/old_stable_id_mapping.pl -db ${env.RELEASE_CURRENT_DB} -host localhost"
 						}
+						sh "rm ${stableIdMappingStorFile}.zip"
+						sh "rm ${env.ABS_RELEASE_PATH}/generate_stable_ids_orthoinference/${stableIdMappingStorFile}"
 					}
 				}
 			}

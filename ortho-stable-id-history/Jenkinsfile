@@ -18,17 +18,6 @@ pipeline {
  				}
  			}
  		}
-		// TODO: This file should be downloaded at the step that uses it to reduce complexity and confusion.
-/*		stage('Setup: Download stable_id_mapping.stored_data.zip from S3'){
-		    steps{
-    			script{
-    				dir('ortho-stable-id-history'){
-    					sh "aws s3 --no-progress cp --recursive ${env.S3_RELEASE_DIRECTORY_URL}/supplementary_files/stable_id_mapping.stored_data.zip ."
-    				}
-			    }
-			}
-		}
-*/
 		// Backs up the release_current and stable_identifiers databases.
 		stage('Setup: Back up DBs'){
 			steps{
@@ -53,7 +42,6 @@ pipeline {
 			}
 		}
 		// Runs the perl 'save_stable_id_history.pl' script. 
-		// NOTE: Good spot to download the stable_id_mapping.stored data?
 		stage('Main: Save StableIdentifier History'){
 			steps{
 				script{
@@ -71,9 +59,13 @@ pipeline {
 			steps{
 				script{
 					dir('ortho-stable-id-history'){
+						// Download 'stable_id_mapping.stored_data' from S3
+						sh "aws s3 --no-progress cp --recursive ${env.S3_RELEASE_DIRECTORY_URL}/supplementary_files/stable_id_mapping.stored_data.zip ."
+						sh "unzip stable_id_mapping.stored_data.zip"
 						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
 							sh "perl ${env.ABS_RELEASE_PATH}/generate_stable_ids_orthoinference/old_stable_id_mapping.pl -db ${env.RELEASE_CURRENT_DB} -host localhost"
 						}
+						sh "rm stable_id_mapping.stored_data*"
 					}
 				}
 			}

@@ -41,14 +41,14 @@ pipeline {
 				}
 			}
 		}
-		// Runs the perl 'save_stable_id_history.pl' script. 
+		// Runs the perl 'save_stable_id_history.pl' script.
 		stage('Main: Save StableIdentifier History'){
 			steps{
 				script{
 					dir('ortho-stable-id-history'){
 						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
 							def releaseVersion = utils.getReleaseVersion()
-							sh  "perl ${env.ABS_RELEASE_PATH}/generate_stable_ids_orthoinference/save_stable_id_history.pl -db ${env.RELEASE_CURRENT_DB} -sdb ${env.STABLE_IDENTIFIERS_DB} -host localhost -user $user -pass $pass -release ${releaseVersion}" 
+							sh  "perl ${env.ABS_RELEASE_PATH}/generate_stable_ids_orthoinference/save_stable_id_history.pl -db ${env.RELEASE_CURRENT_DB} -sdb ${env.STABLE_IDENTIFIERS_DB} -host localhost -user $user -pass $pass -release ${releaseVersion}"
 						}
 					}
 				}
@@ -62,6 +62,8 @@ pipeline {
 						// Download 'stable_id_mapping.stored_data' from S3
 						sh "aws s3 cp ${env.S3_RELEASE_DIRECTORY_URL}/supplementary_files/stable_id_mapping.stored_data.zip ."
 						sh "unzip stable_id_mapping.stored_data.zip"
+						// Ensure that the file is in the same location as the Perl script
+						sh "cp ./stable_id_mapping.stored_data ${env.ABS_RELEASE_PATH}/generate_stable_ids_orthoinference/stable_id_mapping.stored_data"
 						withCredentials([usernamePassword(credentialsId: 'mySQLUsernamePassword', passwordVariable: 'pass', usernameVariable: 'user')]){
 							sh "perl ${env.ABS_RELEASE_PATH}/generate_stable_ids_orthoinference/old_stable_id_mapping.pl -db ${env.RELEASE_CURRENT_DB} -host localhost"
 						}
@@ -114,5 +116,5 @@ pipeline {
 				}
 			}
 		}
-	}		
+	}
 }

@@ -50,7 +50,7 @@ public class PostStepChecks {
                 }
 
                 if (oldIdentifiersAssociatedWithMultipleStableIdentifiersMap.get(oldIdentifier) != null) {
-                    System.out.println(stableIdentifierInst + " has an old identifier is used in multiple instances (" + oldIdentifier + ")");
+                    System.out.println(stableIdentifierInst + " has an old identifier that is used in multiple instances (" + oldIdentifier + ")");
                 }
             }
         }

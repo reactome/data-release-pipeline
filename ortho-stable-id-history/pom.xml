@@ -35,9 +35,10 @@
                   <artifactId>maven-assembly-plugin</artifactId>
                   <configuration>
                            <archive>
-                                    <manifest>
-                                             <mainClass>org.reactome.release.orthoStableIdentifierHistory.Main</mainClass>
-                                    </manifest>
+                                    <manifestEntries>
+					    <Multi-Release>true</Multi-Release>
+					    <Main-Class>org.reactome.release.orthoStableIdentifierHistory.Main</Main-Class>
+                                    </manifestEntries>
                            </archive>
                            <descriptorRefs>
                                     <descriptorRef>jar-with-dependencies</descriptorRef>

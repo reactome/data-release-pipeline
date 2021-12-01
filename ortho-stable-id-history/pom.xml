@@ -36,8 +36,8 @@
                   <configuration>
                            <archive>
                                     <manifestEntries>
-					    <Multi-Release>true</Multi-Release>
-					    <Main-Class>org.reactome.release.orthoStableIdentifierHistory.Main</Main-Class>
+                                        <Multi-Release>true</Multi-Release>
+                                        <Main-Class>org.reactome.release.orthoStableIdentifierHistory.Main</Main-Class>
                                     </manifestEntries>
                            </archive>
                            <descriptorRefs>

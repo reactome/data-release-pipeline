@@ -32,19 +32,19 @@
                 </configuration>
             </plugin>
             <plugin>
-                  <artifactId>maven-assembly-plugin</artifactId>
-                  <configuration>
-                           <archive>
-                                    <manifestEntries>
-                                        <Multi-Release>true</Multi-Release>
-                                        <Main-Class>org.reactome.release.orthoStableIdentifierHistory.Main</Main-Class>
-                                    </manifestEntries>
-                           </archive>
-                           <descriptorRefs>
-                                    <descriptorRef>jar-with-dependencies</descriptorRef>
-                           </descriptorRefs>
-                  </configuration>
-         </plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Multi-Release>true</Multi-Release>
+                            <Main-Class>org.reactome.release.orthoStableIdentifierHistory.Main</Main-Class>
+                        </manifestEntries>
+                    </archive>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>

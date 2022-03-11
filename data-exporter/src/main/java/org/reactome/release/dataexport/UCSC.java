@@ -197,6 +197,8 @@ public class UCSC {
 	 * @return Set of UniProt Reactome Entry objects
 	 */
 	Set<UniProtReactomeEntry> getUniProtReactomeEntriesForUCSC(Session graphDBSession) {
+		final String UCSC_ACCEPTED_SPECIES = "'Homo sapiens', 'Rattus norvegicus', 'Mus musculus'";
+
 		if (ucscUniProtReactomeEntries != null) {
 			return ucscUniProtReactomeEntries;
 		}
@@ -207,16 +209,16 @@ public class UCSC {
 			String.join(System.lineSeparator(),
 				"MATCH (ewas:EntityWithAccessionedSequence)-[:referenceEntity]->(rgp:ReferenceGeneProduct)" +
 				"-[:referenceDatabase]->(rd:ReferenceDatabase)",
-				"WHERE ewas.speciesName IN ['Homo sapiens', 'Rattus norvegicus', 'Mus musculus'] AND rd.displayName =" +
-				" 'UniProt'",
-				"RETURN rgp.dbId, rgp.identifier, rgp.displayName",
-				"ORDER BY rgp.identifier"
+				"WHERE ewas.speciesName IN [" + UCSC_ACCEPTED_SPECIES + "] AND rd.displayName = 'UniProt'",
+				"RETURN DISTINCT rgp.dbId, coalesce(rgp.variantIdentifier, rgp.identifier) as rgp_accession,"
+					+ " rgp.displayName",
+				"ORDER BY rgp_accession"
 			)
 		)
 		.stream()
 		.map(record -> UniProtReactomeEntry.get(
 			record.get("rgp.dbId").asLong(),
-			record.get("rgp.identifier").asString(),
+			record.get("rgp_accession").asString(),
 			record.get("rgp.displayName").asString()
 		))
 		.collect(Collectors.toCollection(LinkedHashSet::new));

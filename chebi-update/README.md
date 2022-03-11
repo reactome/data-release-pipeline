@@ -12,7 +12,7 @@ It will:
  
 ## Configuration
 
-This application requires a properties file that looks like this:
+This application requires a properties file at `./chebi-update.properties` that looks like this:
 
 ```
 db.host=database_server

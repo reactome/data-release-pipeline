@@ -20,7 +20,6 @@ public class ReactomeEventTest {
 		assertThat(reactomeEventCache, is(anEmptyMap()));
 	}
 
-
 	@Test
 	public void retrievesNCBIEntryFromDummyGraphDB() {
 		final long EVENT_DB_ID = 69563L;
@@ -34,7 +33,8 @@ public class ReactomeEventTest {
 		Map<Long, ReactomeEvent> reactomeEventCache =
 			ReactomeEvent.fetchReactomeEventMap(dummyGraphDBServer.getSession());
 
-		assertThat(reactomeEventCache, is(aMapWithSize(7)));
+		final int EXPECTED_NUMBER_OF_REACTOME_EVENTS = 15;
+		assertThat(reactomeEventCache, is(aMapWithSize(EXPECTED_NUMBER_OF_REACTOME_EVENTS)));
 
 		ReactomeEvent expectedEvent = new ReactomeEvent(EVENT_DB_ID, EVENT_DISPLAY_NAME, EVENT_ST_ID);
 		assertThat(reactomeEventCache, hasEntry(EVENT_DB_ID, expectedEvent));
@@ -45,10 +45,11 @@ public class ReactomeEventTest {
 		final long DUMMY_DB_ID = 1L;
 		final String DUMMY_STABLE_ID = "R-HSA-123456";
 		final String NAME_STRING_CONTAINING_SUGAR = "something to do with sugars";
+		final String EXPECTED_NAME_AFTER_CORRECTION = "Metabolism of sugars";
 
 		ReactomeEvent reactomeEvent =
 			new ReactomeEvent(DUMMY_DB_ID, NAME_STRING_CONTAINING_SUGAR, DUMMY_STABLE_ID);
 
-		assertThat(reactomeEvent.getName(), equalTo("Metabolism of sugars"));
+		assertThat(reactomeEvent.getName(), equalTo(EXPECTED_NAME_AFTER_CORRECTION));
 	}
 }

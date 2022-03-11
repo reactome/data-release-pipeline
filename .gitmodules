@@ -1,0 +1,4 @@
+[submodule "add-links"]
+	path = add-links
+	url = https://github.com/reactome/add-links
+	branch = develop

@@ -1,30 +1,41 @@
 MERGE (rd1:ReferenceDatabase { dbId:2, displayName:"UniProt" })
+
 MERGE (rds1:ReferenceDNASequence { dbId:10618550, databaseName:"NCBI Gene", identifier:"5339" })
 MERGE (rgp1:ReferenceGeneProduct { dbId:69487, displayName:"UniProt:P04637 TP53", identifier:"P04637" })
 MERGE (ewas1:EntityWithAccessionedSequence {dbId:69488, displayName:"TP53 [nucleoplasm]", stId:"R-HSA-69488", speciesName:"Homo sapiens"})
 MERGE (c1:Complex {dbId:3209194, displayName:"TP53 Tetramer [nucleoplasm]", stId:"R-HSA-3209194", speciesName:"Homo sapiens"})
-MERGE (r1:Reaction:ReactionLikeEvent:Event {dbId:5693609, displayName:"ATM phosphorylates TP53 at S15",
-stId:"R-HSA-5693609",
-speciesName:"Homo sapiens"})
-MERGE (p1:Pathway:Event {dbId:69541, displayName:"Stabilization of p53", stId:"R-HSA-69541", speciesName:"Homo
-sapiens"})
-MERGE (p2:Pathway:Event {dbId:69563, displayName:"p53-Dependent G1 DNA Damage Response", stId:"R-HSA-69563",
-speciesName:"Homo sapiens"})
-MERGE (p3:Pathway:Event {dbId:69580, displayName:"p53-Dependent G1/S DNA damage checkpoint", stId:"R-HSA-69580",
-speciesName:"Homo sapiens"})
-MERGE (p4:Pathway:Event {dbId:69615, displayName:"G1/S DNA Damage Checkpoints", stId:"R-HSA-69615", speciesName:"Homo
-sapiens"})
-MERGE (p5:Pathway:Event {dbId:69620, displayName:"Cell Cycle Checkpoints", stId:"R-HSA-69620", speciesName:"Homo
-sapiens"})
-MERGE (p6:Pathway:Event:TopLevelPathway {dbId:1640170, displayName:"Cell Cycle", stId:"R-HSA-1640170", speciesName:"Homo
- sapiens"})
-MERGE (lr1:LiteratureReference {dbId:69564, displayName:"Mdm2 promotes the rapid degradation of p53.",
-pubMedIdentifier:9153395})
-MERGE (p2)-[:literatureReference]->(lr1)
-MERGE (p6)-[:hasEvent]->(p5)-[:hasEvent]->(p4)-[:hasEvent]->(p3)-[:hasEvent]->(p2)-[:hasEvent]->(p1)-[:hasEvent]->(r1)
+MERGE (r1:Reaction:ReactionLikeEvent:Event {dbId:5693609, displayName:"ATM phosphorylates TP53 at S15", stId:"R-HSA-5693609", speciesName:"Homo sapiens"})
+MERGE (p1a:Pathway:Event {dbId:69541, displayName:"Stabilization of p53", stId:"R-HSA-69541", speciesName:"Homo sapiens"})
+MERGE (p1b:Pathway:Event {dbId:69563, displayName:"p53-Dependent G1 DNA Damage Response", stId:"R-HSA-69563", speciesName:"Homo sapiens"})
+MERGE (p1c:Pathway:Event {dbId:69580, displayName:"p53-Dependent G1/S DNA damage checkpoint", stId:"R-HSA-69580", speciesName:"Homo sapiens"})
+MERGE (p1d:Pathway:Event {dbId:69615, displayName:"G1/S DNA Damage Checkpoints", stId:"R-HSA-69615", speciesName:"Homo sapiens"})
+MERGE (p1e:Pathway:Event {dbId:69620, displayName:"Cell Cycle Checkpoints", stId:"R-HSA-69620", speciesName:"Homo sapiens"})
+MERGE (p1f:Pathway:Event:TopLevelPathway {dbId:1640170, displayName:"Cell Cycle", stId:"R-HSA-1640170", speciesName:"Homo sapiens"})
+MERGE (lr1:LiteratureReference {dbId:69564, displayName:"Mdm2 promotes the rapid degradation of p53.", pubMedIdentifier:9153395})
+
+MERGE (rds2:ReferenceDNASequence { dbId:11364728, databaseName:"NCBI Gene", identifier:"8787"})
+MERGE (rgp2:ReferenceGeneProduct { dbId:152926, displayName:"UniProt:O75916-3 RGS9", identifier:"O75916", variantIdentifier:"O75916-3"})
+MERGE (ewas2:EntityWithAccessionedSequence {dbId: 2584256, displayName:"RGS9 isoform 3", stId:"R-HSA-2584256", speciesName:"Homo sapiens"})
+MERGE (c2:Complex {dbId:74601, displayName:"RGS9-1:GNB5:RGS9BP [photoreceptor disc membrane]", stId:"R-HSA-74601", speciesName:"Homo sapiens"})
+MERGE (r2:Reaction:ReactionLikeEvent:Event {dbId:74615, displayName:"PRKCA/Q phosphorylate RGS9-1:GN5B:RGS9BP", stId:"R-HSA-74615",speciesName:"Homo sapiens"})
+MERGE (p2a:Pathway:Event {dbId:2514859, displayName:"Inactivation, recovery and regulation of the phototransduction cascade", stId:"R-HSA-2514859", speciesName:"Homo sapiens"})
+MERGE (p2b:Pathway:Event {dbId:2514856, displayName:"The phototransduction cascade", stId:"R-HSA-2514856", speciesName:"Homo sapiens"})
+MERGE (p2c:Pathway:Event {dbId:2187338, displayName:"Visual phototransduction", stId:"R-HSA-2187338", speciesName:"Homo sapiens"})
+MERGE (p2d:Pathway:Event {dbId:418594, displayName:"G alpha (i) signalling events", stId:"R-HSA-418594", speciesName:"Homo sapiens"})
+MERGE (p2e:Pathway:Event {dbId:388396, displayName:"GPCR downstream signalling", stId:"R-HSA-388396", speciesName:"Homo sapiens"})
+MERGE (p2f:Pathway:Event {dbId:372790, displayName:"Signaling by GPCR", stId:"R-HSA-372790", speciesName:"Homo sapiens"})
+MERGE (p2g:Pathway:Event:TopLevelPathway {dbId:162582, displayName:"Signal Transduction", stId:"R-HSA-162582", speciesName:"Homo sapiens"})
+
+MERGE (p1b)-[:literatureReference]->(lr1)
+MERGE (p1f)-[:hasEvent]->(p1e)-[:hasEvent]->(p1d)-[:hasEvent]->(p1c)-[:hasEvent]->(p1b)-[:hasEvent]->(p1a)-[:hasEvent]->(r1)
+MERGE (p2g)-[:hasEvent]->(p2f)-[:hasEvent]->(p2e)-[:hasEvent]->(p2d)-[:hasEvent]->(p2c)-[:hasEvent]->(p2b)-[:hasEvent]->(p2a)-[:hasEvent]->(r2)
+MERGE (r2)-[:input]->(c2)
+MERGE (c2)-[:hasComponent]->(ewas2)
 MERGE (r1)-[:input]->(c1)
 MERGE (c1)-[:hasComponent]->(ewas1)
 MERGE (ewas1)-[:referenceEntity]->(rgp1)
 MERGE (rgp1)-[:referenceGene]->(rds1)
 MERGE (rgp1)-[:referenceDatabase]->(rd1)
-
+MERGE (ewas2)-[:referenceEntity]->(rgp2)
+MERGE (rgp2)-[:referenceGene]->(rds2)
+MERGE (rgp2)-[:referenceDatabase]->(rd1)

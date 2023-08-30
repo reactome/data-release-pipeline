@@ -104,19 +104,21 @@ public class PostStepChecks {
 
     private static Map<String, List<GKInstance>> mapOldIdentifiersToStableIdentifiers(MySQLAdaptor dba) throws Exception {
         if (oldIdentifierToStableIdentifierMap.isEmpty()) {
-            String oldIdentifier = (String) stableIdentifierInst.getAttributeValue("oldIdentifier");
-            if (oldIdentifier != null) {
-                List<GKInstance> stableIdentifierList = oldIdentifierToStableIdentifierMap.get(oldIdentifier);
+            for (GKInstance stableIdentifierInst : findStableIdentifierInstances(dba)) {
+                String oldIdentifier = (String) stableIdentifierInst.getAttributeValue("oldIdentifier");
+                if (oldIdentifier != null) {
+                    List<GKInstance> stableIdentifierList = oldIdentifierToStableIdentifierMap.get(oldIdentifier);
 
-                if (stableIdentifierList == null) {
-                    stableIdentifierList = new ArrayList<>();
-                    oldIdentifierToStableIdentifierMap.put(oldIdentifier, stableIdentifierList);
+                    if (stableIdentifierList == null) {
+                        stableIdentifierList = new ArrayList<>();
+                        oldIdentifierToStableIdentifierMap.put(oldIdentifier, stableIdentifierList);
+                    }
+
+                    List<GKInstance> tempList = new ArrayList<>(stableIdentifierList);  // Create a mutable list
+                    tempList.add(stableIdentifierInst);  // Add the new instance to the list
+
+                    oldIdentifierToStableIdentifierMap.put(oldIdentifier, tempList);  // Put the list back in the map
                 }
-
-                List<GKInstance> tempList = new ArrayList<>(stableIdentifierList);  // Create a mutable list
-                tempList.add(stableIdentifierInst);  // Add the new instance to the list
-
-                oldIdentifierToStableIdentifierMap.put(oldIdentifier, tempList);  // Put the list back in the map
             }
         }
         return oldIdentifierToStableIdentifierMap;

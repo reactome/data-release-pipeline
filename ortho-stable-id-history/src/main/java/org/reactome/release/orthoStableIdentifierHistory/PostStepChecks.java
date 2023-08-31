@@ -27,7 +27,7 @@ public class PostStepChecks {
 
         for (GKInstance stableIdentifierInst : findStableIdentifierInstances(dba)) {
             Collection<GKInstance> stableIdentifierReferrals = stableIdentifierInst.getReferers(ReactomeJavaConstants.stableIdentifier);
-            if (stableIdentifierReferrals.isEmpty()) {
+            if (stableIdentifierReferrals == null || stableIdentifierReferrals.isEmpty()) {
                 System.out.println(stableIdentifierInst + " has no referrers");
             } else if (stableIdentifierReferrals.size() > 1) {
                 System.out.println(stableIdentifierInst + " has multiple referrers");
@@ -105,15 +105,19 @@ public class PostStepChecks {
     private static Map<String, List<GKInstance>> mapOldIdentifiersToStableIdentifiers(MySQLAdaptor dba) throws Exception {
         if (oldIdentifierToStableIdentifierMap.isEmpty()) {
             for (GKInstance stableIdentifierInst : findStableIdentifierInstances(dba)) {
-                // Cast to String instead of using toString() in case value returned is null.
                 String oldIdentifier = (String) stableIdentifierInst.getAttributeValue("oldIdentifier");
                 if (oldIdentifier != null) {
-                    if (oldIdentifierToStableIdentifierMap.get(oldIdentifier) != null) {
-                        oldIdentifierToStableIdentifierMap.get(oldIdentifier).add(stableIdentifierInst);
-                    } else {
-                        List<GKInstance> stableIdentifierSingletonList = Arrays.asList(stableIdentifierInst);
-                        oldIdentifierToStableIdentifierMap.put(oldIdentifier, stableIdentifierSingletonList);
+                    List<GKInstance> stableIdentifierList = oldIdentifierToStableIdentifierMap.get(oldIdentifier);
+
+                    if (stableIdentifierList == null) {
+                        stableIdentifierList = new ArrayList<>();
+                        oldIdentifierToStableIdentifierMap.put(oldIdentifier, stableIdentifierList);
                     }
+
+                    List<GKInstance> tempList = new ArrayList<>(stableIdentifierList);  // Create a mutable list
+                    tempList.add(stableIdentifierInst);  // Add the new instance to the list
+
+                    oldIdentifierToStableIdentifierMap.put(oldIdentifier, tempList);  // Put the list back in the map
                 }
             }
         }

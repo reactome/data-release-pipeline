@@ -111,7 +111,8 @@ public class PostStepChecks {
                     if (oldIdentifierToStableIdentifierMap.get(oldIdentifier) != null) {
                         oldIdentifierToStableIdentifierMap.get(oldIdentifier).add(stableIdentifierInst);
                     } else {
-                        List<GKInstance> stableIdentifierSingletonList = Arrays.asList(stableIdentifierInst);
+                        List<GKInstance> stableIdentifierSingletonList = new ArrayList<>();
+                        stableIdentifierSingletonList.add(stableIdentifierInst);
                         oldIdentifierToStableIdentifierMap.put(oldIdentifier, stableIdentifierSingletonList);
                     }
                 }

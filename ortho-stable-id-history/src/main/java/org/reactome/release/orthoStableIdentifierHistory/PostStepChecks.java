@@ -27,7 +27,9 @@ public class PostStepChecks {
 
         for (GKInstance stableIdentifierInst : findStableIdentifierInstances(dba)) {
             Collection<GKInstance> stableIdentifierReferrals = stableIdentifierInst.getReferers(ReactomeJavaConstants.stableIdentifier);
-            if (stableIdentifierReferrals.isEmpty()) {
+            if (stableIdentifierReferrals == null) {
+                System.out.println(stableIdentifierInst + " has null stableIdentifierReferrals");
+            } else if (stableIdentifierReferrals.isEmpty()) {
                 System.out.println(stableIdentifierInst + " has no referrers");
             } else if (stableIdentifierReferrals.size() > 1) {
                 System.out.println(stableIdentifierInst + " has multiple referrers");

@@ -107,7 +107,6 @@ public class PostStepChecks {
     private static Map<String, List<GKInstance>> mapOldIdentifiersToStableIdentifiers(MySQLAdaptor dba) throws Exception {
         if (oldIdentifierToStableIdentifierMap.isEmpty()) {
             for (GKInstance stableIdentifierInst : findStableIdentifierInstances(dba)) {
-                // Cast to String instead of using toString() in case value returned is null.
                 String oldIdentifier = (String) stableIdentifierInst.getAttributeValue("oldIdentifier");
                 if (oldIdentifier != null) {
                     if (oldIdentifierToStableIdentifierMap.get(oldIdentifier) != null) {
@@ -117,6 +116,11 @@ public class PostStepChecks {
                         stableIdentifierSingletonList.add(stableIdentifierInst);
                         oldIdentifierToStableIdentifierMap.put(oldIdentifier, stableIdentifierSingletonList);
                     }
+
+                    List<GKInstance> tempList = new ArrayList<>(stableIdentifierList);  // Create a mutable list
+                    tempList.add(stableIdentifierInst);  // Add the new instance to the list
+
+                    oldIdentifierToStableIdentifierMap.put(oldIdentifier, tempList);  // Put the list back in the map
                 }
             }
         }

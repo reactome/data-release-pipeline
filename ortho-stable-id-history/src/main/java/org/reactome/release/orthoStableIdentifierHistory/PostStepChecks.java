@@ -110,7 +110,7 @@ public class PostStepChecks {
             for (GKInstance stableIdentifierInst : findStableIdentifierInstances(dba)) {
                 String oldIdentifier = (String) stableIdentifierInst.getAttributeValue("oldIdentifier");
                 if (oldIdentifier != null) {
-                    if (oldIdentifierToStableIdentifierMap.get(oldIdentifier) != null) {
+                    if (oldIdentifierToStableIdentifierMap.get(oldIdentifier)) {
                         oldIdentifierToStableIdentifierMap.get(oldIdentifier).add(stableIdentifierInst);
                     } else {
                         List<GKInstance> stableIdentifierSingletonList = new ArrayList<>();

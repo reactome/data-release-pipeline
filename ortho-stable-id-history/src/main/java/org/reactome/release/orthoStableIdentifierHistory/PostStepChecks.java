@@ -27,7 +27,9 @@ public class PostStepChecks {
 
         for (GKInstance stableIdentifierInst : findStableIdentifierInstances(dba)) {
             Collection<GKInstance> stableIdentifierReferrals = stableIdentifierInst.getReferers(ReactomeJavaConstants.stableIdentifier);
-            if (stableIdentifierReferrals == null || stableIdentifierReferrals.isEmpty()) {
+            if (stableIdentifierReferrals == null) {
+                System.out.println(stableIdentifierInst + " has null stableIdentifierReferrals");
+            } else if (stableIdentifierReferrals.isEmpty()) {
                 System.out.println(stableIdentifierInst + " has no referrers");
             } else if (stableIdentifierReferrals.size() > 1) {
                 System.out.println(stableIdentifierInst + " has multiple referrers");
@@ -107,11 +109,12 @@ public class PostStepChecks {
             for (GKInstance stableIdentifierInst : findStableIdentifierInstances(dba)) {
                 String oldIdentifier = (String) stableIdentifierInst.getAttributeValue("oldIdentifier");
                 if (oldIdentifier != null) {
-                    List<GKInstance> stableIdentifierList = oldIdentifierToStableIdentifierMap.get(oldIdentifier);
-
-                    if (stableIdentifierList == null) {
-                        stableIdentifierList = new ArrayList<>();
-                        oldIdentifierToStableIdentifierMap.put(oldIdentifier, stableIdentifierList);
+                    if (oldIdentifierToStableIdentifierMap.get(oldIdentifier) != null) {
+                        oldIdentifierToStableIdentifierMap.get(oldIdentifier).add(stableIdentifierInst);
+                    } else {
+                        List<GKInstance> stableIdentifierSingletonList = new ArrayList<>();
+                        stableIdentifierSingletonList.add(stableIdentifierInst);
+                        oldIdentifierToStableIdentifierMap.put(oldIdentifier, stableIdentifierSingletonList);
                     }
 
                     List<GKInstance> tempList = new ArrayList<>(stableIdentifierList);  // Create a mutable list

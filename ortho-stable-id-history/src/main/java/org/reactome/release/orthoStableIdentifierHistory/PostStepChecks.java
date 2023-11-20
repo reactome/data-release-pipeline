@@ -81,7 +81,8 @@ public class PostStepChecks {
     private static Map<String, List<GKInstance>> mapIdentifiersToStableIdentifiers(MySQLAdaptor dba) throws Exception {
         if (identifierToStableIdentifierMap.isEmpty()) {
             for (GKInstance stableIdentifierInst : findStableIdentifierInstances(dba)) {
-                String identifier = stableIdentifierInst.getAttributeValue(ReactomeJavaConstants.identifier).toString();
+                Object identifierObj = stableIdentifierInst.getAttributeValue(ReactomeJavaConstants.identifier);
+                String identifier = (identifierObj != null) ? identifierObj.toString() : null;
                 if (identifierToStableIdentifierMap.containsKey(identifier) != null) {
                     identifierToStableIdentifierMap.get(identifier).add(stableIdentifierInst);
                 } else {

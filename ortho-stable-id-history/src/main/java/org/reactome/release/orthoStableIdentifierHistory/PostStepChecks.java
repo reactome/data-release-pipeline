@@ -117,11 +117,6 @@ public class PostStepChecks {
                         stableIdentifierSingletonList.add(stableIdentifierInst);
                         oldIdentifierToStableIdentifierMap.put(oldIdentifier, stableIdentifierSingletonList);
                     }
-
-                    List<GKInstance> tempList = new ArrayList<>(stableIdentifierList);  // Create a mutable list
-                    tempList.add(stableIdentifierInst);  // Add the new instance to the list
-
-                    oldIdentifierToStableIdentifierMap.put(oldIdentifier, tempList);  // Put the list back in the map
                 }
             }
         }

@@ -83,6 +83,27 @@ public class PostStepChecks {
             for (GKInstance stableIdentifierInst : findStableIdentifierInstances(dba)) {
                 Object identifierObj = stableIdentifierInst.getAttributeValue(ReactomeJavaConstants.identifier);
                 String identifier = (identifierObj instanceof String) ? (String) identifierObj : null;
+
+                if (identifier != null) {
+                    if (identifierToStableIdentifierMap.containsKey(identifier)) {
+                        List<GKInstance> existingList = identifierToStableIdentifierMap.get(identifier);
+                        existingList.add(stableIdentifierInst);
+                    } else {
+                        List<GKInstance> stableIdentifierSingletonList = new ArrayList<>();
+                        stableIdentifierSingletonList.add(stableIdentifierInst);
+                        identifierToStableIdentifierMap.put(identifier, stableIdentifierSingletonList);
+                    }
+                }
+            }
+         }
+         return identifierToStableIdentifierMap;
+    }
+    
+    private static Map<String, List<GKInstance>> mapIdentifiersToStableIdentifiers(MySQLAdaptor dba) throws Exception {
+        if (identifierToStableIdentifierMap.isEmpty()) {
+            for (GKInstance stableIdentifierInst : findStableIdentifierInstances(dba)) {
+                Object identifierObj = stableIdentifierInst.getAttributeValue(ReactomeJavaConstants.identifier);
+                String identifier = (identifierObj instanceof String) ? (String) identifierObj : null;
                 if (identifierToStableIdentifierMap.containsKey(identifier)) {
                     identifierToStableIdentifierMap.get(identifier).add(stableIdentifierInst);
                 } else {

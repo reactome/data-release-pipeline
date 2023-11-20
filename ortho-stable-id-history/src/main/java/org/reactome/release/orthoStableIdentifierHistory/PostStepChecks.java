@@ -82,10 +82,10 @@ public class PostStepChecks {
         if (identifierToStableIdentifierMap.isEmpty()) {
             for (GKInstance stableIdentifierInst : findStableIdentifierInstances(dba)) {
                 String identifier = stableIdentifierInst.getAttributeValue(ReactomeJavaConstants.identifier).toString();
-                if (identifierToStableIdentifierMap.get(identifier) != null) {
+                if (identifierToStableIdentifierMap.containsKey(identifier) != null) {
                     identifierToStableIdentifierMap.get(identifier).add(stableIdentifierInst);
                 } else {
-                    List<GKInstance> stableIdentifierSingletonList = Arrays.asList(stableIdentifierInst);
+                    List<GKInstance> stableIdentifierSingletonList = new ArrayList<>(Arrays.asList(stableIdentifierInst));
                     identifierToStableIdentifierMap.put(identifier, stableIdentifierSingletonList);
                 }
             }

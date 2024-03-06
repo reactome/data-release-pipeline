@@ -81,11 +81,12 @@ public class PostStepChecks {
     private static Map<String, List<GKInstance>> mapIdentifiersToStableIdentifiers(MySQLAdaptor dba) throws Exception {
         if (identifierToStableIdentifierMap.isEmpty()) {
             for (GKInstance stableIdentifierInst : findStableIdentifierInstances(dba)) {
-                String identifier = stableIdentifierInst.getAttributeValue(ReactomeJavaConstants.identifier).toString();
-                if (identifierToStableIdentifierMap.get(identifier) != null) {
+                Object identifierObj = stableIdentifierInst.getAttributeValue(ReactomeJavaConstants.identifier);
+                String identifier = (identifierObj instanceof String) ? (String) identifierObj : null;
+                if (identifierToStableIdentifierMap.containsKey(identifier)) {
                     identifierToStableIdentifierMap.get(identifier).add(stableIdentifierInst);
                 } else {
-                    List<GKInstance> stableIdentifierSingletonList = Arrays.asList(stableIdentifierInst);
+                    List<GKInstance> stableIdentifierSingletonList = new ArrayList<>(Arrays.asList(stableIdentifierInst));
                     identifierToStableIdentifierMap.put(identifier, stableIdentifierSingletonList);
                 }
             }
@@ -116,11 +117,6 @@ public class PostStepChecks {
                         stableIdentifierSingletonList.add(stableIdentifierInst);
                         oldIdentifierToStableIdentifierMap.put(oldIdentifier, stableIdentifierSingletonList);
                     }
-
-                    List<GKInstance> tempList = new ArrayList<>(stableIdentifierList);  // Create a mutable list
-                    tempList.add(stableIdentifierInst);  // Add the new instance to the list
-
-                    oldIdentifierToStableIdentifierMap.put(oldIdentifier, tempList);  // Put the list back in the map
                 }
             }
         }

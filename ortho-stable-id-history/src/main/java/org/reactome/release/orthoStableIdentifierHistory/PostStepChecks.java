@@ -356,7 +356,9 @@ public class PostStepChecks {
         Pattern numericRegex = Pattern.compile("^R-(\\w{3})-\\d+");
         Matcher numericMatch = numericRegex.matcher(identifier);
         // The match group isn't accessible unless the .find method loads it
-        numericMatch.find();
+        if (!numericMatch.find()) {
+            return "";
+        }
         return numericMatch.group(1);
     }
 

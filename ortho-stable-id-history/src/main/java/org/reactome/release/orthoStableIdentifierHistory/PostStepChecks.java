@@ -27,7 +27,9 @@ public class PostStepChecks {
 
         for (GKInstance stableIdentifierInst : findStableIdentifierInstances(dba)) {
             Collection<GKInstance> stableIdentifierReferrals = stableIdentifierInst.getReferers(ReactomeJavaConstants.stableIdentifier);
-            if (stableIdentifierReferrals.isEmpty()) {
+            if (stableIdentifierReferrals == null) {
+                System.out.println(stableIdentifierInst + " has null stableIdentifierReferrals");
+            } else if (stableIdentifierReferrals.isEmpty()) {
                 System.out.println(stableIdentifierInst + " has no referrers");
             } else if (stableIdentifierReferrals.size() > 1) {
                 System.out.println(stableIdentifierInst + " has multiple referrers");
@@ -79,11 +81,12 @@ public class PostStepChecks {
     private static Map<String, List<GKInstance>> mapIdentifiersToStableIdentifiers(MySQLAdaptor dba) throws Exception {
         if (identifierToStableIdentifierMap.isEmpty()) {
             for (GKInstance stableIdentifierInst : findStableIdentifierInstances(dba)) {
-                String identifier = stableIdentifierInst.getAttributeValue(ReactomeJavaConstants.identifier).toString();
-                if (identifierToStableIdentifierMap.get(identifier) != null) {
+                Object identifierObj = stableIdentifierInst.getAttributeValue(ReactomeJavaConstants.identifier);
+                String identifier = (identifierObj instanceof String) ? (String) identifierObj : null;
+                if (identifierToStableIdentifierMap.containsKey(identifier)) {
                     identifierToStableIdentifierMap.get(identifier).add(stableIdentifierInst);
                 } else {
-                    List<GKInstance> stableIdentifierSingletonList = Arrays.asList(stableIdentifierInst);
+                    List<GKInstance> stableIdentifierSingletonList = new ArrayList<>(Arrays.asList(stableIdentifierInst));
                     identifierToStableIdentifierMap.put(identifier, stableIdentifierSingletonList);
                 }
             }
@@ -105,13 +108,13 @@ public class PostStepChecks {
     private static Map<String, List<GKInstance>> mapOldIdentifiersToStableIdentifiers(MySQLAdaptor dba) throws Exception {
         if (oldIdentifierToStableIdentifierMap.isEmpty()) {
             for (GKInstance stableIdentifierInst : findStableIdentifierInstances(dba)) {
-                // Cast to String instead of using toString() in case value returned is null.
                 String oldIdentifier = (String) stableIdentifierInst.getAttributeValue("oldIdentifier");
                 if (oldIdentifier != null) {
                     if (oldIdentifierToStableIdentifierMap.get(oldIdentifier) != null) {
                         oldIdentifierToStableIdentifierMap.get(oldIdentifier).add(stableIdentifierInst);
                     } else {
-                        List<GKInstance> stableIdentifierSingletonList = Arrays.asList(stableIdentifierInst);
+                        List<GKInstance> stableIdentifierSingletonList = new ArrayList<>();
+                        stableIdentifierSingletonList.add(stableIdentifierInst);
                         oldIdentifierToStableIdentifierMap.put(oldIdentifier, stableIdentifierSingletonList);
                     }
                 }

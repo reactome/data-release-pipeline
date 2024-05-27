@@ -27,8 +27,16 @@ public class PostStepChecks {
 
         for (GKInstance stableIdentifierInst : findStableIdentifierInstances(dba)) {
             List<GKInstance> stableIdentifierReferrals = new ArrayList<>();
-            stableIdentifierReferrals.addAll(stableIdentifierInst.getReferers(ReactomeJavaConstants.stableIdentifier));
-            stableIdentifierReferrals.addAll(stableIdentifierInst.getReferers("deletedStableIdentifier"));
+            Collection<GKInstance> stableIdentifierAttributeReferrals =
+                stableIdentifierInst.getReferers(ReactomeJavaConstants.stableIdentifier);
+            Collection<GKInstance> deletedStableIdentifierAttributeReferrals =
+                stableIdentifierInst.getReferers("deletedStableIdentifier");
+            if (stableIdentifierAttributeReferrals != null) {
+                stableIdentifierReferrals.addAll(stableIdentifierAttributeReferrals);
+            }
+            if (deletedStableIdentifierAttributeReferrals != null) {
+                stableIdentifierReferrals.addAll(deletedStableIdentifierAttributeReferrals);
+            }
 
             if (stableIdentifierReferrals == null) {
                 System.out.println(stableIdentifierInst + " has null stableIdentifierReferrals");

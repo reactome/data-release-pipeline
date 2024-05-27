@@ -138,17 +138,22 @@ public class PostStepChecks {
 
     private static boolean hasCorrectIdentifierNumericComponent(GKInstance referralInst) throws Exception {
         GKInstance stableIdentifierInst = (GKInstance) referralInst.getAttributeValue(ReactomeJavaConstants.stableIdentifier);
-        long stableIdentifierNumericComponent = getStableIdentifierNumericComponent(stableIdentifierInst);
+        Long stableIdentifierNumericComponent = getStableIdentifierNumericComponent(stableIdentifierInst);
+        if (stableIdentifierNumericComponent == null) {
+            return false;
+        }
         Set<Long> referralNumericComponent = getInstanceStableIdentifierNumericComponent(referralInst);
         return referralNumericComponent.contains(stableIdentifierNumericComponent);
     }
 
-    private static long getStableIdentifierNumericComponent(GKInstance stableIdentifierInst) throws Exception {
+    private static Long getStableIdentifierNumericComponent(GKInstance stableIdentifierInst) throws Exception {
         String identifier = stableIdentifierInst.getAttributeValue(ReactomeJavaConstants.identifier).toString();
         Pattern numericRegex = Pattern.compile("^R-\\w{3}-(\\d+)");
         Matcher numericMatch = numericRegex.matcher(identifier);
         // The match group isn't accessible unless the .find method loads it
-        numericMatch.find();
+        if (!numericMatch.find()) {
+            return null;
+        }
         return Long.parseLong(numericMatch.group(1));
     }
 
